@@ -1,0 +1,19 @@
+# Ignore bin and obj folders in any directory
+**/bin/
+**/obj/
+
+# Other common .NET and Visual Studio ignores
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vs/
+.idea/
+*.tsscache
+*.ncrunchsolution
+*.builds
+*.pidb
+*.svclog
+*.scc
+*.cache
