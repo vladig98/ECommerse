@@ -1,13 +1,28 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using SharedModels;
+using System.Reflection;
 using UserManagementService.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration["ConnectionStrings:PostgreSQL"] ??
         throw new InvalidOperationException("Connection string not found.");
-builder.Services.AddDbContext<ECommerceDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<ECommerceDbContext>(options => {
+    options.UseNpgsql(connectionString,
+    npgsqlOptionsAction: npgsqlOptions =>
+    {
+        npgsqlOptions.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
+
+        //Configuring Connection Resiliency:
+        npgsqlOptions.
+            EnableRetryOnFailure(maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorCodesToAdd: null);
+    });
+});
+
 builder.Services.AddIdentityCore<User>().AddSignInManager().AddRoles<Role>().AddEntityFrameworkStores<ECommerceDbContext>().AddDefaultTokenProviders();
 
 builder.Services.AddDataProtection();
