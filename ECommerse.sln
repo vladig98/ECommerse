@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "api-gateway\src\ApiGateway\ApiGateway.csproj", "{E54B8322-816C-4720-A660-64C57389A837}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiGateway", "api-gateway\src\ApiGateway\ApiGateway.csproj", "{E54B8322-816C-4720-A660-64C57389A837}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserManagementService", "services\UserManagementService\src\UserManagementService\UserManagementService.csproj", "{05DC0DFC-4127-4244-9868-36BA67DD1A9F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "shared\models\SharedModels\SharedModels.csproj", "{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{E54B8322-816C-4720-A660-64C57389A837}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E54B8322-816C-4720-A660-64C57389A837}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E54B8322-816C-4720-A660-64C57389A837}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05DC0DFC-4127-4244-9868-36BA67DD1A9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05DC0DFC-4127-4244-9868-36BA67DD1A9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05DC0DFC-4127-4244-9868-36BA67DD1A9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05DC0DFC-4127-4244-9868-36BA67DD1A9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

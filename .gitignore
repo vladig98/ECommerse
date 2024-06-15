@@ -17,3 +17,6 @@
 *.svclog
 *.scc
 *.cache
+
+~$design.docx
+design.docx
