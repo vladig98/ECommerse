@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiGateway", "api-gateway\s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserManagementService", "services\UserManagementService\src\UserManagementService\UserManagementService.csproj", "{05DC0DFC-4127-4244-9868-36BA67DD1A9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "shared\models\SharedModels\SharedModels.csproj", "{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{05DC0DFC-4127-4244-9868-36BA67DD1A9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{05DC0DFC-4127-4244-9868-36BA67DD1A9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{05DC0DFC-4127-4244-9868-36BA67DD1A9F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A7C274BE-BA1E-434E-BB4D-39AC83AAC5F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

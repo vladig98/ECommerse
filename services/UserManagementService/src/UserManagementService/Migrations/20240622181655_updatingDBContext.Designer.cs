@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UserManagementService.Data;
@@ -11,9 +12,11 @@ using UserManagementService.Data;
 namespace UserManagementService.Migrations
 {
     [DbContext(typeof(ECommerceDbContext))]
-    partial class ECommerceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240622181655_updatingDBContext")]
+    partial class updatingDBContext
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -185,11 +188,9 @@ namespace UserManagementService.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")
@@ -225,10 +226,10 @@ namespace UserManagementService.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("PreferredCurrency")
+                    b.Property<string>("PreferedLanguage")
                         .HasColumnType("text");
 
-                    b.Property<string>("PreferredLanguage")
+                    b.Property<string>("PreferredCurrency")
                         .HasColumnType("text");
 
                     b.Property<string>("SecurityStamp")

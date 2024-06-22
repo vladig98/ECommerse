@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace SharedModels
+namespace UserManagementService.Models
 {
     public class Role : IdentityRole<string>
     {

@@ -1,15 +1,15 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using SharedModels;
 using System.Reflection;
-using UserManagementService.Data;
+using UserManagementService;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration["ConnectionStrings:PostgreSQL"] ??
-        throw new InvalidOperationException("Connection string not found.");
-builder.Services.AddDbContext<ECommerceDbContext>(options => {
+var connectionString = builder.Configuration["ConnectionStrings:PostgreSQL"] ?? throw new InvalidOperationException("Connection string not found.");
+
+builder.Services.AddDbContext<ECommerceDbContext>(options =>
+{
     options.UseNpgsql(connectionString,
     npgsqlOptionsAction: npgsqlOptions =>
     {
@@ -25,8 +25,12 @@ builder.Services.AddDbContext<ECommerceDbContext>(options => {
 
 builder.Services.AddIdentityCore<User>().AddSignInManager().AddRoles<Role>().AddEntityFrameworkStores<ECommerceDbContext>().AddDefaultTokenProviders();
 
+var mapper = AutoMapperConfig.Initialize();
+builder.Services.AddSingleton(mapper);
+
 builder.Services.AddDataProtection();
 builder.Services.AddSingleton<System.TimeProvider>(System.TimeProvider.System);
+builder.Services.AddTransient<IUserService, UserService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
