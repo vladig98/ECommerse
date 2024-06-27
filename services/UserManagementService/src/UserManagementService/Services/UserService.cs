@@ -11,6 +11,7 @@ namespace UserManagementService.Services
         private readonly RoleManager<Role> _roleManager;
         private readonly ILogger<UserService> _logger;
         private readonly IMapper _mapper;
+        private string ErrorMessage;
 
         public UserService(UserManager<User> userManager, RoleManager<Role> roleManager, ILogger<UserService> logger, IMapper mapper)
         {
@@ -18,78 +19,115 @@ namespace UserManagementService.Services
             _roleManager = roleManager;
             _logger = logger;
             _mapper = mapper;
+            ErrorMessage = string.Empty;
         }
 
-        public async Task<ServiceResult<UserDTO>> RegisterUser(CreateUserDTO registerData)
+        private bool DoPasswordsMatch(string password, string confirmPassword)
         {
-            string errorMessage = string.Empty;
+            return password == confirmPassword;
+        }
 
-            if (registerData.Password != registerData.ConfirmPassword)
-            {
-                errorMessage = GlobalConstants.PasswordsDoNotMatch;
-                _logger.LogError(errorMessage);
-                return ServiceResult<UserDTO>.Failure(errorMessage);
-            }
+        private void LogError(string message)
+        {
+            ErrorMessage = message;
+            _logger.LogError(message);
+        }
 
-            var dbUser = await _userManager.FindByNameAsync(registerData.Username);
+        private async Task<bool> DoesUserExistByUsername(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            return user != null;
+        }
 
-            if (dbUser != null)
-            {
-                errorMessage = GlobalConstants.UsernameAlreadyExists;
-                _logger.LogError(errorMessage);
-                return ServiceResult<UserDTO>.Failure(errorMessage);
-            }
+        private async Task<bool> DoesUserExistByEmail(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            return user != null;
+        }
 
-            dbUser = await _userManager.FindByEmailAsync(registerData.Email);
+        private async Task<bool> DoesRoleExists(string roleName)
+        {
+            return await _roleManager.RoleExistsAsync(roleName);
+        }
 
-            if (dbUser != null)
-            {
-                errorMessage = GlobalConstants.EmailAlreadyExists;
-                _logger.LogError(errorMessage);
-                return ServiceResult<UserDTO>.Failure(errorMessage);
-            }
-
-            var role = new Role
+        private Role CreateRole(string roleName)
+        {
+            return new Role
             {
                 Id = Guid.NewGuid().ToString(),
-                Name = RoleName.User.ToString()
+                Name = roleName
             };
+        }
 
-            var roleExists = await _roleManager.RoleExistsAsync(role.Name);
+        private User CreateUser(CreateUserDTO data)
+        {
+            var validDOB = DateTime.TryParseExact(data.DateOfBirth, GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob);
 
-            if (!roleExists)
-            {
-                await _roleManager.CreateAsync(role);
-            }
-
-            var validDOB = DateTime.TryParseExact(registerData.DateOfBirth, GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob);
-
-            var user = _mapper.Map<User>(registerData);
+            var user = _mapper.Map<User>(data);
             user.LoyaltyPoints = 0;
             user.MembershipLevel = MembershipLevels.Silver.ToString();
             user.Id = Guid.NewGuid().ToString();
             user.DateOfBirth = validDOB ? DateTime.SpecifyKind(dob, DateTimeKind.Utc) : (DateTime?)null;
 
+            return user;
+        }
+
+        private async Task<UserDTO> GetUserDTO(User user)
+        {
+            var userDto = _mapper.Map<UserDTO>(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            userDto.Role = roles.FirstOrDefault();
+
+            return userDto;
+        }
+
+        public async Task<ServiceResult<UserDTO>> RegisterUser(CreateUserDTO registerData)
+        {
+            if (!DoPasswordsMatch(registerData.Password, registerData.ConfirmPassword))
+            {
+                LogError(GlobalConstants.PasswordsDoNotMatch);
+                return ServiceResult<UserDTO>.Failure(ErrorMessage);
+            }
+
+            if (await DoesUserExistByUsername(registerData.Username))
+            {
+                LogError(GlobalConstants.UsernameAlreadyExists);
+                return ServiceResult<UserDTO>.Failure(ErrorMessage);
+            }
+
+            if (await DoesUserExistByEmail(registerData.Email))
+            {
+                LogError(GlobalConstants.EmailAlreadyExists);
+                return ServiceResult<UserDTO>.Failure(ErrorMessage);
+            }
+
+            var role = CreateRole(RoleName.User.ToString());
+
+            if (!await DoesRoleExists(role.Name))
+            {
+                await _roleManager.CreateAsync(role);
+            }
+
+            var user = CreateUser(registerData);
+
             var userCreated = await _userManager.CreateAsync(user, registerData.Password);
 
             if (!userCreated.Succeeded)
             {
-                errorMessage = string.Format(GlobalConstants.PasswordsDoNotMeetRequirements, string.Join(GlobalConstants.CommaSeparator, userCreated.Errors.Select(e => e.Description)));
-
-                _logger.LogError(errorMessage);
-                return ServiceResult<UserDTO>.Failure(errorMessage);
+                LogError(string.Format(GlobalConstants.PasswordsDoNotMeetRequirements, string.Join(Environment.NewLine, userCreated.Errors.Select(e => e.Description))));
+                return ServiceResult<UserDTO>.Failure(ErrorMessage);
             }
 
             await _userManager.AddToRoleAsync(user, role.Name);
             await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), role.Name));
 
-            _logger.LogInformation(string.Format(GlobalConstants.UserCreatedSuccessfully, user.UserName));
+            string successMessage = string.Format(GlobalConstants.UserCreatedSuccessfully, user.UserName);
 
-            var userDto = _mapper.Map<UserDTO>(user);
-            var roles = await _userManager.GetRolesAsync(user);
-            userDto.Role = roles.FirstOrDefault();
+            _logger.LogInformation(successMessage);
 
-            return ServiceResult<UserDTO>.Success(userDto);
+            var userDto = await GetUserDTO(user);
+
+            return ServiceResult<UserDTO>.Success(userDto, successMessage);
         }
     }
 }

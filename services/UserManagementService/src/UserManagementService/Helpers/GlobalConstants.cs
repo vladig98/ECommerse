@@ -2,16 +2,22 @@
 {
     public static class GlobalConstants
     {
-        public const string LogLevelError = "ERROR: ";
-        public const string LogLevelWarning = "WARN: ";
-        public const string LogLevelInfo = "INFO: ";
-        public const string LogLevelTrace = "TRACE: ";
+        private const string LoggingFormat = "{0} {1} {0}\r\n{2}\r\n{3}";
+        private const string LoggingSeparator = "====================";
 
-        public const string PasswordsDoNotMatch = LogLevelError + "Registration failed. Password and Confirm Password do not match!";
-        public const string UsernameAlreadyExists = LogLevelError + "Registration failed. User with this username already exists!";
-        public const string EmailAlreadyExists = LogLevelError + "Registration failed. User with this email address already exists!";
-        public const string PasswordsDoNotMeetRequirements = LogLevelError + "Registration failed. {0}!";
-        public const string UserCreatedSuccessfully = LogLevelInfo + "Registration completed successfully. User {0} created successfully!";
+        private const string LogLevelError = "ERROR";
+        private const string LogLevelWarning = "WARN";
+        private const string LogLevelInfo = "INFO";
+        private const string LogLevelTrace = "TRACE";
+        private const string LogLevelDebug = "DEBUG";
+
+        private const string RegistrationFailed = "Registration failed.";
+
+        public static string PasswordsDoNotMatch = string.Format(LoggingFormat, LoggingSeparator, LogLevelError, RegistrationFailed, "Password and Confirm Password do not match!");
+        public static string UsernameAlreadyExists = string.Format(LoggingFormat, LoggingSeparator, LogLevelError, RegistrationFailed, "User with this username already exists!");
+        public static string EmailAlreadyExists = string.Format(LoggingFormat, LoggingSeparator, LogLevelError, RegistrationFailed, "User with this email address already exists!");
+        public static string PasswordsDoNotMeetRequirements = string.Format(LoggingFormat, LoggingSeparator, LogLevelError, RegistrationFailed, "{0}");
+        public static string UserCreatedSuccessfully = string.Format(LoggingFormat, LoggingSeparator, LogLevelInfo, "Registration completed successfully.", "User {0} created successfully!");
 
         public const string DateTimeFormat = "dd/MM/yyyy";
         public const string CommaSeparator = ", ";

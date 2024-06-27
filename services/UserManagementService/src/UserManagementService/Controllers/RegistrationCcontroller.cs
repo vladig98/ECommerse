@@ -18,28 +18,16 @@ namespace UserManagementService.Controllers
         {
             var result = await _userService.RegisterUser(registerData);
 
+            var respone = new APIResponse<UserDTO>(result.Data, result.Message);
+
             if (!result.Succeeded)
             {
-                var errorResponse = new ErrorResponse
-                {
-                    Error = new ErrorDetails
-                    {
-                        Code = "400",
-                        Message = result.Error.ErrorMessage,
-                        Details = new List<string> { result.Error.ErrorMessage }
-                    }
-                };
-                return BadRequest(errorResponse);
+                respone.SetStatus(BadRequest());
+                return BadRequest(respone);
             }
 
-            var successResponse = new APIResponse<UserDTO>
-            {
-                Status = "success",
-                Data = result.Data,
-                Message = "User registered successfully"
-            };
-
-            return Ok(successResponse);
+            respone.SetStatus(Ok());
+            return Ok(respone);
         }
     }
 }
