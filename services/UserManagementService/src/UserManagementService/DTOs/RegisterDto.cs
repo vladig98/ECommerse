@@ -2,7 +2,7 @@
 {
     public class RegisterDto
     {
-        public string Token { get; set; }
+        public TokenDto TokenData { get; set; }
         public UserDTO UserData { get; set; }
     }
 }

@@ -124,9 +124,14 @@ namespace UserManagementService.Services
 
             var token = await _tokenService.GenerateJWTToken(user);
 
+            var tokenDto = new TokenDto
+            {
+                Token = token
+            };
+
             var registerDto = new RegisterDto
             {
-                Token = token,
+                TokenData = tokenDto,
                 UserData = userDto
             };
 

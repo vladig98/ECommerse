@@ -19,6 +19,11 @@
         public static string PasswordsDoNotMeetRequirements = LogError(RegistrationFailed, "{0}");
         public static string UserCreatedSuccessfully = LogInfo("Registration completed successfully.", "User {0} created successfully!");
 
+        public const string FailedLogin = "Login failed!";
+        public static string UserNotFound = LogError(FailedLogin, "User does not exist!");
+        public static string UserEnteredWrongPassword = LogError(FailedLogin, "Incorrect password!");
+        public static string UserLoggedInSuccessfully = LogInfo("Login Successful", "User {0} logged in successfully!");
+
         public static string JWTTokenSucces = LogInfo("JWT generated", "Token generated for user {0}");
 
         public const string JWT = "JWT";

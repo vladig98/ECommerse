@@ -25,7 +25,7 @@ namespace UserManagementService.Services
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()),
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
                 new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName),
                 new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email)
@@ -41,7 +41,7 @@ namespace UserManagementService.Services
             JwtSecurityToken token = new JwtSecurityToken(
                     issuer: jwtIssuer,
                     claims: claims,
-                    expires: DateTime.UtcNow.AddMinutes(3600), // valid for 1 hour
+                    expires: DateTime.UtcNow.AddHours(1), // valid for 1 hour
                     audience: jwtIssuer,
                     signingCredentials: credentials
             );

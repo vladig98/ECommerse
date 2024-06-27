@@ -7,10 +7,29 @@ namespace UserManagementService.Controllers
     public class RegistrationCcontroller : ControllerBase
     {
         private readonly IRegisterService _registerService;
+        private readonly ILoginService _loginService;
 
-        public RegistrationCcontroller(IRegisterService registerService)
+        public RegistrationCcontroller(IRegisterService registerService, ILoginService loginService)
         {
             _registerService = registerService;
+            _loginService = loginService;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginDto loginData)
+        {
+            var result = await _loginService.LoginUser(loginData);
+
+            var response = new APIResponse<TokenDto>(result.Data, result.Message);
+
+            if (!result.Succeeded)
+            {
+                response.SetStatus(BadRequest());
+                return BadRequest(response);
+            }
+
+            response.SetStatus(Ok());
+            return Ok(response);
         }
 
         [HttpPost]
