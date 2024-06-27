@@ -12,7 +12,6 @@ namespace UserManagementService.Services
         private readonly ILogger<RegisterService> _logger;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
-        private string ErrorMessage;
 
         public RegisterService(UserManager<User> userManager, RoleManager<Role> roleManager, ILogger<RegisterService> logger, IMapper mapper, ITokenService tokenService)
         {
@@ -21,18 +20,11 @@ namespace UserManagementService.Services
             _logger = logger;
             _mapper = mapper;
             _tokenService = tokenService;
-            ErrorMessage = string.Empty;
         }
 
         private bool DoPasswordsMatch(string password, string confirmPassword)
         {
             return password == confirmPassword;
-        }
-
-        private void LogError(string message)
-        {
-            ErrorMessage = message;
-            _logger.LogError(message);
         }
 
         private async Task<bool> DoesUserExistByUsername(string username)
@@ -87,20 +79,20 @@ namespace UserManagementService.Services
         {
             if (!DoPasswordsMatch(registerData.Password, registerData.ConfirmPassword))
             {
-                LogError(GlobalConstants.PasswordsDoNotMatch);
-                return ServiceResult<RegisterDto>.Failure(ErrorMessage);
+                _logger.LogError(GlobalConstants.PasswordsDoNotMatch);
+                return ServiceResult<RegisterDto>.Failure(GlobalConstants.PasswordsDoNotMatch);
             }
 
             if (await DoesUserExistByUsername(registerData.Username))
             {
-                LogError(GlobalConstants.UsernameAlreadyExists);
-                return ServiceResult<RegisterDto>.Failure(ErrorMessage);
+                _logger.LogError(GlobalConstants.UsernameAlreadyExists);
+                return ServiceResult<RegisterDto>.Failure(GlobalConstants.UsernameAlreadyExists);
             }
 
             if (await DoesUserExistByEmail(registerData.Email))
             {
-                LogError(GlobalConstants.EmailAlreadyExists);
-                return ServiceResult<RegisterDto>.Failure(ErrorMessage);
+                _logger.LogError(GlobalConstants.EmailAlreadyExists);
+                return ServiceResult<RegisterDto>.Failure(GlobalConstants.EmailAlreadyExists);
             }
 
             var role = CreateRole(RoleName.User.ToString());
@@ -116,8 +108,9 @@ namespace UserManagementService.Services
 
             if (!userCreated.Succeeded)
             {
-                LogError(string.Format(GlobalConstants.PasswordsDoNotMeetRequirements, string.Join(Environment.NewLine, userCreated.Errors.Select(e => e.Description))));
-                return ServiceResult<RegisterDto>.Failure(ErrorMessage);
+                string error = string.Format(GlobalConstants.PasswordsDoNotMeetRequirements, string.Join(Environment.NewLine, userCreated.Errors.Select(e => e.Description)));
+                _logger.LogError(error);
+                return ServiceResult<RegisterDto>.Failure(error);
             }
 
             await _userManager.AddToRoleAsync(user, role.Name);

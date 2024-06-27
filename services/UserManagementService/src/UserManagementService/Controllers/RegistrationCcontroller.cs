@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace UserManagementService.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("/api/users/[action]")]
     public class RegistrationCcontroller : ControllerBase
     {
         private readonly IRegisterService _registerService;
@@ -18,17 +18,17 @@ namespace UserManagementService.Controllers
         {
             var result = await _registerService.RegisterUser(registerData);
 
-            var respone = new APIResponse<RegisterDto>(result.Data, result.Message);
+            var response = new APIResponse<RegisterDto>(result.Data, result.Message);
 
             if (!result.Succeeded)
             {
-                respone.SetStatus(BadRequest());
-                return BadRequest(respone);
+                response.SetStatus(BadRequest());
+                return BadRequest(response);
             }
 
-            var status = Created("/users/1", respone);
+            var status = CreatedAtAction(nameof(Register), new { id = result.Data.UserData.Id }, response);
+            response.SetStatus(status);
 
-            respone.SetStatus(status);
             return status;
         }
     }

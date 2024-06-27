@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using System.Net;
 
 namespace UserManagementService.Helpers
@@ -19,24 +20,13 @@ namespace UserManagementService.Helpers
             SetDataAndMessage(data, message);
         }
 
-        public APIResponse(T data, string message, StatusCodeResult status)
+        public APIResponse(T data, string message, IActionResult status)
         {
             SetDataAndMessage(data, message);
             SetStatus(status);
         }
 
-        public APIResponse(T data, string message, ObjectResult status)
-        {
-            SetDataAndMessage(data, message);
-            SetStatus(status);
-        }
-
-        public APIResponse(StatusCodeResult status)
-        {
-            SetStatus(status);
-        }
-
-        public APIResponse(ObjectResult status)
+        public APIResponse(IActionResult status)
         {
             SetStatus(status);
         }
@@ -47,16 +37,12 @@ namespace UserManagementService.Helpers
             Message = message;
         }
 
-        public void SetStatus(StatusCodeResult status)
+        public void SetStatus(IActionResult status)
         {
-            Status = ((HttpStatusCode)status.StatusCode).ToString();
-            StatusCode = status.StatusCode;
-        }
+            var statusCodeResult = (IStatusCodeActionResult)status;
 
-        public void SetStatus(ObjectResult status)
-        {
-            Status = ((HttpStatusCode)status.StatusCode.Value).ToString();
-            StatusCode = status.StatusCode.Value;
+            Status = ((HttpStatusCode)statusCodeResult.StatusCode.Value).ToString();
+            StatusCode = statusCodeResult.StatusCode.Value;
         }
     }
 }
