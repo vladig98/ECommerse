@@ -13,13 +13,53 @@
 
         private const string RegistrationFailed = "Registration failed.";
 
-        public static string PasswordsDoNotMatch = string.Format(LoggingFormat, LoggingSeparator, LogLevelError, RegistrationFailed, "Password and Confirm Password do not match!");
-        public static string UsernameAlreadyExists = string.Format(LoggingFormat, LoggingSeparator, LogLevelError, RegistrationFailed, "User with this username already exists!");
-        public static string EmailAlreadyExists = string.Format(LoggingFormat, LoggingSeparator, LogLevelError, RegistrationFailed, "User with this email address already exists!");
-        public static string PasswordsDoNotMeetRequirements = string.Format(LoggingFormat, LoggingSeparator, LogLevelError, RegistrationFailed, "{0}");
-        public static string UserCreatedSuccessfully = string.Format(LoggingFormat, LoggingSeparator, LogLevelInfo, "Registration completed successfully.", "User {0} created successfully!");
+        public static string PasswordsDoNotMatch = LogError(RegistrationFailed, "Password and Confirm Password do not match!");
+        public static string UsernameAlreadyExists = LogError(RegistrationFailed, "User with this username already exists!");
+        public static string EmailAlreadyExists = LogError(RegistrationFailed, "User with this email address already exists!");
+        public static string PasswordsDoNotMeetRequirements = LogError(RegistrationFailed, "{0}");
+        public static string UserCreatedSuccessfully = LogInfo("Registration completed successfully.", "User {0} created successfully!");
+
+        public static string JWTTokenSucces = LogInfo("JWT generated", "Token generated for user {0}");
+
+        public const string JWT = "JWT";
+        public const string LoginProvider = "Ecoomerse-Vladi";
+
+        public const string JWTIssuer = "UserManagement:JWT:Issuer";
+        public const string JWTKey = "UserManagement:JWT:Key";
+        public const string ConnectionString = "ConnectionStrings:PostgreSQL";
+        public const string InvalidConnectionString = "Connection string not found.";
 
         public const string DateTimeFormat = "dd/MM/yyyy";
         public const string CommaSeparator = ", ";
+
+        private static string GenerateLogMessage(string level, string header, string message)
+        {
+            return string.Format(LoggingFormat, LoggingSeparator, level, header, message);
+        }
+
+        private static string LogError(string header, string message)
+        {
+            return GenerateLogMessage(LogLevelError, header, message);
+        }
+
+        private static string LogInfo(string header, string message)
+        {
+            return GenerateLogMessage(LogLevelInfo, header, message);
+        }
+
+        private static string LogWarning(string header, string message)
+        {
+            return GenerateLogMessage(LogLevelWarning, header, message);
+        }
+
+        private static string LogTrace(string header, string message)
+        {
+            return GenerateLogMessage(LogLevelTrace, header, message);
+        }
+
+        private static string LogDebug(string header, string message)
+        {
+            return GenerateLogMessage(LogLevelDebug, header, message);
+        }
     }
 }

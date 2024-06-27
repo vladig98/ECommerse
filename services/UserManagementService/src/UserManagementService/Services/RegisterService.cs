@@ -5,20 +5,22 @@ using System.Security.Claims;
 
 namespace UserManagementService.Services
 {
-    public class UserService : IUserService
+    public class RegisterService : IRegisterService
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
-        private readonly ILogger<UserService> _logger;
+        private readonly ILogger<RegisterService> _logger;
         private readonly IMapper _mapper;
+        private readonly ITokenService _tokenService;
         private string ErrorMessage;
 
-        public UserService(UserManager<User> userManager, RoleManager<Role> roleManager, ILogger<UserService> logger, IMapper mapper)
+        public RegisterService(UserManager<User> userManager, RoleManager<Role> roleManager, ILogger<RegisterService> logger, IMapper mapper, ITokenService tokenService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _logger = logger;
             _mapper = mapper;
+            _tokenService = tokenService;
             ErrorMessage = string.Empty;
         }
 
@@ -81,24 +83,24 @@ namespace UserManagementService.Services
             return userDto;
         }
 
-        public async Task<ServiceResult<UserDTO>> RegisterUser(CreateUserDTO registerData)
+        public async Task<ServiceResult<RegisterDto>> RegisterUser(CreateUserDTO registerData)
         {
             if (!DoPasswordsMatch(registerData.Password, registerData.ConfirmPassword))
             {
                 LogError(GlobalConstants.PasswordsDoNotMatch);
-                return ServiceResult<UserDTO>.Failure(ErrorMessage);
+                return ServiceResult<RegisterDto>.Failure(ErrorMessage);
             }
 
             if (await DoesUserExistByUsername(registerData.Username))
             {
                 LogError(GlobalConstants.UsernameAlreadyExists);
-                return ServiceResult<UserDTO>.Failure(ErrorMessage);
+                return ServiceResult<RegisterDto>.Failure(ErrorMessage);
             }
 
             if (await DoesUserExistByEmail(registerData.Email))
             {
                 LogError(GlobalConstants.EmailAlreadyExists);
-                return ServiceResult<UserDTO>.Failure(ErrorMessage);
+                return ServiceResult<RegisterDto>.Failure(ErrorMessage);
             }
 
             var role = CreateRole(RoleName.User.ToString());
@@ -115,7 +117,7 @@ namespace UserManagementService.Services
             if (!userCreated.Succeeded)
             {
                 LogError(string.Format(GlobalConstants.PasswordsDoNotMeetRequirements, string.Join(Environment.NewLine, userCreated.Errors.Select(e => e.Description))));
-                return ServiceResult<UserDTO>.Failure(ErrorMessage);
+                return ServiceResult<RegisterDto>.Failure(ErrorMessage);
             }
 
             await _userManager.AddToRoleAsync(user, role.Name);
@@ -127,7 +129,15 @@ namespace UserManagementService.Services
 
             var userDto = await GetUserDTO(user);
 
-            return ServiceResult<UserDTO>.Success(userDto, successMessage);
+            var token = await _tokenService.GenerateJWTToken(user);
+
+            var registerDto = new RegisterDto
+            {
+                Token = token,
+                UserData = userDto
+            };
+
+            return ServiceResult<RegisterDto>.Success(registerDto, successMessage);
         }
     }
 }

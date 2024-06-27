@@ -25,7 +25,18 @@ namespace UserManagementService.Helpers
             SetStatus(status);
         }
 
+        public APIResponse(T data, string message, ObjectResult status)
+        {
+            SetDataAndMessage(data, message);
+            SetStatus(status);
+        }
+
         public APIResponse(StatusCodeResult status)
+        {
+            SetStatus(status);
+        }
+
+        public APIResponse(ObjectResult status)
         {
             SetStatus(status);
         }
@@ -40,6 +51,12 @@ namespace UserManagementService.Helpers
         {
             Status = ((HttpStatusCode)status.StatusCode).ToString();
             StatusCode = status.StatusCode;
+        }
+
+        public void SetStatus(ObjectResult status)
+        {
+            Status = ((HttpStatusCode)status.StatusCode.Value).ToString();
+            StatusCode = status.StatusCode.Value;
         }
     }
 }

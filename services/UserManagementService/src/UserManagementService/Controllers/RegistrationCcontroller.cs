@@ -6,19 +6,19 @@ namespace UserManagementService.Controllers
     [Route("[controller]")]
     public class RegistrationCcontroller : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IRegisterService _registerService;
 
-        public RegistrationCcontroller(IUserService userService)
+        public RegistrationCcontroller(IRegisterService registerService)
         {
-            _userService = userService;
+            _registerService = registerService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Register(CreateUserDTO registerData)
         {
-            var result = await _userService.RegisterUser(registerData);
+            var result = await _registerService.RegisterUser(registerData);
 
-            var respone = new APIResponse<UserDTO>(result.Data, result.Message);
+            var respone = new APIResponse<RegisterDto>(result.Data, result.Message);
 
             if (!result.Succeeded)
             {
@@ -26,8 +26,10 @@ namespace UserManagementService.Controllers
                 return BadRequest(respone);
             }
 
-            respone.SetStatus(Ok());
-            return Ok(respone);
+            var status = Created("/users/1", respone);
+
+            respone.SetStatus(status);
+            return status;
         }
     }
 }

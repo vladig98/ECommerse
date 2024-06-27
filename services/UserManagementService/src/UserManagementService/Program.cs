@@ -1,12 +1,14 @@
-using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
+using System.Text;
 using UserManagementService;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration["ConnectionStrings:PostgreSQL"] ?? throw new InvalidOperationException("Connection string not found.");
+var connectionString = builder.Configuration[GlobalConstants.ConnectionString] ?? throw new InvalidOperationException(GlobalConstants.InvalidConnectionString);
 
 builder.Services.AddDbContext<ECommerceDbContext>(options =>
 {
@@ -25,12 +27,35 @@ builder.Services.AddDbContext<ECommerceDbContext>(options =>
 
 builder.Services.AddIdentityCore<User>().AddSignInManager().AddRoles<Role>().AddEntityFrameworkStores<ECommerceDbContext>().AddDefaultTokenProviders();
 
+var jwtIssuer = builder.Configuration[GlobalConstants.JWTIssuer];
+var jwtKey = builder.Configuration[GlobalConstants.JWTKey];
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+ .AddJwtBearer(options =>
+ {
+     options.IncludeErrorDetails = true;
+     options.TokenValidationParameters = new TokenValidationParameters
+     {
+         ValidateIssuer = true,
+         ValidateAudience = true,
+         ValidateLifetime = true,
+         ValidateIssuerSigningKey = true,
+         ValidIssuer = jwtIssuer,
+         ValidAudience = jwtIssuer,
+         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+         ClockSkew = TimeSpan.Zero
+     };
+ });
+
+builder.Services.AddAuthorization();
+
 var mapper = AutoMapperConfig.Initialize();
 builder.Services.AddSingleton(mapper);
 
 builder.Services.AddDataProtection();
 builder.Services.AddSingleton<System.TimeProvider>(System.TimeProvider.System);
-builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<ITokenService, TokenService>();
+builder.Services.AddTransient<IRegisterService, RegisterService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
