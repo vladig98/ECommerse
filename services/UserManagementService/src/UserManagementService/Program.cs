@@ -57,6 +57,7 @@ builder.Services.AddSingleton<System.TimeProvider>(System.TimeProvider.System);
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.AddTransient<IRegisterService, RegisterService>();
 builder.Services.AddTransient<ILoginService, LoginService>();
+builder.Services.AddTransient<IProfileService, ProfileService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

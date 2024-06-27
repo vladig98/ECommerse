@@ -24,6 +24,8 @@
         public static string UserEnteredWrongPassword = LogError(FailedLogin, "Incorrect password!");
         public static string UserLoggedInSuccessfully = LogInfo("Login Successful", "User {0} logged in successfully!");
 
+        public static string UserRetrieved = LogInfo("User found!", "User {0} retrieved successfully!");
+
         public static string JWTTokenSucces = LogInfo("JWT generated", "Token generated for user {0}");
 
         public const string JWT = "JWT";

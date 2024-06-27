@@ -3,17 +3,42 @@ using Microsoft.AspNetCore.Mvc;
 namespace UserManagementService.Controllers
 {
     [ApiController]
-    [Route("/api/users/[action]")]
-    public class RegistrationCcontroller : ControllerBase
+    [Route("/api/[controller]/[action]")]
+    public class UsersController : ControllerBase
     {
         private readonly IRegisterService _registerService;
         private readonly ILoginService _loginService;
+        private readonly IProfileService _profileService;
 
-        public RegistrationCcontroller(IRegisterService registerService, ILoginService loginService)
+        public UsersController(IRegisterService registerService, ILoginService loginService, IProfileService profileService)
         {
             _registerService = registerService;
             _loginService = loginService;
+            _profileService = profileService;
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Profile(string id)
+        {
+            var result = await _profileService.GetUser(id);
+
+            var response = new APIResponse<UserDTO>(result.Data, result.Message);
+
+            if (!result.Succeeded)
+            {
+                response.SetStatus(BadRequest());
+                return BadRequest(response);
+            }
+
+            response.SetStatus(Ok());
+            return Ok(response);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Profile(string id, CreateUserDTO editData)
+        {
+            return Ok();
+        } 
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginDto loginData)
