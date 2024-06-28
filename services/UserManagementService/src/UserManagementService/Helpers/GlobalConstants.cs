@@ -25,6 +25,7 @@
         public static string UserLoggedInSuccessfully = LogInfo("Login Successful", "User {0} logged in successfully!");
 
         public static string UserRetrieved = LogInfo("User found!", "User {0} retrieved successfully!");
+        public static string UserUpdated = LogInfo("User updated!", "User {0} updated successfully!");
 
         public static string JWTTokenSucces = LogInfo("JWT generated", "Token generated for user {0}");
 

@@ -3,6 +3,6 @@
     public interface IProfileService
     {
         Task<ServiceResult<UserDTO>> GetUser(string userId);
-        Task<ServiceResult<UserDTO>> UpdateUser(CreateUserDTO updatedData);
+        Task<ServiceResult<UserDTO>> UpdateUser(string userId, EditUserDto updatedData);
     }
 }

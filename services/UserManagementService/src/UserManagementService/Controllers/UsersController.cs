@@ -35,10 +35,22 @@ namespace UserManagementService.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Profile(string id, CreateUserDTO editData)
+        public async Task<IActionResult> Profile(string id, EditUserDto editData)
         {
-            return Ok();
-        } 
+            var result = await _profileService.UpdateUser(id, editData);
+
+            var response = new APIResponse<UserDTO>(result.Data, result.Message);
+
+            if (!result.Succeeded)
+            {
+                response.SetStatus(BadRequest());
+                return BadRequest(response);
+            }
+
+            response.SetStatus(Ok());
+
+            return Ok(response);
+        }
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginDto loginData)
