@@ -10,6 +10,7 @@
         Beauty,
         Sports,
         Automotive,
-        Furniture
+        Furniture,
+        Food
     }
 }

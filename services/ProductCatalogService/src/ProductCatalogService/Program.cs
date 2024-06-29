@@ -20,6 +20,8 @@ builder.Services.AddDbContext<ProductsDbContext>(options =>
     });
 });
 
+builder.Services.AddTransient<IProductService, ProductService>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
