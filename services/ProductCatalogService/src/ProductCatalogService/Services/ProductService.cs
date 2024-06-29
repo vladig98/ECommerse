@@ -154,7 +154,7 @@ namespace ProductCatalogService.Services
                 return ServiceResult<ProductDto>.Failure(GlobalConstants.ProductDoesNotExist);
             }
 
-            var nameTaken = await _dbContext.Products.FirstOrDefaultAsync(x => x.Name == updatedData.Name);
+            var nameTaken = await _dbContext.Products.Where(x => x.Id != id).FirstOrDefaultAsync(x => x.Name == updatedData.Name);
 
             if (nameTaken != null)
             {
@@ -162,29 +162,26 @@ namespace ProductCatalogService.Services
                 return ServiceResult<ProductDto>.Failure(GlobalConstants.InvalidName);
             }
 
-            var (createdDateValid, createdDate) = ParseDate(updatedData.CreationDate ?? product.CreationDate.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture));
+            var (createdDateValid, createdDate) = ParseDate(updatedData.CreationDate);
 
             if (!createdDateValid)
             {
-                _logger.LogError(GlobalConstants.InvalidCreatedDate);
-                return ServiceResult<ProductDto>.Failure(GlobalConstants.InvalidCreatedDate);
+                createdDate = product.CreationDate;
             }
 
-            var (updatedDateValid, updatedDate) = ParseDate(updatedData.UpdatedDate ?? product.UpdatedDate.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture));
-
+            var (updatedDateValid, updatedDate) = ParseDate(updatedData.UpdatedDate);
+            
             if (!updatedDateValid)
             {
-                _logger.LogError(GlobalConstants.InvalidUpdatedDate);
-                return ServiceResult<ProductDto>.Failure(GlobalConstants.InvalidUpdatedDate);
+                updatedDate = product.UpdatedDate;
             }
 
-            var newCategory = updatedData.Category == null ? product.Category.ToString() : updatedData.Category;
+            var newCategory = updatedData.Category;
             var categoryValid = Enum.TryParse<ProductCategory>(newCategory, true, out ProductCategory category);
 
             if (!categoryValid)
             {
-                _logger.LogError(GlobalConstants.InvalidCategory);
-                return ServiceResult<ProductDto>.Failure(GlobalConstants.InvalidCategory);
+                category = product.Category;
             }
 
             createdDate = DateTime.SpecifyKind(createdDate, DateTimeKind.Utc);
