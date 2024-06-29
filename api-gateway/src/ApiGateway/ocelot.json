@@ -1,32 +1,32 @@
-{
-  "Routes": [
-    {
-      "DownstreamPathTemplate": "/api/users/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5001
-        }
-      ],
-      "UpstreamPathTemplate": "/users/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/products/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5002
-        }
-      ],
-      "UpstreamPathTemplate": "/products/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
-    }
-    // Add more routes for other services
-  ],
-  "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:5000"
-  }
-}
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/api/users/{everything}",
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5001
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/users/{everything}",
+//      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+//    },
+//    {
+//      "DownstreamPathTemplate": "/api/products/{everything}",
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5002
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/products/{everything}",
+//      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+//    }
+//    // Add more routes for other services
+//  ],
+//  "GlobalConfiguration": {
+//    "BaseUrl": "https://localhost:5000"
+//  }
+//}
