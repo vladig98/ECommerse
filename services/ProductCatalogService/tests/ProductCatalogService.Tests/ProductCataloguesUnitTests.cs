@@ -6,7 +6,7 @@ using System;
 
 namespace ProductCatalogService.Tests
 {
-    public class ProductCataloguesTests
+    public class ProductCataloguesUnitTests
     {
         private DbContextOptions<ProductsDbContext> GetOptions()
         {

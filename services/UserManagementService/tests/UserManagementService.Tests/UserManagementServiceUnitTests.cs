@@ -10,7 +10,7 @@ using System.Security.Claims;
 
 namespace UserManagementService.Tests
 {
-    public class UnitTest1
+    public class UserManagementServiceUnitTests
     {
         private DbContextOptions<ECommerceDbContext> GetOptions()
         {
