@@ -2,6 +2,12 @@
 {
     public class ServiceResult<T>
     {
+        public ServiceResult()
+        {
+            Message = string.Empty;
+            Data = default(T)!;
+        }
+
         public bool Succeeded { get; private set; }
         public T Data { get; private set; }
         public string Message { get; private set; }

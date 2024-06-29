@@ -45,7 +45,7 @@ namespace UserManagementService.Services
                 return ServiceResult<UserDTO>.Failure(GlobalConstants.UserNotFound);
             }
 
-            var userEmail = await _userManager.FindByEmailAsync(updatedData.Email);
+            var userEmail = await _userManager.FindByEmailAsync(updatedData.Email!);
 
             if (userEmail != null)
             {
@@ -87,7 +87,7 @@ namespace UserManagementService.Services
         private async Task<UserDTO> GenerateUserDto(User user)
         {
             var userDto = _mapper.Map<UserDTO>(user);
-            userDto.Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+            userDto.Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()!;
 
             return userDto;
         }

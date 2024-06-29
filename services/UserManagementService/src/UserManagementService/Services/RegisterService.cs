@@ -70,7 +70,7 @@ namespace UserManagementService.Services
         {
             var userDto = _mapper.Map<UserDTO>(user);
             var roles = await _userManager.GetRolesAsync(user);
-            userDto.Role = roles.FirstOrDefault();
+            userDto.Role = roles.FirstOrDefault()!;
 
             return userDto;
         }
@@ -97,7 +97,7 @@ namespace UserManagementService.Services
 
             var role = CreateRole(RoleName.User.ToString());
 
-            if (!await DoesRoleExists(role.Name))
+            if (!await DoesRoleExists(role.Name!))
             {
                 await _roleManager.CreateAsync(role);
             }
@@ -113,8 +113,8 @@ namespace UserManagementService.Services
                 return ServiceResult<RegisterDto>.Failure(error);
             }
 
-            await _userManager.AddToRoleAsync(user, role.Name);
-            await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), role.Name));
+            await _userManager.AddToRoleAsync(user, role.Name!);
+            await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), role.Name!));
 
             string successMessage = string.Format(GlobalConstants.UserCreatedSuccessfully, user.UserName);
 

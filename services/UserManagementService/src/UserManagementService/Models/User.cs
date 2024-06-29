@@ -5,6 +5,17 @@ namespace UserManagementService.Models
 {
     public class User : IdentityUser<string>
     {
+        public User()
+        {
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            City = string.Empty;
+            Country = string.Empty;
+            Street = string.Empty;
+            PostalCode = string.Empty;
+            State = string.Empty;
+        }
+
         [Required]
         public string FirstName { get; set; }
 

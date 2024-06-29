@@ -2,6 +2,22 @@
 {
     public class UserDTO
     {
+        public UserDTO()
+        {
+            Id = string.Empty;
+            Username = string.Empty;
+            Email = string.Empty;
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            City = string.Empty;
+            Country = string.Empty;
+            PhoneNumber = string.Empty;
+            PostalCode = string.Empty;
+            Street = string.Empty;
+            State = string.Empty;
+            Role = string.Empty;
+        }
+
         public string Id { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }

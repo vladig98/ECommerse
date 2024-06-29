@@ -4,6 +4,22 @@ namespace UserManagementService.DTOs
 {
     public class CreateUserDTO
     {
+        public CreateUserDTO()
+        {
+            Username = string.Empty;
+            Password = string.Empty;
+            ConfirmPassword = string.Empty;
+            Email = string.Empty;
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            PhoneNumber = string.Empty;
+            City = string.Empty;
+            Country = string.Empty;
+            PostalCode = string.Empty;
+            Street = string.Empty;
+            State = string.Empty;
+        }
+
         [Required]
         public string Username { get; set; }
 

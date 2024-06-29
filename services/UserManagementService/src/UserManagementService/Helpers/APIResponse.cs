@@ -13,22 +13,37 @@ namespace UserManagementService.Helpers
 
         public APIResponse()
         {
+            Status = string.Empty;
+            Message = string.Empty;
+            Data = default(T)!;
         }
 
         public APIResponse(T data, string message)
         {
-            SetDataAndMessage(data, message);
+            Status = string.Empty;
+            Message = message;
+            Data = data;
         }
 
         public APIResponse(T data, string message, IActionResult status)
         {
-            SetDataAndMessage(data, message);
-            SetStatus(status);
+            Message = message;
+            Data = data;
+            var statusCodeResult = (IStatusCodeActionResult)status;
+
+            Status = ((HttpStatusCode)statusCodeResult.StatusCode!.Value).ToString();
+            StatusCode = statusCodeResult.StatusCode!.Value;
         }
 
         public APIResponse(IActionResult status)
         {
-            SetStatus(status);
+            var statusCodeResult = (IStatusCodeActionResult)status;
+
+            Status = ((HttpStatusCode)statusCodeResult.StatusCode!.Value).ToString();
+            StatusCode = statusCodeResult.StatusCode.Value;
+
+            Message = string.Empty;
+            Data = default(T)!;
         }
 
         public void SetDataAndMessage(T data, string message)
@@ -41,7 +56,7 @@ namespace UserManagementService.Helpers
         {
             var statusCodeResult = (IStatusCodeActionResult)status;
 
-            Status = ((HttpStatusCode)statusCodeResult.StatusCode.Value).ToString();
+            Status = ((HttpStatusCode)statusCodeResult.StatusCode!.Value).ToString();
             StatusCode = statusCodeResult.StatusCode.Value;
         }
     }

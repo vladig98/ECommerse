@@ -23,16 +23,16 @@ namespace UserManagementService.Services
         {
             Claim[] claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
                 new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName),
                 new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email)
+                new Claim(JwtRegisteredClaimNames.Email, user.Email!)
             };
 
-            string jwtIssuer = _configuration[GlobalConstants.JWTIssuer];
-            string jwtKey = _configuration[GlobalConstants.JWTKey];
+            string jwtIssuer = _configuration[GlobalConstants.JWTIssuer]!;
+            string jwtKey = _configuration[GlobalConstants.JWTKey]!;
 
             byte[] jwtKeyBytes = Encoding.ASCII.GetBytes(jwtKey);
             SymmetricSecurityKey key = new SymmetricSecurityKey(jwtKeyBytes);
