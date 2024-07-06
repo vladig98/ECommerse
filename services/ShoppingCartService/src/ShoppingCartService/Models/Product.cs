@@ -22,8 +22,8 @@
         public double Price { get; set; }
         public string Category { get; set; }
         public string SKU { get; set; }
-        public List<string> ImageURLs { get; set; }
-        public List<string> Tags { get; set; }
+        public List<string>? ImageURLs { get; set; }
+        public List<string>? Tags { get; set; }
         public DateTime CreationDate { get; set; }
         public DateTime UpdatedDate { get; set; }
         public bool IsActive { get; set; }
