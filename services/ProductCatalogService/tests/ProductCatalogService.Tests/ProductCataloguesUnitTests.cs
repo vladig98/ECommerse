@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using ProductCatalogService.DTOs;
+using ProductCatalogService.Events;
 using System;
 
 namespace ProductCatalogService.Tests
@@ -63,7 +64,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
                 var productDto = GetProductDto();
@@ -93,7 +95,8 @@ namespace ProductCatalogService.Tests
             using(var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -112,7 +115,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -132,7 +136,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -152,7 +157,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -172,7 +178,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -194,7 +201,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var result = await productsService.GetAllProducts();
 
@@ -208,7 +216,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -241,7 +250,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -260,7 +270,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var getProductResult = await productsService.GetProduct("1");
 
@@ -275,7 +286,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -297,7 +309,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -316,7 +329,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var getProductResult = await productsService.DeleteProduct("1");
 
@@ -331,7 +345,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -381,7 +396,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -417,7 +433,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -457,7 +474,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -495,7 +513,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
@@ -533,7 +552,8 @@ namespace ProductCatalogService.Tests
             using (var context = new ProductsDbContext(GetOptions()))
             {
                 var mockedLogger = new Mock<ILogger<ProductService>>();
-                var productsService = new ProductService(context, mockedLogger.Object);
+                var eventBus = new EventBusRabbitMQ();
+                var productsService = new ProductService(context, mockedLogger.Object, eventBus);
 
                 var createProductDto = GetProductData();
 
