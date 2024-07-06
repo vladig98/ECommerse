@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using ProductCatalogService.Events.Contracts;
+using ProductCatalogService.Events;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,7 @@ builder.Services.AddDbContext<ProductsDbContext>(options =>
 });
 
 builder.Services.AddTransient<IProductService, ProductService>();
+builder.Services.AddSingleton<IEventBus, EventBusRabbitMQ>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
