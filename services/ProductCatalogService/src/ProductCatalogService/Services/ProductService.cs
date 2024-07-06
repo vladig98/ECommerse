@@ -107,7 +107,23 @@ namespace ProductCatalogService.Services
 
             var productDto = GenerateProductDto(product);
 
-            var productCreatedEvent = new ProductCreatedEvent { ProductId = product.Id };
+            var productCreatedEvent = new ProductCreatedEvent 
+            { 
+                ProductId = product.Id,
+                Category = product.Category.ToString(),
+                CreationDate = product.CreationDate,
+                UpdatedDate = product.UpdatedDate,
+                Description = product.Description,
+                Discount = product.Discount,
+                ImageURLs = product.ImageURLs,
+                IsActive = product.IsActive,
+                Name = product.Name,
+                Price = product.Price,
+                Quantity = product.Quantity,
+                Rating = product.Rating,
+                SKU = product.SKU,
+                Tags = product.Tags
+            };
             _eventBus.Publish(productCreatedEvent);
 
             _logger.LogInformation(GlobalConstants.ProductCreated);
