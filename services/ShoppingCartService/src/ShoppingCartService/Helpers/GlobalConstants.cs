@@ -16,6 +16,7 @@
 
         public const string RabbitMQHostName = "localhost";
         public const string RabbitMQUserCreatedEventName = "UserCreatedEvent";
+        public const string RabbitMQProductCreatedEventName = "ProductCreatedEvent";
 
         private static string GenerateLogMessage(string level, string header, string message)
         {

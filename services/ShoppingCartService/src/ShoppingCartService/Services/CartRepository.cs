@@ -15,14 +15,28 @@ namespace ShoppingCartService.Services
         {
             if (!await UserExists(userId))
             {
-                _dbContext.Users.Add(new User { Id = userId });
+                _dbContext.Users.Add(new User { UserId = userId });
                 await _dbContext.SaveChangesAsync();
             }
         }
 
         public async Task<bool> UserExists(string userId)
         {
-            return await _dbContext.Users.AnyAsync(u => u.Id == userId);
+            return await _dbContext.Users.AnyAsync(u => u.UserId == userId);
+        }
+
+        public async Task AddProduct(string productId)
+        {
+            if (!await ProductExists(productId))
+            {
+                _dbContext.Products.Add(new Product { ProductId = productId });
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task<bool> ProductExists(string productId)
+        {
+            return await _dbContext.Products.AnyAsync(p => p.ProductId == productId);
         }
     }
 }
