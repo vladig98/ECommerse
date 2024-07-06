@@ -61,7 +61,6 @@ builder.Services.AddTransient<IRegisterService, RegisterService>();
 builder.Services.AddTransient<ILoginService, LoginService>();
 builder.Services.AddTransient<IProfileService, ProfileService>();
 builder.Services.AddSingleton<IEventBus, EventBusRabbitMQ>();
-builder.Services.AddHostedService<RegisterService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
