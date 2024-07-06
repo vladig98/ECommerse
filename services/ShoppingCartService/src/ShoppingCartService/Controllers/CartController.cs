@@ -7,9 +7,21 @@ namespace ShoppingCartService.Controllers
     public class CartController : ControllerBase
     {
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetCart()
         {
-            throw new NotImplementedException();
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddProductToCart(CreateCartItemDto item)
+        {
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEmelentFromCart(string id)
+        {
+            return Ok();
         }
     }
 }
