@@ -76,9 +76,10 @@ namespace UserManagementService.Tests
             var mockedRoleManager = GetMockedRoleManager();
             var mockedMapper = GetMockedMapper(userDto, userMap);
             var mockedTokenService = GetMockedToken("USER_TOKEN");
-            var eventBus = new EventBusRabbitMQ();
+            var eventBus = new Mock<EventBusRabbitMQ>();
 
-            var registerService = new RegisterService(mockedUserManager.Object, mockedRoleManager.Object, mockedLogger.Object, mockedMapper.Object, mockedTokenService.Object, eventBus);
+            var registerService = new RegisterService(mockedUserManager.Object, mockedRoleManager.Object, mockedLogger.Object, 
+                mockedMapper.Object, mockedTokenService.Object, eventBus.Object);
 
             return registerService;
         }
