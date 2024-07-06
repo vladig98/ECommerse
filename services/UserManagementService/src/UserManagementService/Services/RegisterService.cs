@@ -145,7 +145,26 @@ namespace UserManagementService.Services
                 UserData = userDto
             };
 
-            var userCreatedEvent = new UserCreatedEvent { UserId = user.Id };
+            var userCreatedEvent = new UserCreatedEvent 
+            { 
+                UserId = user.Id,
+                City = user.City,
+                Country = user.Country,
+                DateOfBirth = user.DateOfBirth.Value.ToString(GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture),
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                LoyaltyPoints = user.LoyaltyPoints,
+                MembershipLevel = user.MembershipLevel,
+                PhoneNumber = user.PhoneNumber,
+                PostalCode = user.PostalCode,
+                PreferredCurrency = user.PreferredCurrency,
+                PreferredLanguage = user.PreferredLanguage,
+                Role = role.Name,
+                State = user.State,
+                Street = user.Street,
+                Username = user.UserName
+            };
             _eventBus.Publish(userCreatedEvent);
 
             return ServiceResult<RegisterDto>.Success(registerDto, successMessage);
