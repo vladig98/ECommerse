@@ -7,6 +7,7 @@ using Moq;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using UserManagementService.Events;
 
 namespace UserManagementService.Tests
 {
@@ -75,8 +76,9 @@ namespace UserManagementService.Tests
             var mockedRoleManager = GetMockedRoleManager();
             var mockedMapper = GetMockedMapper(userDto, userMap);
             var mockedTokenService = GetMockedToken("USER_TOKEN");
+            var eventBus = new EventBusRabbitMQ();
 
-            var registerService = new RegisterService(mockedUserManager.Object, mockedRoleManager.Object, mockedLogger.Object, mockedMapper.Object, mockedTokenService.Object);
+            var registerService = new RegisterService(mockedUserManager.Object, mockedRoleManager.Object, mockedLogger.Object, mockedMapper.Object, mockedTokenService.Object, eventBus);
 
             return registerService;
         }
