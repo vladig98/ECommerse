@@ -42,13 +42,7 @@ namespace ShoppingCartService.Services
 
             var cartItem = new CartItem
             {
-                Description = item.Description,
-                Discount = item.Discount,
                 Id = Guid.NewGuid().ToString(),
-                Name = item.Name,
-                Price = item.Price,
-                Quantity = item.Quantity,
-                SKU = item.SKU,
                 ProductId = item.ProductId
             };
 
@@ -69,14 +63,8 @@ namespace ShoppingCartService.Services
             {
                 items.Add(new CartItemDto
                 {
-                    Description = cartItemProduct.Description,
-                    Discount = cartItemProduct.Discount,
                     Id = cartItemProduct.Id,
-                    Name = cartItemProduct.Name,
-                    Price = cartItemProduct.Price,
-                    ProductId = cartItemProduct.ProductId,
-                    Quantity = cartItemProduct.Quantity,
-                    SKU = cartItemProduct.SKU
+                    ProductId = cartItemProduct.ProductId
                 });
             }
 
