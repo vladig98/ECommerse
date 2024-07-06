@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
 using UserManagementService;
+using UserManagementService.Events;
+using UserManagementService.Events.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +60,8 @@ builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.AddTransient<IRegisterService, RegisterService>();
 builder.Services.AddTransient<ILoginService, LoginService>();
 builder.Services.AddTransient<IProfileService, ProfileService>();
+builder.Services.AddSingleton<IEventBus, EventBusRabbitMQ>();
+builder.Services.AddHostedService<RegisterService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

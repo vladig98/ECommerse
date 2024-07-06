@@ -13,6 +13,8 @@
 
         private const string RegistrationFailed = "Registration failed.";
 
+        public const string RabbitMQHostName = "localhost";
+
         public static string PasswordsDoNotMatch = LogError(RegistrationFailed, "Password and Confirm Password do not match!");
         public static string UsernameAlreadyExists = LogError(RegistrationFailed, "User with this username already exists!");
         public static string EmailAlreadyExists = LogError(RegistrationFailed, "User with this email address already exists!");

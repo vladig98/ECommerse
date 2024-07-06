@@ -2,24 +2,34 @@
 using Microsoft.AspNetCore.Identity;
 using System.Globalization;
 using System.Security.Claims;
+using UserManagementService.Events.Contracts;
 
 namespace UserManagementService.Services
 {
-    public class RegisterService : IRegisterService
+    public class RegisterService : BackgroundService, IRegisterService
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
         private readonly ILogger<RegisterService> _logger;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
+        private readonly IEventBus _eventBus;
 
-        public RegisterService(UserManager<User> userManager, RoleManager<Role> roleManager, ILogger<RegisterService> logger, IMapper mapper, ITokenService tokenService)
+        public RegisterService(UserManager<User> userManager, RoleManager<Role> roleManager, ILogger<RegisterService> logger,
+            IMapper mapper, ITokenService tokenService, IEventBus eventBus)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _logger = logger;
             _mapper = mapper;
             _tokenService = tokenService;
+            _eventBus = eventBus;
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            // Implement logic if needed to run background service
+            return Task.CompletedTask;
         }
 
         private bool DoPasswordsMatch(string password, string confirmPassword)
@@ -134,6 +144,9 @@ namespace UserManagementService.Services
                 TokenData = tokenDto,
                 UserData = userDto
             };
+
+            var userCreatedEvent = new UserCreatedEvent { UserId = user.Id };
+            _eventBus.Publish(userCreatedEvent);
 
             return ServiceResult<RegisterDto>.Success(registerDto, successMessage);
         }
