@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ProductCatalogService.Events.Contracts;
 using System.Globalization;
 
 namespace ProductCatalogService.Services
@@ -7,11 +8,13 @@ namespace ProductCatalogService.Services
     {
         private readonly ProductsDbContext _dbContext;
         private readonly ILogger<ProductService> _logger;
+        private readonly IEventBus _eventBus;
 
-        public ProductService(ProductsDbContext dbContext, ILogger<ProductService> logger)
+        public ProductService(ProductsDbContext dbContext, ILogger<ProductService> logger, IEventBus eventBus)
         {
             _dbContext = dbContext;
             _logger = logger;
+            _eventBus = eventBus;
         }
 
         private ProductDto GenerateProductDto(Product product)
@@ -103,6 +106,9 @@ namespace ProductCatalogService.Services
             await _dbContext.SaveChangesAsync();
 
             var productDto = GenerateProductDto(product);
+
+            var productCreatedEvent = new ProductCreatedEvent { ProductId = product.Id };
+            _eventBus.Publish(productCreatedEvent);
 
             _logger.LogInformation(GlobalConstants.ProductCreated);
             return ServiceResult<ProductDto>.Success(productDto, GlobalConstants.ProductCreated);

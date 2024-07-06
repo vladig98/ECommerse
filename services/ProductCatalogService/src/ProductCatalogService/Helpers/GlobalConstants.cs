@@ -14,6 +14,8 @@
         public const string ConnectionString = "ConnectionStrings:PostgreSQL";
         public const string InvalidConnectionString = "Connection string not found.";
 
+        public const string RabbitMQHostName = "localhost";
+
         private const string InvalidDate = "Invalid date!";
         public static string InvalidCreatedDate = LogError(InvalidDate, "Created Date is invalid!");
         public static string InvalidUpdatedDate = LogError(InvalidDate, "Updated Date is invalid!");
