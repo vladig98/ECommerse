@@ -11,11 +11,11 @@ namespace ShoppingCartService.Services
             _dbContext = dbContext;
         }
 
-        public async Task AddUser(string userId)
+        public async Task AddUser(User user)
         {
-            if (!await UserExists(userId))
+            if (!await UserExists(user.UserId))
             {
-                _dbContext.Users.Add(new User { UserId = userId });
+                _dbContext.Users.Add(user);
                 await _dbContext.SaveChangesAsync();
             }
         }
@@ -25,11 +25,11 @@ namespace ShoppingCartService.Services
             return await _dbContext.Users.AnyAsync(u => u.UserId == userId);
         }
 
-        public async Task AddProduct(string productId)
+        public async Task AddProduct(Product product)
         {
-            if (!await ProductExists(productId))
+            if (!await ProductExists(product.Id))
             {
-                _dbContext.Products.Add(new Product { ProductId = productId });
+                _dbContext.Products.Add(product);
                 await _dbContext.SaveChangesAsync();
             }
         }

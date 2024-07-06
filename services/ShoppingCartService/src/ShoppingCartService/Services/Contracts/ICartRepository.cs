@@ -2,9 +2,9 @@
 {
     public interface ICartRepository
     {
-        Task AddUser(string userId);
+        Task AddUser(User user);
         Task<bool> UserExists(string userId);
-        Task AddProduct(string productId);
+        Task AddProduct(Product product);
         Task<bool> ProductExists(string productId);
     }
 }
