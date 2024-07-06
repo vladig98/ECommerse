@@ -18,6 +18,12 @@
         public const string RabbitMQUserCreatedEventName = "UserCreatedEvent";
         public const string RabbitMQProductCreatedEventName = "ProductCreatedEvent";
 
+        public const string UserDoesNotExist = "User does not exist!";
+        public const string ProductDoesNotExist = "Product does not exist!";
+        public const string ProductAddedSuccessfully = "Product added to cart!";
+
+        public const string DateFormat = "dd/MM/yyyy";
+
         private static string GenerateLogMessage(string level, string header, string message)
         {
             return string.Format(LoggingFormat, LoggingSeparator, level, header, message);

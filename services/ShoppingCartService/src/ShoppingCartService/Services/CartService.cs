@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace ShoppingCartService.Services
 {
@@ -19,28 +20,25 @@ namespace ShoppingCartService.Services
 
             if (!userExists)
             {
-                return ServiceResult<CartDto>.Failure("User does not exist!");
+                return ServiceResult<CartDto>.Failure(GlobalConstants.UserDoesNotExist);
             }
 
             var productExists = await _cartRepository.ProductExists(item.ProductId);
 
             if (!productExists)
             {
-                return ServiceResult<CartDto>.Failure("Product does not exist!");
+                return ServiceResult<CartDto>.Failure(GlobalConstants.ProductDoesNotExist);
             }
 
-            var cart = await _context.Carts.FirstOrDefaultAsync(x => x.UserId == item.UserId);
+            var cartExists = await _context.Carts.AnyAsync(x => x.UserId == item.UserId);
 
-            if (cart == null)
+            var cart = cartExists ? await _context.Carts.FirstAsync(x => x.UserId == item.UserId) : new Cart
             {
-                cart = new Cart
-                {
-                    CreatedAt = DateTime.UtcNow,
-                    Id = Guid.NewGuid().ToString(),
-                    UpdatedAt = DateTime.UtcNow,
-                    UserId = item.UserId
-                };
-            }
+                CreatedAt = DateTime.UtcNow,
+                Id = Guid.NewGuid().ToString(),
+                UpdatedAt = DateTime.UtcNow,
+                UserId = item.UserId
+            };
 
             var cartItem = new CartItem
             {
@@ -57,15 +55,41 @@ namespace ShoppingCartService.Services
             cart.CartItems.Add(cartItem);
 
             await _context.CartItems.AddAsync(cartItem);
-            await _context.Carts.AddAsync(cart);
+
+            if (!cartExists)
+            {
+                await _context.Carts.AddAsync(cart);
+            }
+
             await _context.SaveChangesAsync();
+
+            var items = new List<CartItemDto>();
+
+            foreach (var cartItemProduct in cart.CartItems)
+            {
+                items.Add(new CartItemDto
+                {
+                    Description = cartItemProduct.Description,
+                    Discount = cartItemProduct.Discount,
+                    Id = cartItemProduct.Id,
+                    Name = cartItemProduct.Name,
+                    Price = cartItemProduct.Price,
+                    ProductId = cartItemProduct.ProductId,
+                    Quantity = cartItemProduct.Quantity,
+                    SKU = cartItemProduct.SKU
+                });
+            }
 
             var cartDto = new CartDto
             {
-                
+                CreatedAt = cart.CreatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
+                Id = cart.Id,
+                UpdatedAt = cart.UpdatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
+                UserId = cart.UserId,
+                Items = items
             };
 
-            return ServiceResult<CartDto>.Success(cartDto, "Product added to cart!");
+            return ServiceResult<CartDto>.Success(cartDto, GlobalConstants.ProductAddedSuccessfully);
         }
 
         public async Task HandleUserCreatedEvent(UserCreatedEvent userCreatedEvent)
