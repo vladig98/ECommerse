@@ -32,7 +32,7 @@ namespace ShoppingCartService.Services
 
             var cartExists = await _context.Carts.AnyAsync(x => x.UserId == item.UserId);
 
-            var cart = cartExists ? await _context.Carts.FirstAsync(x => x.UserId == item.UserId) : new Cart
+            var cart = cartExists ? await _context.Carts.Include(x => x.CartItems).FirstAsync(x => x.UserId == item.UserId) : new Cart
             {
                 CreatedAt = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString(),
@@ -40,15 +40,39 @@ namespace ShoppingCartService.Services
                 UserId = item.UserId
             };
 
-            var cartItem = new CartItem
+            Func<CartItem, bool> cartItemFunc = x => x.ProductId == item.ProductId;
+
+            var itemExists = cart.CartItems.Any(cartItemFunc);
+            var cartItem = new CartItem();
+
+            var product = await _context.Products.FirstAsync(x => x.ProductId == item.ProductId);
+
+            if (itemExists)
             {
-                Id = Guid.NewGuid().ToString(),
-                ProductId = item.ProductId
-            };
+                cartItem = cart.CartItems.First(cartItemFunc);
+                cartItem.Quantity++;
+            }
+            else
+            {
+                cartItem = new CartItem
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity
+                };
 
-            cart.CartItems.Add(cartItem);
+                cart.CartItems.Add(cartItem);
+            }
 
-            await _context.CartItems.AddAsync(cartItem);
+            if (product.Quantity < cartItem.Quantity)
+            {
+                return ServiceResult<CartDto>.Failure(GlobalConstants.ProductNotEnough);
+            }
+
+            if (!itemExists)
+            {
+                await _context.CartItems.AddAsync(cartItem);
+            }
 
             if (!cartExists)
             {
@@ -64,7 +88,8 @@ namespace ShoppingCartService.Services
                 items.Add(new CartItemDto
                 {
                     Id = cartItemProduct.Id,
-                    ProductId = cartItemProduct.ProductId
+                    ProductId = cartItemProduct.ProductId,
+                    Quantity = cartItemProduct.Quantity
                 });
             }
 
@@ -127,6 +152,51 @@ namespace ShoppingCartService.Services
             };
 
             await _cartRepository.AddProduct(product);
+        }
+
+        public async Task<ServiceResult<CartDto>> GetCart(string userId)
+        {
+            var userExists = await _cartRepository.UserExists(userId);
+
+            if (!userExists)
+            {
+                return ServiceResult<CartDto>.Failure(GlobalConstants.UserDoesNotExist);
+            }
+
+            var cart = await _context.Carts.Include(x => x.CartItems).FirstOrDefaultAsync(x => x.UserId == userId);
+
+            if (cart == null) 
+            {
+                return ServiceResult<CartDto>.Failure(GlobalConstants.CartNotExist);
+            }
+
+            if (!cart.CartItems.Any())
+            {
+                return ServiceResult<CartDto>.Failure(GlobalConstants.CartNotExist);
+            }
+
+            var items = new List<CartItemDto>();
+
+            foreach (var cartItemProduct in cart.CartItems)
+            {
+                items.Add(new CartItemDto
+                {
+                    Id = cartItemProduct.Id,
+                    ProductId = cartItemProduct.ProductId,
+                    Quantity = cartItemProduct.Quantity
+                });
+            }
+
+            var cartDto = new CartDto
+            {
+                CreatedAt = cart.CreatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
+                Id = cart.Id,
+                UpdatedAt = cart.UpdatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
+                UserId = cart.UserId,
+                Items = items
+            };
+
+            return ServiceResult<CartDto>.Success(cartDto, GlobalConstants.CartFound);
         }
     }
 }

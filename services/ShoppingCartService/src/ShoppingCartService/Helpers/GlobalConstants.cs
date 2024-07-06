@@ -20,6 +20,9 @@
 
         public const string UserDoesNotExist = "User does not exist!";
         public const string ProductDoesNotExist = "Product does not exist!";
+        public const string ProductNotEnough = "The product does not have enough quantity to add to the cart!";
+        public const string CartNotExist = "The has not added any products to the cart!";
+        public const string CartFound = "The cart was retrieved successfully!";
         public const string ProductAddedSuccessfully = "Product added to cart!";
 
         public const string DateFormat = "dd/MM/yyyy";

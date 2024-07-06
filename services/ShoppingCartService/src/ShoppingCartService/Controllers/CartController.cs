@@ -14,9 +14,20 @@ namespace ShoppingCartService.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCart()
+        public async Task<IActionResult> GetCart(string userId)
         {
-            return Ok();
+            var result = await _cartService.GetCart(userId);
+
+            var response = new APIResponse<CartDto>(result.Data, result.Message);
+
+            if (!result.Succeeded)
+            {
+                response.SetStatus(BadRequest());
+                return BadRequest(response);
+            }
+
+            response.SetStatus(Ok());
+            return Ok(response);
         }
 
         [HttpPost]
