@@ -202,7 +202,7 @@ namespace ShoppingCartService.Services
                 return ServiceResult<CartDto>.Failure(GlobalConstants.CartNotExist);
             }
 
-            var product = cart.CartItems.FirstOrDefault(x => x.ProductId == productId);
+            var product = cart!.CartItems.FirstOrDefault(x => x.ProductId == productId);
 
             if (product == null)
             {
