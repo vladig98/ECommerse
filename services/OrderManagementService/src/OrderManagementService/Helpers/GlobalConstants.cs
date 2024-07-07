@@ -14,6 +14,10 @@
         public const string ConnectionString = "ConnectionStrings:PostgreSQL";
         public const string InvalidConnectionString = "Connection string not found.";
 
+        public const string RabbitMQHostName = "localhost";
+        public const string RabbitMQUserCreatedEventName = "UserCreatedEvent";
+        public const string RabbitMQProductCreatedEventName = "ProductCreatedEvent";
+
         private static string GenerateLogMessage(string level, string header, string message)
         {
             return string.Format(LoggingFormat, LoggingSeparator, level, header, message);
