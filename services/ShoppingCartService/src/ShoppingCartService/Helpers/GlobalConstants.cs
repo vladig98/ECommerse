@@ -23,6 +23,8 @@
         public const string ProductNotEnough = "The product does not have enough quantity to add to the cart!";
         public const string CartNotExist = "The has not added any products to the cart!";
         public const string CartFound = "The cart was retrieved successfully!";
+        public const string ProductNotFound = "This product is not in the cart!";
+        public const string ProductDeleted = "The product was removed from the cart!";
         public const string ProductAddedSuccessfully = "Product added to cart!";
 
         public const string DateFormat = "dd/MM/yyyy";

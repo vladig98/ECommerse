@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ShoppingCartService.Models;
 using System.Globalization;
 
 namespace ShoppingCartService.Services
@@ -12,6 +13,32 @@ namespace ShoppingCartService.Services
         {
             _cartRepository = cartRepository;
             _context = context;
+        }
+
+        private CartDto GenerateCartDto(Cart cart)
+        {
+            var items = new List<CartItemDto>();
+
+            foreach (var cartItemProduct in cart.CartItems)
+            {
+                items.Add(new CartItemDto
+                {
+                    Id = cartItemProduct.Id,
+                    ProductId = cartItemProduct.ProductId,
+                    Quantity = cartItemProduct.Quantity
+                });
+            }
+
+            var cartDto = new CartDto
+            {
+                CreatedAt = cart.CreatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
+                Id = cart.Id,
+                UpdatedAt = cart.UpdatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
+                UserId = cart.UserId,
+                Items = items
+            };
+
+            return cartDto;
         }
 
         public async Task<ServiceResult<CartDto>> AddItemToCart(CreateCartItemDto item)
@@ -50,7 +77,7 @@ namespace ShoppingCartService.Services
             if (itemExists)
             {
                 cartItem = cart.CartItems.First(cartItemFunc);
-                cartItem.Quantity++;
+                cartItem.Quantity = item.Quantity;
             }
             else
             {
@@ -81,26 +108,7 @@ namespace ShoppingCartService.Services
 
             await _context.SaveChangesAsync();
 
-            var items = new List<CartItemDto>();
-
-            foreach (var cartItemProduct in cart.CartItems)
-            {
-                items.Add(new CartItemDto
-                {
-                    Id = cartItemProduct.Id,
-                    ProductId = cartItemProduct.ProductId,
-                    Quantity = cartItemProduct.Quantity
-                });
-            }
-
-            var cartDto = new CartDto
-            {
-                CreatedAt = cart.CreatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
-                Id = cart.Id,
-                UpdatedAt = cart.UpdatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
-                UserId = cart.UserId,
-                Items = items
-            };
+            var cartDto = GenerateCartDto(cart);
 
             return ServiceResult<CartDto>.Success(cartDto, GlobalConstants.ProductAddedSuccessfully);
         }
@@ -164,39 +172,51 @@ namespace ShoppingCartService.Services
             }
 
             var cart = await _context.Carts.Include(x => x.CartItems).FirstOrDefaultAsync(x => x.UserId == userId);
+            int cartItems = cart?.CartItems?.Count() ?? 0;
 
-            if (cart == null) 
+            if (cartItems == 0) 
             {
                 return ServiceResult<CartDto>.Failure(GlobalConstants.CartNotExist);
             }
 
-            if (!cart.CartItems.Any())
-            {
-                return ServiceResult<CartDto>.Failure(GlobalConstants.CartNotExist);
-            }
-
-            var items = new List<CartItemDto>();
-
-            foreach (var cartItemProduct in cart.CartItems)
-            {
-                items.Add(new CartItemDto
-                {
-                    Id = cartItemProduct.Id,
-                    ProductId = cartItemProduct.ProductId,
-                    Quantity = cartItemProduct.Quantity
-                });
-            }
-
-            var cartDto = new CartDto
-            {
-                CreatedAt = cart.CreatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
-                Id = cart.Id,
-                UpdatedAt = cart.UpdatedAt.ToString(GlobalConstants.DateFormat, CultureInfo.InvariantCulture),
-                UserId = cart.UserId,
-                Items = items
-            };
+            var cartDto = GenerateCartDto(cart!);
 
             return ServiceResult<CartDto>.Success(cartDto, GlobalConstants.CartFound);
+        }
+
+        public async Task<ServiceResult<CartDto>> DeleteItemFromCart(string userId, string productId)
+        {
+            var userExists = await _cartRepository.UserExists(userId);
+
+            if (!userExists)
+            {
+                return ServiceResult<CartDto>.Failure(GlobalConstants.UserDoesNotExist);
+            }
+
+            var cart = await _context.Carts.Include(x => x.CartItems).FirstOrDefaultAsync(x => x.UserId == userId);
+
+            int cartItems = cart?.CartItems?.Count() ?? 0;
+
+            if (cartItems == 0)
+            {
+                return ServiceResult<CartDto>.Failure(GlobalConstants.CartNotExist);
+            }
+
+            var product = cart.CartItems.FirstOrDefault(x => x.ProductId == productId);
+
+            if (product == null)
+            {
+                return ServiceResult<CartDto>.Failure(GlobalConstants.ProductNotFound);
+            }
+
+            cart.CartItems.Remove(product);
+            _context.CartItems.Remove(product);
+
+            await _context.SaveChangesAsync();
+
+            var cartDto = GenerateCartDto(cart);
+
+            return ServiceResult<CartDto>.Success(cartDto, GlobalConstants.ProductDeleted);
         }
     }
 }

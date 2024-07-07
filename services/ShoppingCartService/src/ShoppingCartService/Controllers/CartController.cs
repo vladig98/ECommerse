@@ -49,10 +49,21 @@ namespace ShoppingCartService.Controllers
             return status;
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEmelentFromCart(string id)
+        [HttpDelete("{productId}")]
+        public async Task<IActionResult> DeleteEmelentFromCart(string userId, string productId)
         {
-            return Ok();
+            var result = await _cartService.DeleteItemFromCart(userId, productId);
+
+            var response = new APIResponse<CartDto>(result.Data, result.Message);
+
+            if (!result.Succeeded)
+            {
+                response.SetStatus(BadRequest());
+                return BadRequest(response);
+            }
+
+            response.SetStatus(Ok());
+            return Ok(response);
         }
     }
 }
