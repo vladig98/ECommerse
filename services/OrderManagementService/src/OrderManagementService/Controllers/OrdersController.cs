@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace OrderManagementService.Controllers
@@ -13,6 +14,7 @@ namespace OrderManagementService.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public IActionResult GetOrders()
         {
             throw new NotImplementedException();

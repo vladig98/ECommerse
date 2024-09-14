@@ -11,6 +11,9 @@
         private const string LogLevelTrace = "TRACE";
         private const string LogLevelDebug = "DEBUG";
 
+        public const string JWTIssuer = "OrderManagement:JWT:Issuer";
+        public const string JWTKey = "OrderManagement:JWT:Key";
+
         public const string ConnectionString = "ConnectionStrings:PostgreSQL";
         public const string InvalidConnectionString = "Connection string not found.";
 
