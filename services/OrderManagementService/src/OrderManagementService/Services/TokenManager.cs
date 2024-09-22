@@ -1,5 +1,4 @@
-﻿using OrderManagementService.Services.Contracts;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 
 namespace OrderManagementService.Services
 {
@@ -7,9 +6,9 @@ namespace OrderManagementService.Services
     {
         public string ExtractUserNameFromJWT(string jwt)
         {
-            JwtSecurityToken token = new JwtSecurityToken(jwt.Split("Bearer ")[1]);
+            JwtSecurityToken token = new JwtSecurityToken(jwt.Split(GlobalConstants.BearerString)[GlobalConstants.JWTIndex]);
 
-            string username = token.Claims.First(x => x.Type == "sub").Value;
+            string username = token.Claims.First(x => x.Type == GlobalConstants.SubClaim).Value;
 
             return username;
         }

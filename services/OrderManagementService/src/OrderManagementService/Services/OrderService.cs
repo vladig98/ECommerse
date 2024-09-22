@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OrderManagementService.Services.Contracts;
 using System.Globalization;
 
 namespace OrderManagementService.Services
@@ -17,27 +16,27 @@ namespace OrderManagementService.Services
         {
             if (!_context.Users.Any(x => x.Username == username))
             {
-                return ServiceResult<OrderDto>.Failure("No such user exists!");
+                return ServiceResult<OrderDto>.Failure(GlobalConstants.NoUserFound);
             }
 
             if (!orderDetails.Products.All(x => _context.Products.Any(y => y.ProductId == x.ProductId)))
             {
-                return ServiceResult<OrderDto>.Failure($"Products with IDs {string.Join(", ", orderDetails.Products.Where(x => !_context.Products.Any(y => y.ProductId == x.ProductId)).Select(x => x.ProductId))} do not exist!");
+                return ServiceResult<OrderDto>.Failure(string.Format(GlobalConstants.NoSuchProducts, string.Join(GlobalConstants.CommaSeparator, orderDetails.Products.Where(x => !_context.Products.Any(y => y.ProductId == x.ProductId)).Select(x => x.ProductId))));
             }
 
             if (!orderDetails.Products.All(x => x.Quantity <= _context.Products.First(y => y.ProductId == x.ProductId).Quantity))
             {
-                return ServiceResult<OrderDto>.Failure($"Products with IDs {string.Join(", ", orderDetails.Products.Where(x => x.Quantity > _context.Products.First(y => y.ProductId == x.ProductId).Quantity).Select(x => x.ProductId))} do not have sufficient quantity!");
+                return ServiceResult<OrderDto>.Failure(string.Format(GlobalConstants.ProductsOutOfQuantity, string.Join(GlobalConstants.CommaSeparator, orderDetails.Products.Where(x => x.Quantity > _context.Products.First(y => y.ProductId == x.ProductId).Quantity).Select(x => x.ProductId))));
             }
 
-            if (!DateTime.TryParseExact(orderDetails.PaymentDetails.ExpiryDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime expiryDate))
+            if (!DateTime.TryParseExact(orderDetails.PaymentDetails.ExpiryDate, GlobalConstants.DateFormatCardExpiry, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime expiryDate))
             {
-                return ServiceResult<OrderDto>.Failure("Invalid expiry date!");
+                return ServiceResult<OrderDto>.Failure(GlobalConstants.ExpiryDateInvalid);
             }
 
             if (!Enum.TryParse<PaymentOption>(orderDetails.PaymentOption, true, out PaymentOption paymentOption))
             {
-                return ServiceResult<OrderDto>.Failure("Invalid payment option!");
+                return ServiceResult<OrderDto>.Failure(GlobalConstants.InvalidPaymentOption);
             }
 
             expiryDate = DateTime.SpecifyKind(expiryDate, DateTimeKind.Utc);
@@ -92,7 +91,7 @@ namespace OrderManagementService.Services
             {
                 productsDto.Add(new OrderProductDto()
                 {
-                    Id= product.Id,
+                    Id = product.Id,
                     Name = product.Name,
                     Price = product.Price,
                     ProductId = product.ProductId,
@@ -102,7 +101,7 @@ namespace OrderManagementService.Services
 
             OrderDto orderDto = new OrderDto()
             {
-                CreatedAt = order.CreatedAt.ToString("yyyy-MM-dd"),
+                CreatedAt = order.CreatedAt.ToString(GlobalConstants.DateFormat),
                 Id = order.Id,
                 Notes = order.Notes,
                 OrderNumber = order.OrderNumber,
@@ -111,7 +110,7 @@ namespace OrderManagementService.Services
                     CardHolder = order.PaymentDetails.CardHolder,
                     CardNumber = order.PaymentDetails.CardNumber,
                     CVC = order.PaymentDetails.CVC,
-                    ExpiryDate = order.PaymentDetails.ExpiryDate.ToString("MM-yy"),
+                    ExpiryDate = order.PaymentDetails.ExpiryDate.ToString(GlobalConstants.DateFormatCardExpiry),
                     Id = order.PaymentDetails.Id
                 },
                 PaymentOption = order.PaymentOption.ToString(),
@@ -119,21 +118,21 @@ namespace OrderManagementService.Services
                 TotalAmount = order.TotalAmount,
                 ShippingAddress = order.ShippingAddress,
                 Status = order.Status.ToString(),
-                UpdatedAt = order.UpdatedAt.ToString("yyyy-MM-dd"),
+                UpdatedAt = order.UpdatedAt.ToString(GlobalConstants.DateFormat),
                 UserId = order.UserId
             };
 
-            return ServiceResult<OrderDto>.Success(orderDto, $"Order {order.OrderNumber} created successfully for user {user.Username}!");
+            return ServiceResult<OrderDto>.Success(orderDto, string.Format(GlobalConstants.OrderCreated, order.OrderNumber, user.Username));
         }
 
         private string GenerateOrderMumber()
         {
-            string lastOrderNumber = _context.Orders.Any() ? _context.Orders.Last().OrderNumber : "0";
+            string lastOrderNumber = _context.Orders.Any() ? _context.Orders.Last().OrderNumber : GlobalConstants.StartingOrderNumber;
 
             ulong digits = ulong.Parse(lastOrderNumber);
             digits++;
 
-            return digits.ToString("D19");
+            return digits.ToString(GlobalConstants.OrderNumberLength);
         }
 
         public async Task HandleProductCreatedEvent(ProductCreatedEvent productCreatedEvent)
@@ -191,17 +190,17 @@ namespace OrderManagementService.Services
         {
             if (!_context.Users.Any(x => x.Username == username))
             {
-                return ServiceResult<OrderDto>.Failure("No such user exists!");
+                return ServiceResult<OrderDto>.Failure(GlobalConstants.NoUserFound);
             }
 
             if (!_context.Orders.Any(x => x.Id == id))
             {
-                return ServiceResult<OrderDto>.Failure("No such order exists!");
+                return ServiceResult<OrderDto>.Failure(GlobalConstants.OrderDoesNotExist);
             }
 
             if (_context.Users.First(x => x.Username == username).UserId != _context.Orders.First(x => x.Id == id).UserId)
             {
-                return ServiceResult<OrderDto>.Failure("No such order exists!");
+                return ServiceResult<OrderDto>.Failure(GlobalConstants.OrderDoesNotExist);
             }
 
             Order order = await _context.Orders.Include(x => x.PaymentDetails).Include(x => x.Products).FirstAsync(x => x.Id == id);
@@ -221,7 +220,7 @@ namespace OrderManagementService.Services
 
             OrderDto orderDto = new OrderDto()
             {
-                CreatedAt = order.CreatedAt.ToString("yyyy-MM-dd"),
+                CreatedAt = order.CreatedAt.ToString(GlobalConstants.DateFormat),
                 Id = order.Id,
                 Notes = order.Notes,
                 OrderNumber = order.OrderNumber,
@@ -230,7 +229,7 @@ namespace OrderManagementService.Services
                     CardHolder = order.PaymentDetails.CardHolder,
                     CardNumber = order.PaymentDetails.CardNumber,
                     CVC = order.PaymentDetails.CVC,
-                    ExpiryDate = order.PaymentDetails.ExpiryDate.ToString("yyyy-MM-dd"),
+                    ExpiryDate = order.PaymentDetails.ExpiryDate.ToString(GlobalConstants.DateFormatCardExpiry),
                     Id = order.PaymentDetails.Id
                 },
                 PaymentOption = order.PaymentOption.ToString(),
@@ -238,23 +237,23 @@ namespace OrderManagementService.Services
                 ShippingAddress = order.ShippingAddress,
                 Status = order.Status.ToString(),
                 TotalAmount = order.TotalAmount,
-                UpdatedAt = order.UpdatedAt.ToString("yyyy-MM-dd"),
+                UpdatedAt = order.UpdatedAt.ToString(GlobalConstants.DateFormat),
                 UserId = order.UserId
             };
 
-            return ServiceResult<OrderDto>.Success(orderDto, "Order retrieved successfully!");
+            return ServiceResult<OrderDto>.Success(orderDto, GlobalConstants.OrderFoundAndReturned);
         }
 
         public async Task<ServiceResult<List<OrderDto>>> GetOrders(string username)
         {
             if (!_context.Users.Any(x => x.Username == username))
             {
-                return ServiceResult<List<OrderDto>>.Failure("No such user exists!");
+                return ServiceResult<List<OrderDto>>.Failure(GlobalConstants.NoUserFound);
             }
 
             if (!_context.Orders.Any(x => x.UserId == _context.Users.First(y => y.Username == username).UserId))
             {
-                return ServiceResult<List<OrderDto>>.Failure($"The user {username} has no orders!");
+                return ServiceResult<List<OrderDto>>.Failure(string.Format(GlobalConstants.UserHasNoOrders, username));
             }
 
             List<Order> orders = await _context.Orders.Include(x => x.PaymentDetails).Include(x => x.Products).Where(x => x.UserId == _context.Users.First(y => y.Username == username).UserId).ToListAsync();
@@ -278,7 +277,7 @@ namespace OrderManagementService.Services
 
                 orderDtos.Add(new OrderDto()
                 {
-                    CreatedAt = order.CreatedAt.ToString("yyyy-MM-dd"),
+                    CreatedAt = order.CreatedAt.ToString(GlobalConstants.DateFormat),
                     Id = order.Id,
                     Notes = order.Notes,
                     OrderNumber = order.OrderNumber,
@@ -287,7 +286,7 @@ namespace OrderManagementService.Services
                         CardHolder = order.PaymentDetails.CardHolder,
                         CardNumber = order.PaymentDetails.CardNumber,
                         CVC = order.PaymentDetails.CVC,
-                        ExpiryDate = order.PaymentDetails.ExpiryDate.ToString("yyyy-MM-dd"),
+                        ExpiryDate = order.PaymentDetails.ExpiryDate.ToString(GlobalConstants.DateFormatCardExpiry),
                         Id = order.PaymentDetails.Id
                     },
                     PaymentOption = order.PaymentOption.ToString(),
@@ -295,12 +294,12 @@ namespace OrderManagementService.Services
                     ShippingAddress = order.ShippingAddress,
                     Status = order.Status.ToString(),
                     TotalAmount = order.TotalAmount,
-                    UpdatedAt = order.UpdatedAt.ToString("yyyy-MM-dd"),
+                    UpdatedAt = order.UpdatedAt.ToString(GlobalConstants.DateFormat),
                     UserId = order.UserId
                 });
             }
 
-            return ServiceResult<List<OrderDto>>.Success(orderDtos, "Orders retrieved successfully!");
+            return ServiceResult<List<OrderDto>>.Success(orderDtos, GlobalConstants.OrddersFound);
         }
     }
 }

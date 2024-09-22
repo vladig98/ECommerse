@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OrderManagementService.EventHandlers;
-using OrderManagementService.Services.Contracts;
 using System.Reflection;
 using System.Text;
 
@@ -57,12 +56,12 @@ builder.Services.AddSwaggerGen(setup =>
     // Include 'SecurityScheme' to use JWT Authentication
     var jwtSecurityScheme = new OpenApiSecurityScheme
     {
-        BearerFormat = "JWT",
-        Name = "JWT Authentication",
+        BearerFormat = GlobalConstants.BearerFormat,
+        Name = GlobalConstants.JWTSchemeName,
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
         Scheme = JwtBearerDefaults.AuthenticationScheme,
-        Description = "Put **_ONLY_** your JWT Bearer token on textbox below!",
+        Description = GlobalConstants.JWTSchemeDescription,
 
         Reference = new OpenApiReference
         {
