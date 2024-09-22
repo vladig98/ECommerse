@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OrderManagementService.EventHandlers;
+using OrderManagementService.Services.Contracts;
 using System.Reflection;
 using System.Text;
 
@@ -23,6 +25,10 @@ builder.Services.AddDbContext<OrderManagementDbContext>(options =>
             errorCodesToAdd: null);
     });
 });
+
+builder.Services.AddHostedService<EventBusSubscriber>();
+builder.Services.AddSingleton<ITokenManager, TokenManager>();
+builder.Services.AddTransient<IOrderService, OrderService>();
 
 var jwtIssuer = builder.Configuration[GlobalConstants.JWTIssuer];
 var jwtKey = builder.Configuration[GlobalConstants.JWTKey];
