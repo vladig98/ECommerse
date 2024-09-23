@@ -26,7 +26,6 @@ builder.Services.AddDbContext<OrderManagementDbContext>(options =>
 });
 
 builder.Services.AddHostedService<EventBusSubscriber>();
-builder.Services.AddSingleton<ITokenManager, TokenManager>();
 builder.Services.AddTransient<IOrderService, OrderService>();
 
 var jwtIssuer = builder.Configuration[GlobalConstants.JWTIssuer];

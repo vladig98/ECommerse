@@ -17,6 +17,8 @@
         public const string JWTSchemeName = "JWT Authentication";
         public const string JWTSchemeDescription = "Put **_ONLY_** your JWT Bearer token on textbox below!";
 
+        public const string Admin = "Admin";
+
         public const string ConnectionString = "ConnectionStrings:PostgreSQL";
         public const string InvalidConnectionString = "Connection string not found.";
 
@@ -45,6 +47,8 @@
         public const string OrderFoundAndReturned = "Order retrieved successfully!";
         public const string OrddersFound = "Orders retrieved successfully!";
         public const string UserHasNoOrders = "The user {0} has no orders!";
+        public const string InvalidStatus = "The order status is invalid!";
+        public const string OrderStatusUpdated = "The order status has been updated successfully!";
 
         private static string GenerateLogMessage(string level, string header, string message)
         {

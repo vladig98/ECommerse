@@ -8,20 +8,35 @@ namespace OrderManagementService.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
-        private readonly ITokenManager _tokenManager;
 
-        public OrdersController(IOrderService orderService, ITokenManager tokenManager)
+        public OrdersController(IOrderService orderService)
         {
             _orderService = orderService;
-            _tokenManager = tokenManager;
+        }
+
+        [HttpPost]
+        [Authorize(Roles = GlobalConstants.Admin)]
+        public async Task<IActionResult> ChangeOrdderStatus(string orderId, string status)
+        {
+            var result = await _orderService.ChangeOrderStatus(orderId, status);
+
+            var response = new APIResponse<OrderDto>(result.Data, result.Message);
+
+            if (!result.Succeeded)
+            {
+                response.SetStatus(BadRequest());
+                return BadRequest(response);
+            }
+
+            response.SetStatus(Ok());
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
         [Authorize]
         public async Task<IActionResult> GetOrder(string id)
         {
-            var token = Request.Headers.Authorization;
-            string username = _tokenManager.ExtractUserNameFromJWT(token!);
+            string username = User.FindFirst(GlobalConstants.SubClaim)?.Value;
 
             var result = await _orderService.GetOrderById(id, username);
 
@@ -41,8 +56,7 @@ namespace OrderManagementService.Controllers
         [Authorize]
         public async Task<IActionResult> GetOrders()
         {
-            var token = Request.Headers.Authorization;
-            string username = _tokenManager.ExtractUserNameFromJWT(token!);
+            string username = User.FindFirst(GlobalConstants.SubClaim)?.Value;
 
             var result = await _orderService.GetOrders(username);
 
@@ -62,8 +76,7 @@ namespace OrderManagementService.Controllers
         [Authorize]
         public async Task<IActionResult> CreateOrder(CreateOrderDto orderDetails)
         {
-            var token = Request.Headers.Authorization;
-            string username = _tokenManager.ExtractUserNameFromJWT(token!);
+            string username = User.FindFirst(GlobalConstants.SubClaim)?.Value;
 
             var result = await _orderService.Create(orderDetails, username);
 

@@ -301,5 +301,63 @@ namespace OrderManagementService.Services
 
             return ServiceResult<List<OrderDto>>.Success(orderDtos, GlobalConstants.OrddersFound);
         }
+
+        public async Task<ServiceResult<OrderDto>> ChangeOrderStatus(string orderId, string status)
+        {
+            if (!_context.Orders.Any(x => x.Id == orderId))
+            {
+                return ServiceResult<OrderDto>.Failure(GlobalConstants.OrderDoesNotExist);
+            }
+
+            if (!Enum.TryParse(status, true, out OrderStatus orderStatus))
+            {
+                return ServiceResult<OrderDto>.Failure(GlobalConstants.InvalidStatus);
+            }
+
+            Order order = await _context.Orders.Include(x => x.PaymentDetails).Include(x => x.Products).FirstAsync(x => x.Id == orderId);
+
+            order.Status = orderStatus;
+
+            await _context.SaveChangesAsync();
+
+            List<OrderProductDto> productDtos = new List<OrderProductDto>();
+
+            foreach (OrderProduct product in order.Products)
+            {
+                productDtos.Add(new OrderProductDto()
+                {
+                    Id = product.Id,
+                    Name = product.Name,
+                    Price = product.Price,
+                    ProductId = product.ProductId,
+                    Quantity = product.Quantity,
+                });
+            }
+
+            OrderDto orderDto = new OrderDto()
+            {
+                CreatedAt = order.CreatedAt.ToString(GlobalConstants.DateFormat),
+                Id = order.Id,
+                Notes = order.Notes,
+                OrderNumber = order.OrderNumber,
+                PaymentDetails = new PaymentDetailsDto()
+                {
+                    CardHolder = order.PaymentDetails.CardHolder,
+                    CardNumber = order.PaymentDetails.CardNumber,
+                    Id = order.PaymentDetails.Id,
+                    ExpiryDate = order.PaymentDetails.ExpiryDate.ToString(GlobalConstants.DateFormatCardExpiry),
+                    CVC = order.PaymentDetails.CVC
+                },
+                PaymentOption = order.PaymentOption.ToString(),
+                Products = productDtos,
+                ShippingAddress = order.ShippingAddress,
+                Status = order.Status.ToString(),
+                TotalAmount = order.TotalAmount,
+                UpdatedAt = order.UpdatedAt.ToString(GlobalConstants.DateFormat),
+                UserId = order.UserId
+            };
+
+            return ServiceResult<OrderDto>.Success(orderDto, GlobalConstants.OrderStatusUpdated);
+        }
     }
 }
