@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Stripe.Checkout;
 
 namespace OrderManagementService.Controllers
 {
@@ -14,9 +15,9 @@ namespace OrderManagementService.Controllers
             _orderService = orderService;
         }
 
-        [HttpPost]
+        [HttpPost("{orderId}")]
         [Authorize(Roles = GlobalConstants.Admin)]
-        public async Task<IActionResult> ChangeOrdderStatus(string orderId, string status)
+        public async Task<IActionResult> ChangeOrderStatus(string orderId, string status)
         {
             var result = await _orderService.ChangeOrderStatus(orderId, status);
 
@@ -88,10 +89,33 @@ namespace OrderManagementService.Controllers
                 return BadRequest(response);
             }
 
-            var status = CreatedAtAction(nameof(CreateOrder), new { id = result.Data.Id }, response);
-            response.SetStatus(status);
+            response.SetStatus(new StatusCodeResult(303));
 
-            return status;
+            List<SessionLineItemOptions> products = new List<SessionLineItemOptions>();
+
+            foreach (OrderProductDto product in result.Data.Products)
+            {
+                products.Add(new SessionLineItemOptions()
+                {
+                    Price = product.Price.ToString(),
+                    Quantity = product.Quantity
+                });
+            }
+
+            SessionCreateOptions options = new SessionCreateOptions()
+            {
+                LineItems = products,
+                Mode = "payment",
+                SuccessUrl = "?success=true",
+                CancelUrl = "?canceled=true"
+            };
+
+            SessionService sessionService = new SessionService();
+            Session session = sessionService.Create(options);
+
+            Response.Headers.Add("Location", session.Url);
+
+            return new StatusCodeResult(303);
         }
     }
 }
