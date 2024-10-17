@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UserManagementService.Data;
@@ -11,9 +12,11 @@ using UserManagementService.Data;
 namespace UserManagementService.Migrations
 {
     [DbContext(typeof(ECommerceDbContext))]
-    partial class ECommerceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241015204045_addingRoleToUserNavigationProp")]
+    partial class addingRoleToUserNavigationProp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -244,6 +247,10 @@ namespace UserManagementService.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("PreferredLanguage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("SecurityStamp")

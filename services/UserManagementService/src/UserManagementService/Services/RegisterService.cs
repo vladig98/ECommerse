@@ -1,121 +1,53 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
-using System.Globalization;
+﻿using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
-using UserManagementService.Events.Contracts;
 
 namespace UserManagementService.Services
 {
-    public class RegisterService : BackgroundService, IRegisterService
+    public class RegisterService : IRegisterService
     {
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<Role> _roleManager;
-        private readonly ILogger<RegisterService> _logger;
-        private readonly IMapper _mapper;
-        private readonly ITokenService _tokenService;
+        private readonly ILogger<IRegisterService> _logger;
         private readonly IEventBus _eventBus;
+        private readonly IDataFactory _dataFactory;
+        private readonly IRoleManagement _roleManagement;
 
-        public RegisterService(UserManager<User> userManager, RoleManager<Role> roleManager, ILogger<RegisterService> logger,
-            IMapper mapper, ITokenService tokenService, IEventBus eventBus)
+        public RegisterService(UserManager<User> userManager, ILogger<IRegisterService> logger,
+            IEventBus eventBus, IDataFactory dataFactory, IRoleManagement roleManagement)
         {
             _userManager = userManager;
-            _roleManager = roleManager;
             _logger = logger;
-            _mapper = mapper;
-            _tokenService = tokenService;
             _eventBus = eventBus;
+            _dataFactory = dataFactory;
+            _roleManagement = roleManagement;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        public async Task<ServiceResult<RegisterDto>> RegisterUserAsync(CreateUserDTO registerData)
         {
-            // Implement logic if needed to run background service
-            return Task.CompletedTask;
-        }
-
-        private bool DoPasswordsMatch(string password, string confirmPassword)
-        {
-            return password == confirmPassword;
-        }
-
-        private async Task<bool> DoesUserExistByUsername(string username)
-        {
-            var user = await _userManager.FindByNameAsync(username);
-            return user != null;
-        }
-
-        private async Task<bool> DoesUserExistByEmail(string email)
-        {
-            var user = await _userManager.FindByEmailAsync(email);
-            return user != null;
-        }
-
-        private async Task<bool> DoesRoleExists(string roleName)
-        {
-            return await _roleManager.RoleExistsAsync(roleName);
-        }
-
-        private Role CreateRole(string roleName)
-        {
-            return new Role
+            // Validations
+            // Same usersname validation
+            if (await DoesUserExistByUsernameAsync(registerData.Username))
             {
-                Id = Guid.NewGuid().ToString(),
-                Name = roleName
-            };
-        }
-
-        private User CreateUser(CreateUserDTO data)
-        {
-            var validDOB = DateTime.TryParseExact(data.DateOfBirth, GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob);
-
-            var user = _mapper.Map<User>(data);
-            user.LoyaltyPoints = 0;
-            user.MembershipLevel = MembershipLevels.Silver.ToString();
-            user.Id = Guid.NewGuid().ToString();
-            user.DateOfBirth = validDOB ? DateTime.SpecifyKind(dob, DateTimeKind.Utc) : (DateTime?)null;
-
-            return user;
-        }
-
-        private async Task<UserDTO> GetUserDTO(User user)
-        {
-            var userDto = _mapper.Map<UserDTO>(user);
-            var roles = await _userManager.GetRolesAsync(user);
-            userDto.Role = roles.FirstOrDefault()!;
-
-            return userDto;
-        }
-
-        public async Task<ServiceResult<RegisterDto>> RegisterUser(CreateUserDTO registerData)
-        {
-            if (!DoPasswordsMatch(registerData.Password, registerData.ConfirmPassword))
-            {
-                _logger.LogError(GlobalConstants.PasswordsDoNotMatch);
-                return ServiceResult<RegisterDto>.Failure(GlobalConstants.PasswordsDoNotMatch);
+                _logger.LogError(string.Format(GlobalConstants.UsernameAlreadyExists, registerData.Username));
+                return ServiceResult<RegisterDto>.Failure(string.Format(GlobalConstants.UsernameAlreadyExists, registerData.Username));
             }
 
-            if (await DoesUserExistByUsername(registerData.Username))
+            // Same email address validation
+            if (await DoesUserExistByEmailAsync(registerData.Email))
             {
-                _logger.LogError(GlobalConstants.UsernameAlreadyExists);
-                return ServiceResult<RegisterDto>.Failure(GlobalConstants.UsernameAlreadyExists);
+                _logger.LogError(string.Format(GlobalConstants.EmailAlreadyExists, registerData.Email));
+                return ServiceResult<RegisterDto>.Failure(string.Format(GlobalConstants.EmailAlreadyExists, registerData.Email));
             }
 
-            if (await DoesUserExistByEmail(registerData.Email))
-            {
-                _logger.LogError(GlobalConstants.EmailAlreadyExists);
-                return ServiceResult<RegisterDto>.Failure(GlobalConstants.EmailAlreadyExists);
-            }
+            // Creationg logic
+            // Role
+            string userRole = RoleName.User.ToString();
+            await _roleManagement.ManageRoleAsync(userRole);
 
-            var role = CreateRole(RoleName.User.ToString());
+            // User
+            User user = _dataFactory.CreateUserInstance(registerData);
+            IdentityResult userCreated = await _userManager.CreateAsync(user, registerData.Password);
 
-            if (!await DoesRoleExists(role.Name!))
-            {
-                await _roleManager.CreateAsync(role);
-            }
-
-            var user = CreateUser(registerData);
-
-            var userCreated = await _userManager.CreateAsync(user, registerData.Password);
-
+            // Password Validation
             if (!userCreated.Succeeded)
             {
                 string error = string.Format(GlobalConstants.PasswordsDoNotMeetRequirements, string.Join(Environment.NewLine, userCreated.Errors.Select(e => e.Description)));
@@ -123,51 +55,51 @@ namespace UserManagementService.Services
                 return ServiceResult<RegisterDto>.Failure(error);
             }
 
-            await _userManager.AddToRoleAsync(user, role.Name!);
-            await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), role.Name!));
+            // User-Role table
+            await AssignUserToRoleAsync(user, userRole);
 
+            // Messaging queue events
+            SendMessageToMessageBrokerAndSubscribers(user);
+
+            // Results
             string successMessage = string.Format(GlobalConstants.UserCreatedSuccessfully, user.UserName);
-
             _logger.LogInformation(successMessage);
 
-            var userDto = await GetUserDTO(user);
+            RegisterDto response = await GenerateDtoResponseAsync(user);
 
-            var token = await _tokenService.GenerateJWTToken(user);
+            return ServiceResult<RegisterDto>.Success(response, successMessage);
+        }
 
-            var tokenDto = new TokenDto
-            {
-                Token = token
-            };
+        private async Task<bool> DoesUserExistByUsernameAsync(string username)
+        {
+            return await _userManager.FindByNameAsync(username) != null;
+        }
 
-            var registerDto = new RegisterDto
-            {
-                TokenData = tokenDto,
-                UserData = userDto
-            };
+        private async Task<bool> DoesUserExistByEmailAsync(string email)
+        {
+            return await _userManager.FindByEmailAsync(email) != null;
+        }
 
-            var userCreatedEvent = new UserCreatedEvent 
-            { 
-                UserId = user.Id,
-                City = user.City,
-                Country = user.Country,
-                DateOfBirth = user.DateOfBirth.Value.ToString(GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture),
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                LoyaltyPoints = user.LoyaltyPoints,
-                MembershipLevel = user.MembershipLevel,
-                PhoneNumber = user.PhoneNumber,
-                PostalCode = user.PostalCode,
-                PreferredCurrency = user.PreferredCurrency,
-                PreferredLanguage = user.PreferredLanguage,
-                Role = role.Name,
-                State = user.State,
-                Street = user.Street,
-                Username = user.UserName
-            };
+        private async Task AssignUserToRoleAsync(User user, string roleName)
+        {
+            await _userManager.AddToRoleAsync(user, roleName);
+            await AddRoleAsAClaim(user, roleName);
+        }
+
+        private async Task AddRoleAsAClaim(User user, string roleName)
+        {
+            await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), roleName));
+        }
+
+        private async Task<RegisterDto> GenerateDtoResponseAsync(User user)
+        {
+            return await _dataFactory.CreateRegisterDtoAsync(user);
+        }
+
+        private void SendMessageToMessageBrokerAndSubscribers(User user)
+        {
+            UserCreatedEvent userCreatedEvent = _dataFactory.CreateSubscribeMessageEvent(user);
             _eventBus.Publish(userCreatedEvent);
-
-            return ServiceResult<RegisterDto>.Success(registerDto, successMessage);
         }
     }
 }

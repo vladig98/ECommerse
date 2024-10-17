@@ -14,6 +14,12 @@ namespace UserManagementService.Models
             Street = string.Empty;
             PostalCode = string.Empty;
             State = string.Empty;
+            Roles = new List<UserRole>();
+            DateCreated = DateTime.UtcNow;
+            DateUpdated = DateTime.UtcNow;
+            Id = Guid.NewGuid().ToString();
+            LoyaltyPoints = 0;
+            MembershipLevel = MembershipLevels.Silver.ToString();
         }
 
         [Required]
@@ -37,10 +43,15 @@ namespace UserManagementService.Models
         [Required]
         public string State { get; set; }
 
+        public DateTime DateCreated { get; set; }
+        public DateTime DateUpdated { get; set; }
+
         public DateTime? DateOfBirth { get; set; }
         public string? PreferredLanguage { get; set; }
         public string? PreferredCurrency { get; set; }
         public int? LoyaltyPoints { get; set; }
         public string? MembershipLevel { get; set; }
+
+        public ICollection<UserRole> Roles { get; set; }
     }
 }

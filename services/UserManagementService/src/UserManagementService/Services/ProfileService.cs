@@ -19,47 +19,47 @@ namespace UserManagementService.Services
 
         public async Task<ServiceResult<UserDTO>> GetUser(string userId)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            User? user = await _userManager.FindByIdAsync(userId);
 
             if (user == null)
             {
-                _logger.LogError(GlobalConstants.UserNotFound);
-                return ServiceResult<UserDTO>.Failure(GlobalConstants.UserNotFound);
+                _logger.LogError(GlobalConstants.LogError(GlobalConstants.Failure, string.Format(GlobalConstants.UserNotFound, userId)));
+                return ServiceResult<UserDTO>.Failure(GlobalConstants.WrongCredentials);
             }
 
-            var userDto = await GenerateUserDto(user);
+            UserDTO userDto = await GenerateUserDto(user);
 
             string success = string.Format(GlobalConstants.UserRetrieved, user.UserName);
-            _logger.LogInformation(success);
+            _logger.LogInformation(GlobalConstants.LogInfo(GlobalConstants.Success, success));
 
             return ServiceResult<UserDTO>.Success(userDto, success);
         }
 
         public async Task<ServiceResult<UserDTO>> UpdateUser(string userId, EditUserDto updatedData)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            User? user = await _userManager.FindByIdAsync(userId);
 
             if (user == null)
             {
-                _logger.LogError(GlobalConstants.UserNotFound);
-                return ServiceResult<UserDTO>.Failure(GlobalConstants.UserNotFound);
+                _logger.LogError(GlobalConstants.LogError(GlobalConstants.Failure, string.Format(GlobalConstants.UserNotFound, userId)));
+                return ServiceResult<UserDTO>.Failure(string.Format(GlobalConstants.UserNotFound, userId));
             }
 
-            var userEmail = await _userManager.FindByEmailAsync(updatedData.Email!);
+            User? userEmail = await _userManager.FindByEmailAsync(updatedData.Email!);
 
             if (userEmail != null)
             {
-                _logger.LogError(GlobalConstants.EmailAlreadyExists);
-                return ServiceResult<UserDTO>.Failure(GlobalConstants.EmailAlreadyExists);
+                _logger.LogError(GlobalConstants.LogError(GlobalConstants.Failure, string.Format(GlobalConstants.EmailAlreadyExists, updatedData.Email)));
+                return ServiceResult<UserDTO>.Failure(string.Format(GlobalConstants.EmailAlreadyExists, updatedData.Email));
             }
 
             user = UpdateUserData(user, updatedData);
             await _userManager.UpdateAsync(user);
 
-            var userDto = await GenerateUserDto(user);
+            UserDTO userDto = await GenerateUserDto(user);
 
             string success = string.Format(GlobalConstants.UserUpdated, user.UserName);
-            _logger.LogInformation(success);
+            _logger.LogInformation(GlobalConstants.LogInfo(GlobalConstants.Success, success));
 
             return ServiceResult<UserDTO>.Success(userDto, success);
         }
@@ -80,13 +80,14 @@ namespace UserManagementService.Services
             user.DateOfBirth = dobParsed ? dob : user.DateOfBirth;
             user.FirstName = updatedData.FirstName ?? user.FirstName;
             user.LastName = updatedData.LastName ?? user.LastName;
+            user.DateUpdated = DateTime.Now;
 
             return user;
         }
 
         private async Task<UserDTO> GenerateUserDto(User user)
         {
-            var userDto = _mapper.Map<UserDTO>(user);
+            UserDTO userDto = _mapper.Map<UserDTO>(user);
             userDto.Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()!;
 
             return userDto;

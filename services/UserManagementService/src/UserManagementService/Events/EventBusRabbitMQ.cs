@@ -1,7 +1,6 @@
 ﻿using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
-using UserManagementService.Events.Contracts;
 
 namespace UserManagementService.Events
 {

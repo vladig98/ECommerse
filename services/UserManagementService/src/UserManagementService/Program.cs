@@ -4,9 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
-using UserManagementService;
-using UserManagementService.Events;
-using UserManagementService.Events.Contracts;
+using UserManagementService.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,12 +53,13 @@ var mapper = AutoMapperConfig.Initialize();
 builder.Services.AddSingleton(mapper);
 
 builder.Services.AddDataProtection();
-builder.Services.AddSingleton<System.TimeProvider>(System.TimeProvider.System);
+builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.AddTransient<IRegisterService, RegisterService>();
 builder.Services.AddTransient<ILoginService, LoginService>();
 builder.Services.AddTransient<IProfileService, ProfileService>();
 builder.Services.AddSingleton<IEventBus, EventBusRabbitMQ>();
+builder.Services.AddSingleton<IDataFactory, DataFactory>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

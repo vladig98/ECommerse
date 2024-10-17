@@ -192,7 +192,7 @@ namespace UserManagementService.Tests
                 ConfirmPassword = "1234"
             };
 
-            var result = await registerService.RegisterUser(createUserDto);
+            var result = await registerService.RegisterUserAsync(createUserDto);
 
             Assert.False(result.Succeeded);
             Assert.Equal(GlobalConstants.PasswordsDoNotMatch, result.Message);
@@ -213,7 +213,7 @@ namespace UserManagementService.Tests
                 Email = "user@emailDomain.com"
             };
 
-            var result = await registerService.RegisterUser(createUserDto);
+            var result = await registerService.RegisterUserAsync(createUserDto);
 
             Assert.False(result.Succeeded);
             Assert.Equal(GlobalConstants.EmailAlreadyExists, result.Message);
@@ -234,7 +234,7 @@ namespace UserManagementService.Tests
                 Username = "testUserName"
             };
 
-            var result = await registerService.RegisterUser(createUserDto);
+            var result = await registerService.RegisterUserAsync(createUserDto);
 
             Assert.False(result.Succeeded);
             Assert.Equal(GlobalConstants.UsernameAlreadyExists, result.Message);
@@ -250,7 +250,7 @@ namespace UserManagementService.Tests
 
             var createUserDto = GenerateCreateUserDtoData();
 
-            var result = await registerService.RegisterUser(createUserDto);
+            var result = await registerService.RegisterUserAsync(createUserDto);
             var createdUser = result.Data.UserData;
 
             Assert.True(result.Succeeded);
@@ -304,7 +304,7 @@ namespace UserManagementService.Tests
             var result = await loginService.LoginUser(loginDto);
 
             Assert.False(result.Succeeded);
-            Assert.Equal(GlobalConstants.UserNotFound, result.Message);
+            Assert.Equal(GlobalConstants.WrongCredentials, result.Message);
         }
 
         [Fact]
@@ -323,7 +323,7 @@ namespace UserManagementService.Tests
             var result = await loginService.LoginUser(loginDto);
 
             Assert.False(result.Succeeded);
-            Assert.Equal(GlobalConstants.UserEnteredWrongPassword, result.Message);
+            Assert.Equal(GlobalConstants.WrongCredentials, result.Message);
         }
 
         [Fact]
