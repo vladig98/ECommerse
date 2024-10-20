@@ -5,25 +5,25 @@
 namespace UserManagementService.Migrations
 {
     /// <inheritdoc />
-    public partial class AddingSalt : Migration
+    public partial class removeCurrency : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Salt",
-                table: "AspNetUsers",
-                type: "text",
-                nullable: false,
-                defaultValue: "");
+            migrationBuilder.DropColumn(
+                name: "Currency",
+                table: "AspNetUsers");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Salt",
-                table: "AspNetUsers");
+            migrationBuilder.AddColumn<string>(
+                name: "Currency",
+                table: "AspNetUsers",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
         }
     }
 }

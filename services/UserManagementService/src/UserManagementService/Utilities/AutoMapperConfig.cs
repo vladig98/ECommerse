@@ -13,6 +13,9 @@ namespace UserManagementService.Utilities
                 cfg.CreateMap<CreateUserDTO, User>()
                     .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => z.DateOfBirth));
                 cfg.CreateMap<User, UserDTO>().ForMember(x => x.Roles, y => y.MapFrom(z => z.Roles.Select(r => r.Role.Name)));
+                cfg.CreateMap<EditUserDto, User>()
+                    .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => z.DateOfBirth))
+                    .ForMember(x => x.DateUpdated, y => y.MapFrom(z => DateTime.UtcNow));
                 cfg.CreateMap<User, UserCreatedEvent>()
                     .ForMember(x => x.Roles, y => y.MapFrom(z => z.Roles.Select(r => r.Role.Name)))
                     .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => z.DateOfBirth.Value.ToString(GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture)));

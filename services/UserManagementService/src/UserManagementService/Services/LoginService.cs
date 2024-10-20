@@ -5,14 +5,14 @@ namespace UserManagementService.Services
     public class LoginService : ILoginService
     {
         private readonly UserManager<User> _userManager;
-        private readonly ITokenService _tokenService;
         private readonly ILogger<LoginService> _logger;
+        private readonly IDataFactory _dataFactory;
 
-        public LoginService(UserManager<User> userManager, ITokenService tokenService, ILogger<LoginService> logger)
+        public LoginService(UserManager<User> userManager, ILogger<LoginService> logger, IDataFactory dataFactory)
         {
             _userManager = userManager;
-            _tokenService = tokenService;
             _logger = logger;
+            _dataFactory = dataFactory;
         }
 
         public async Task<ServiceResult<TokenDto>> LoginUser(LoginDto loginData)
@@ -39,12 +39,7 @@ namespace UserManagementService.Services
                 return ServiceResult<TokenDto>.Failure(GlobalConstants.WrongCredentials);
             }
 
-            string token = await _tokenService.GenerateJWTToken(user);
-
-            TokenDto tokenDto = new TokenDto
-            {
-                Token = token
-            };
+            TokenDto tokenDto = await _dataFactory.CreateTokenDtoAsync(user);
 
             string message = string.Format(GlobalConstants.UserLoggedInSuccessfully, user.UserName);
             _logger.LogInformation(GlobalConstants.LogInfo(GlobalConstants.Success, message));

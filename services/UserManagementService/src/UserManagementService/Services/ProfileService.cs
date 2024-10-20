@@ -1,20 +1,18 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
-using System.Globalization;
+﻿using Microsoft.AspNetCore.Identity;
 
 namespace UserManagementService.Services
 {
     public class ProfileService : IProfileService
     {
         private readonly UserManager<User> _userManager;
-        private readonly IMapper _mapper;
         private readonly ILogger<ProfileService> _logger;
+        private readonly IDataFactory _dataFactory;
 
-        public ProfileService(UserManager<User> userManager, IMapper mapper, ILogger<ProfileService> logger)
+        public ProfileService(UserManager<User> userManager, ILogger<ProfileService> logger, IDataFactory dataFactory)
         {
             _userManager = userManager;
-            _mapper = mapper;
             _logger = logger;
+            _dataFactory = dataFactory;
         }
 
         public async Task<ServiceResult<UserDTO>> GetUser(string userId)
@@ -27,7 +25,7 @@ namespace UserManagementService.Services
                 return ServiceResult<UserDTO>.Failure(GlobalConstants.WrongCredentials);
             }
 
-            UserDTO userDto = await GenerateUserDto(user);
+            UserDTO userDto = await _dataFactory.CreateUserDtoAsync(user);
 
             string success = string.Format(GlobalConstants.UserRetrieved, user.UserName);
             _logger.LogInformation(GlobalConstants.LogInfo(GlobalConstants.Success, success));
@@ -53,44 +51,15 @@ namespace UserManagementService.Services
                 return ServiceResult<UserDTO>.Failure(string.Format(GlobalConstants.EmailAlreadyExists, updatedData.Email));
             }
 
-            user = UpdateUserData(user, updatedData);
+            user = _dataFactory.UpdateUser(updatedData);
             await _userManager.UpdateAsync(user);
 
-            UserDTO userDto = await GenerateUserDto(user);
+            UserDTO userDto = await _dataFactory.CreateUserDtoAsync(user);
 
             string success = string.Format(GlobalConstants.UserUpdated, user.UserName);
             _logger.LogInformation(GlobalConstants.LogInfo(GlobalConstants.Success, success));
 
             return ServiceResult<UserDTO>.Success(userDto, success);
-        }
-
-        private User UpdateUserData(User user, EditUserDto updatedData)
-        {
-            bool dobParsed = DateTime.TryParseExact(updatedData.DateOfBirth, GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob);
-
-            user.State = updatedData.State ?? user.State;
-            user.Street = updatedData.Street ?? user.Street;
-            user.PreferredCurrency = updatedData.PreferredCurrency ?? user.PreferredCurrency;
-            user.City = updatedData.City ?? user.City;
-            user.Email = updatedData.Email ?? user.Email;
-            user.Country = updatedData.Country ?? user.Country;
-            user.PostalCode = updatedData.PostalCode ?? user.PostalCode;
-            user.PhoneNumber = updatedData.PhoneNumber ?? user.PhoneNumber;
-            user.PreferredLanguage = updatedData.PreferredLanguage ?? user.PreferredLanguage;
-            user.DateOfBirth = dobParsed ? dob : user.DateOfBirth;
-            user.FirstName = updatedData.FirstName ?? user.FirstName;
-            user.LastName = updatedData.LastName ?? user.LastName;
-            user.DateUpdated = DateTime.Now;
-
-            return user;
-        }
-
-        private async Task<UserDTO> GenerateUserDto(User user)
-        {
-            UserDTO userDto = _mapper.Map<UserDTO>(user);
-            userDto.Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()!;
-
-            return userDto;
         }
     }
 }

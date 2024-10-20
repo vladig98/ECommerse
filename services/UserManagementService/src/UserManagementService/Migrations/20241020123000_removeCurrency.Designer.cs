@@ -12,15 +12,15 @@ using UserManagementService.Data;
 namespace UserManagementService.Migrations
 {
     [DbContext(typeof(ECommerceDbContext))]
-    [Migration("20240615212920_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20241020123000_removeCurrency")]
+    partial class removeCurrency
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -97,21 +97,6 @@ namespace UserManagementService.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RoleId")
-                        .HasColumnType("text");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetUserRoles", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
@@ -131,158 +116,7 @@ namespace UserManagementService.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("SharedModels.Address", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PostalCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Street")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Addresses");
-                });
-
-            modelBuilder.Entity("SharedModels.Order", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("AddressId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("BillingAddressId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ClientId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("OrderNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ShippingAddressId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AddressId");
-
-                    b.HasIndex("BillingAddressId");
-
-                    b.HasIndex("ClientId");
-
-                    b.HasIndex("ShippingAddressId");
-
-                    b.ToTable("Orders");
-                });
-
-            modelBuilder.Entity("SharedModels.OrderItem", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("OrderId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProductId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProductName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("OrderItems");
-                });
-
-            modelBuilder.Entity("SharedModels.PaymentMethod", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<int>("CVC")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("CardHolder")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CardNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ExpiryDate")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PaymentType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PaymentMethods");
-                });
-
-            modelBuilder.Entity("SharedModels.Role", b =>
+            modelBuilder.Entity("UserManagementService.Models.Role", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -308,7 +142,7 @@ namespace UserManagementService.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("SharedModels.User", b =>
+            modelBuilder.Entity("UserManagementService.Models.User", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -316,11 +150,25 @@ namespace UserManagementService.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("DateOfBirth")
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateUpdated")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
@@ -344,11 +192,10 @@ namespace UserManagementService.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("LoyaltyPoints")
+                    b.Property<int?>("LoyaltyPoints")
                         .HasColumnType("integer");
 
                     b.Property<string>("MembershipLevel")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("NormalizedEmail")
@@ -368,15 +215,25 @@ namespace UserManagementService.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("PreferedLanguage")
+                    b.Property<string>("PostalCode")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PreferredCurrency")
-                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreferredLanguage")
                         .HasColumnType("text");
 
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Street")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -398,9 +255,24 @@ namespace UserManagementService.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("UserManagementService.Models.UserRole", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("SharedModels.Role", null)
+                    b.HasOne("UserManagementService.Models.Role", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -409,7 +281,7 @@ namespace UserManagementService.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("SharedModels.User", null)
+                    b.HasOne("UserManagementService.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -418,22 +290,7 @@ namespace UserManagementService.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("SharedModels.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.HasOne("SharedModels.Role", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SharedModels.User", null)
+                    b.HasOne("UserManagementService.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -442,94 +299,40 @@ namespace UserManagementService.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("SharedModels.User", null)
+                    b.HasOne("UserManagementService.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SharedModels.Address", b =>
+            modelBuilder.Entity("UserManagementService.Models.UserRole", b =>
                 {
-                    b.HasOne("SharedModels.User", "User")
-                        .WithMany("Addresses")
+                    b.HasOne("UserManagementService.Models.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("UserManagementService.Models.User", "User")
+                        .WithMany("Roles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Role");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SharedModels.Order", b =>
+            modelBuilder.Entity("UserManagementService.Models.Role", b =>
                 {
-                    b.HasOne("SharedModels.Address", null)
-                        .WithMany("Orders")
-                        .HasForeignKey("AddressId");
-
-                    b.HasOne("SharedModels.Address", "BillingAddress")
-                        .WithMany()
-                        .HasForeignKey("BillingAddressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SharedModels.User", "Client")
-                        .WithMany("Orders")
-                        .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SharedModels.Address", "ShippingAddress")
-                        .WithMany()
-                        .HasForeignKey("ShippingAddressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BillingAddress");
-
-                    b.Navigation("Client");
-
-                    b.Navigation("ShippingAddress");
+                    b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("SharedModels.OrderItem", b =>
+            modelBuilder.Entity("UserManagementService.Models.User", b =>
                 {
-                    b.HasOne("SharedModels.Order", "Order")
-                        .WithMany("OrderItems")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-                });
-
-            modelBuilder.Entity("SharedModels.PaymentMethod", b =>
-                {
-                    b.HasOne("SharedModels.User", "User")
-                        .WithMany("PaymentMethods")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SharedModels.Address", b =>
-                {
-                    b.Navigation("Orders");
-                });
-
-            modelBuilder.Entity("SharedModels.Order", b =>
-                {
-                    b.Navigation("OrderItems");
-                });
-
-            modelBuilder.Entity("SharedModels.User", b =>
-                {
-                    b.Navigation("Addresses");
-
-                    b.Navigation("Orders");
-
-                    b.Navigation("PaymentMethods");
+                    b.Navigation("Roles");
                 });
 #pragma warning restore 612, 618
         }

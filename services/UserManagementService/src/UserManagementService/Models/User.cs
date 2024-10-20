@@ -52,6 +52,6 @@ namespace UserManagementService.Models
         public int? LoyaltyPoints { get; set; }
         public string? MembershipLevel { get; set; }
 
-        public ICollection<UserRole> Roles { get; set; }
+        public virtual ICollection<UserRole> Roles { get; set; }
     }
 }

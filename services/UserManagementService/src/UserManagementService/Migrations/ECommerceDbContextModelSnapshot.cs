@@ -17,7 +17,7 @@ namespace UserManagementService.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -92,30 +92,6 @@ namespace UserManagementService.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AspNetUserLogins", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RoleId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(34)
-                        .HasColumnType("character varying(34)");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("IdentityUserRole<string>");
-
-                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -278,21 +254,17 @@ namespace UserManagementService.Migrations
 
             modelBuilder.Entity("UserManagementService.Models.UserRole", b =>
                 {
-                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUserRole<string>");
-
-                    b.Property<string>("RoleId1")
-                        .IsRequired()
+                    b.Property<string>("UserId")
                         .HasColumnType("text");
 
-                    b.Property<string>("UserId1")
-                        .IsRequired()
+                    b.Property<string>("RoleId")
                         .HasColumnType("text");
 
-                    b.HasIndex("RoleId1");
+                    b.HasKey("UserId", "RoleId");
 
-                    b.HasIndex("UserId1");
+                    b.HasIndex("RoleId");
 
-                    b.HasDiscriminator().HasValue("UserRole");
+                    b.ToTable("AspNetUserRoles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -322,21 +294,6 @@ namespace UserManagementService.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.HasOne("UserManagementService.Models.Role", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UserManagementService.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.HasOne("UserManagementService.Models.User", null)
@@ -350,13 +307,13 @@ namespace UserManagementService.Migrations
                 {
                     b.HasOne("UserManagementService.Models.Role", "Role")
                         .WithMany("Users")
-                        .HasForeignKey("RoleId1")
+                        .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("UserManagementService.Models.User", "User")
                         .WithMany("Roles")
-                        .HasForeignKey("UserId1")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

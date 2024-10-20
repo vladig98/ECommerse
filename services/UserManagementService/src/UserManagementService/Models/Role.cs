@@ -10,6 +10,6 @@ namespace UserManagementService.Models
             Id = Guid.NewGuid().ToString();
         }
 
-        public ICollection<UserRole> Users { get; set; }
+        public virtual ICollection<UserRole> Users { get; set; }
     }
 }

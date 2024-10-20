@@ -72,14 +72,13 @@ namespace UserManagementService.Tests
 
             var roles = new List<string>() { "User" };
 
-            var mockedUserManager = GetMockedUserManager(user, roles, skip: skip);
-            var mockedRoleManager = GetMockedRoleManager();
-            var mockedMapper = GetMockedMapper(userDto, userMap);
-            var mockedTokenService = GetMockedToken("USER_TOKEN");
-            var eventBus = new Mock<EventBusRabbitMQ>();
+            var mockedUserManager = new Mock<IUserManagement>();
+            var eventBus = new Mock<KafkaEventsProdcuer<string, UserCreatedEvent>>();
+            var dataFactory = new Mock<IDataFactory>();
+            var roleManagement = new Mock<IRoleManagement>();
 
-            var registerService = new RegisterService(mockedUserManager.Object, mockedRoleManager.Object, mockedLogger.Object, 
-                mockedMapper.Object, mockedTokenService.Object, eventBus.Object);
+            var registerService = new RegisterService(mockedUserManager.Object, mockedLogger.Object, 
+                 eventBus.Object, dataFactory.Object, roleManagement.Object, CancellationToken.None);
 
             return registerService;
         }
@@ -90,9 +89,9 @@ namespace UserManagementService.Tests
             var roles = new List<string>() { "User" };
 
             var mockedUserManager = GetMockedUserManager(user, roles, validPassword);
-            var mockedTokenService = GetMockedToken("USER_TOKEN");
+            var dataFactory = new Mock<IDataFactory>();
 
-            var loginService = new LoginService(mockedUserManager.Object, mockedTokenService.Object, mockedLogger.Object);
+            var loginService = new LoginService(mockedUserManager.Object, mockedLogger.Object, dataFactory.Object);
 
             return loginService;
         }
@@ -142,7 +141,7 @@ namespace UserManagementService.Tests
                 PreferredCurrency = "EUR",
                 PreferredLanguage = "EN",
                 State = "State",
-                Role = "User"
+                Roles = new List<string> { "User" }
             };
 
             return userDto;
@@ -269,7 +268,7 @@ namespace UserManagementService.Tests
             Assert.Equal(createdUser.City, user?.City);
             Assert.Equal(createdUser.PhoneNumber, user?.PhoneNumber);
             Assert.Equal(createdUser.PostalCode, user?.PostalCode);
-            Assert.Equal("User", createdUser.Role);
+            Assert.Equal("User", createdUser.Roles.First());
             Assert.Equal("USER_TOKEN", result.Data.TokenData.Token);
             Assert.Equal(string.Format(GlobalConstants.UserCreatedSuccessfully, createdUser.Username), result.Message);
         }
@@ -371,10 +370,10 @@ namespace UserManagementService.Tests
             var user = GenerateUserData();
             var userDto = GenerateUserDtoData();
             var userManager = GetMockedUserManager(user, new List<string> { "User" }, true, true);
-            var mapper = GetMockedMapper(userDto, user);
+            var dataFactory = new Mock<IDataFactory>();
             var logger = new Mock<ILogger<ProfileService>>();
 
-            var profileService = new ProfileService(userManager.Object, mapper.Object, logger.Object);
+            var profileService = new ProfileService(userManager.Object, logger.Object, dataFactory.Object);
 
             var result = await profileService.GetUser("2");
 
@@ -387,10 +386,10 @@ namespace UserManagementService.Tests
             var user = GenerateUserData();
             var userDto = GenerateUserDtoData();
             var userManager = GetMockedUserManager(user, new List<string> { "User" });
-            var mapper = GetMockedMapper(userDto, user);
+            var dataFactory = new Mock<IDataFactory>();
             var logger = new Mock<ILogger<ProfileService>>();
 
-            var profileService = new ProfileService(userManager.Object, mapper.Object, logger.Object);
+            var profileService = new ProfileService(userManager.Object, logger.Object, dataFactory.Object);
 
             var result = await profileService.GetUser("1");
 
@@ -403,10 +402,10 @@ namespace UserManagementService.Tests
             var user = GenerateUserData();
             var userDto = GenerateUserDtoData();
             var userManager = GetMockedUserManager(user, new List<string> { "User" }, true, true);
-            var mapper = GetMockedMapper(userDto, user);
+            var dataFactory = new Mock<IDataFactory>();
             var logger = new Mock<ILogger<ProfileService>>();
 
-            var profileService = new ProfileService(userManager.Object, mapper.Object, logger.Object);
+            var profileService = new ProfileService(userManager.Object, logger.Object, dataFactory.Object);
 
             var editData = new EditUserDto
             {
@@ -424,10 +423,10 @@ namespace UserManagementService.Tests
             var user = GenerateUserData();
             var userDto = GenerateUserDtoData();
             var userManager = GetMockedUserManager(user, new List<string> { "User" });
-            var mapper = GetMockedMapper(userDto, user);
+            var dataFactory = new Mock<IDataFactory>();
             var logger = new Mock<ILogger<ProfileService>>();
 
-            var profileService = new ProfileService(userManager.Object, mapper.Object, logger.Object);
+            var profileService = new ProfileService(userManager.Object, logger.Object, dataFactory.Object);
 
             var editData = new EditUserDto
             {
@@ -460,14 +459,14 @@ namespace UserManagementService.Tests
                 Id = "1",
                 LoyaltyPoints = 0,
                 MembershipLevel = MembershipLevels.Silver.ToString(),
-                Role = "User",
+                Roles = new List<string>() { "User" },
                 Username = "TestUser"
             };
             var userManager = GetMockedUserManager(user, new List<string> { "User" }, true, false, true);
-            var mapper = GetMockedMapper(userDto, user);
+            var dataFactory = new Mock<IDataFactory>();
             var logger = new Mock<ILogger<ProfileService>>();
 
-            var profileService = new ProfileService(userManager.Object, mapper.Object, logger.Object);
+            var profileService = new ProfileService(userManager.Object, logger.Object, dataFactory.Object);
 
             var editData = new EditUserDto
             {

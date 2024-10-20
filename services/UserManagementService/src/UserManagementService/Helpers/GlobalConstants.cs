@@ -22,8 +22,13 @@
 
         #region Public Constants
 
+        // Headers
+        public const string KafkaHeader = "Kafka";
+
         // Messaging Queue Constnats
-        public const string RabbitMQHostName = "localhost";
+        public const string KafkaHost = "localhost:9092";
+        public const string KafkaTopic = "UserManagementService";
+        public const string UserCreatedKey = "UserCreated";
 
         // Failure Messages
         public const string RegistrationFailed = "Registration failed.";
@@ -38,6 +43,10 @@
         public const string UserEnteredWrongPassword = "Incorrect password for user {0}!";
         public const string InvalidConnectionString = "Connection string not found.";
         public const string Failure = "Failure";
+        public const string KafkaEventFailure = "Event was not delivered! Topic: {0}, Key: {1}, Value: {2}, Reason: '{3}'";
+
+        // Warnings
+        public const string KafkaEventDeliveredButNotAcknowledged = "Event was delivered but not acknowledged! Topic: {0}, Key: {1}, Value: {2}";
 
         // Success Messages
         public const string UserRetrieved = "User {0} retrieved successfully!";
@@ -46,6 +55,7 @@
         public const string UserLoggedInSuccessfully = "User {0} logged in successfully!";
         public const string JWTTokenSucces = "Token generated for user {0}";
         public const string Success = "Success";
+        public const string KafkaEventDelivered = "Event was successfully delivered! Topic: {0}, Key: {1}, Value: {2}";
 
         // Configurations
         public const string JWT = "JWT";
@@ -63,7 +73,7 @@
 
         private static string GenerateLogMessage(string level, string header, string message)
         {
-            return string.Format(LoggingFormat, LoggingSeparator, DateTime.Now.ToString(LoggingTimeFormat), level, header, message);
+            return string.Format(LoggingFormat, LoggingSeparator, DateTime.UtcNow.ToString(LoggingTimeFormat), level, header, message);
         }
 
         #region Logging methods

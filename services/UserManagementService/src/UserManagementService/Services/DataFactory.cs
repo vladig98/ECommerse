@@ -52,5 +52,10 @@ namespace UserManagementService.Services
         {
             return _mapper.Map<User>(registerData);
         }
+
+        public User UpdateUser(EditUserDto data)
+        {
+            return _mapper.Map<User>(data);
+        }
     }
 }

@@ -2,6 +2,6 @@
 {
     public interface IRoleManagement
     {
-        Task ManageRoleAsync(string roleName);
+        Task EnsureRoleExistsAsync(string roleName);
     }
 }

@@ -13,7 +13,7 @@ namespace UserManagementService.Services
             _dataFactory = dataFactory;
         }
 
-        public async Task ManageRoleAsync(string roleName)
+        public async Task EnsureRoleExistsAsync(string roleName)
         {
             if (await DoesRoleExistAsync(roleName))
             {
@@ -30,13 +30,8 @@ namespace UserManagementService.Services
 
         private async Task CreateRoleAsync(string roleName)
         {
-            Role role = CreateRoleInstance(roleName);
+            Role role = _dataFactory.CreateRoleInstance(roleName);
             await _roleManager.CreateAsync(role);
-        }
-
-        private Role CreateRoleInstance(string roleName)
-        {
-            return _dataFactory.CreateRoleInstance(roleName);
         }
     }
 }

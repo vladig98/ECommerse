@@ -8,5 +8,6 @@
         Task<TokenDto> CreateTokenDtoAsync(User user);
         UserCreatedEvent CreateSubscribeMessageEvent(User user);
         Role CreateRoleInstance(string roleName);
+        User UpdateUser(EditUserDto data);
     }
 }
