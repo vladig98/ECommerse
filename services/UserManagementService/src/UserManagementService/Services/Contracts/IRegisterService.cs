@@ -2,6 +2,6 @@
 {
     public interface IRegisterService
     {
-        Task<ServiceResult<RegisterDto>> RegisterUser(CreateUserDTO registerData);
+        Task<ServiceResult<RegisterDto>> RegisterUserAsync(CreateUserDTO registerData);
     }
 }

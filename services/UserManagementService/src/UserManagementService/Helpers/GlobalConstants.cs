@@ -2,74 +2,106 @@
 {
     public static class GlobalConstants
     {
-        private const string LoggingFormat = "{0} {1} {0}\r\n{2}\r\n{3}";
+        #region Private Constants
+
+        // Logging tokens
+        private const string LoggingFormat = "{0} {1}-{2} {0}\r\n{3}\r\n{4}";
         private const string LoggingSeparator = "====================";
 
+        // Logging Levels
         private const string LogLevelError = "ERROR";
         private const string LogLevelWarning = "WARN";
         private const string LogLevelInfo = "INFO";
         private const string LogLevelTrace = "TRACE";
         private const string LogLevelDebug = "DEBUG";
 
-        private const string RegistrationFailed = "Registration failed.";
+        // Misc
+        private const string LoggingTimeFormat = "yyyy-MMM-dd HH:mm:ss.fff";
 
-        public const string RabbitMQHostName = "localhost";
+        #endregion
 
-        public static string PasswordsDoNotMatch = LogError(RegistrationFailed, "Password and Confirm Password do not match!");
-        public static string UsernameAlreadyExists = LogError(RegistrationFailed, "User with this username already exists!");
-        public static string EmailAlreadyExists = LogError(RegistrationFailed, "User with this email address already exists!");
-        public static string PasswordsDoNotMeetRequirements = LogError(RegistrationFailed, "{0}");
-        public static string UserCreatedSuccessfully = LogInfo("Registration completed successfully.", "User {0} created successfully!");
+        #region Public Constants
 
+        // Headers
+        public const string KafkaHeader = "Kafka";
+
+        // Messaging Queue Constnats
+        public const string KafkaHost = "localhost:9092";
+        public const string KafkaTopic = "UserManagementService";
+        public const string UserCreatedKey = "UserCreated";
+
+        // Failure Messages
+        public const string RegistrationFailed = "Registration failed.";
+        public const string PasswordsDoNotMatch = "Password and Confirm Password do not match!";
+        public const string UsernameAlreadyExists = "User with this username {0} already exists!";
+        public const string EmailAlreadyExists = "User with this email address {0} already exists!";
+        public const string PasswordsDoNotMeetRequirements = "{0}";
         public const string FailedLogin = "Login failed!";
-        public static string UserNotFound = LogError(FailedLogin, "User does not exist!");
-        public static string UserEnteredWrongPassword = LogError(FailedLogin, "Incorrect password!");
-        public static string UserLoggedInSuccessfully = LogInfo("Login Successful", "User {0} logged in successfully!");
+        public const string WrongCredentials = "Invalid username or password.";
+        public const string InvalidData = "The provided data was invalid or did not exist (null) -> {0}.";
+        public const string UserNotFound = "User {0} does not exist!";
+        public const string UserEnteredWrongPassword = "Incorrect password for user {0}!";
+        public const string InvalidConnectionString = "Connection string not found.";
+        public const string Failure = "Failure";
+        public const string KafkaEventFailure = "Event was not delivered! Topic: {0}, Key: {1}, Value: {2}, Reason: '{3}'";
 
-        public static string UserRetrieved = LogInfo("User found!", "User {0} retrieved successfully!");
-        public static string UserUpdated = LogInfo("User updated!", "User {0} updated successfully!");
+        // Warnings
+        public const string KafkaEventDeliveredButNotAcknowledged = "Event was delivered but not acknowledged! Topic: {0}, Key: {1}, Value: {2}";
 
-        public static string JWTTokenSucces = LogInfo("JWT generated", "Token generated for user {0}");
+        // Success Messages
+        public const string UserRetrieved = "User {0} retrieved successfully!";
+        public const string UserUpdated = "User {0} updated successfully!";
+        public const string UserCreatedSuccessfully = "User {0} created successfully!";
+        public const string UserLoggedInSuccessfully = "User {0} logged in successfully!";
+        public const string JWTTokenSucces = "Token generated for user {0}";
+        public const string Success = "Success";
+        public const string KafkaEventDelivered = "Event was successfully delivered! Topic: {0}, Key: {1}, Value: {2}";
 
+        // Configurations
         public const string JWT = "JWT";
         public const string LoginProvider = "Ecoomerse-Vladi";
-
         public const string JWTIssuer = "UserManagement:JWT:Issuer";
         public const string JWTKey = "UserManagement:JWT:Key";
         public const string ConnectionString = "ConnectionStrings:PostgreSQL";
-        public const string InvalidConnectionString = "Connection string not found.";
 
+        // Misc
         public const string DateTimeFormat = "dd/MM/yyyy";
         public const string CommaSeparator = ", ";
+        public const string DefaultRole = "User";
+
+        #endregion
 
         private static string GenerateLogMessage(string level, string header, string message)
         {
-            return string.Format(LoggingFormat, LoggingSeparator, level, header, message);
+            return string.Format(LoggingFormat, LoggingSeparator, DateTime.UtcNow.ToString(LoggingTimeFormat), level, header, message);
         }
 
-        private static string LogError(string header, string message)
+        #region Logging methods
+
+        public static string LogError(string header, string message)
         {
             return GenerateLogMessage(LogLevelError, header, message);
         }
 
-        private static string LogInfo(string header, string message)
+        public static string LogInfo(string header, string message)
         {
             return GenerateLogMessage(LogLevelInfo, header, message);
         }
 
-        private static string LogWarning(string header, string message)
+        public static string LogWarning(string header, string message)
         {
             return GenerateLogMessage(LogLevelWarning, header, message);
         }
 
-        private static string LogTrace(string header, string message)
+        public static string LogTrace(string header, string message)
         {
             return GenerateLogMessage(LogLevelTrace, header, message);
         }
 
-        private static string LogDebug(string header, string message)
+        public static string LogDebug(string header, string message)
         {
             return GenerateLogMessage(LogLevelDebug, header, message);
         }
+        #endregion
     }
 }

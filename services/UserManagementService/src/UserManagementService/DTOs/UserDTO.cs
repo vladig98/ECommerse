@@ -15,7 +15,7 @@
             PostalCode = string.Empty;
             Street = string.Empty;
             State = string.Empty;
-            Role = string.Empty;
+            Roles = new List<string>();
         }
 
         public string Id { get; set; }
@@ -34,6 +34,6 @@
         public string PostalCode { get; set; }
         public string Street { get; set; }
         public string State { get; set; }
-        public string Role { get; set; }
+        public List<string> Roles { get; set; }
     }
 }

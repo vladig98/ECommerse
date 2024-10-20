@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace UserManagementService.Controllers
@@ -17,6 +18,7 @@ namespace UserManagementService.Controllers
             _profileService = profileService;
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> Profile(string id)
         {
@@ -34,6 +36,7 @@ namespace UserManagementService.Controllers
             return Ok(response);
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> Profile(string id, EditUserDto editData)
         {
@@ -72,7 +75,7 @@ namespace UserManagementService.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(CreateUserDTO registerData)
         {
-            var result = await _registerService.RegisterUser(registerData);
+            var result = await _registerService.RegisterUserAsync(registerData);
 
             var response = new APIResponse<RegisterDto>(result.Data, result.Message);
 

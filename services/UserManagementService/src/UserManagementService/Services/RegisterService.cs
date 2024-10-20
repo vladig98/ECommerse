@@ -1,173 +1,61 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
-using System.Globalization;
-using System.Security.Claims;
-using UserManagementService.Events.Contracts;
-
-namespace UserManagementService.Services
+﻿namespace UserManagementService.Services
 {
-    public class RegisterService : BackgroundService, IRegisterService
+    public class RegisterService : IRegisterService
     {
-        private readonly UserManager<User> _userManager;
-        private readonly RoleManager<Role> _roleManager;
-        private readonly ILogger<RegisterService> _logger;
-        private readonly IMapper _mapper;
-        private readonly ITokenService _tokenService;
-        private readonly IEventBus _eventBus;
+        private readonly IUserManagement _userManagement;
+        private readonly ILogger<IRegisterService> _logger;
+        private readonly IKafkaEventProducer<string, UserCreatedEvent> _producer;
+        private readonly IDataFactory _dataFactory;
+        private readonly IRoleManagement _roleManagement;
+        private readonly CancellationToken _cancellationToken;
 
-        public RegisterService(UserManager<User> userManager, RoleManager<Role> roleManager, ILogger<RegisterService> logger,
-            IMapper mapper, ITokenService tokenService, IEventBus eventBus)
+        public RegisterService(
+            IUserManagement userManagement,
+            ILogger<IRegisterService> logger,
+            IKafkaEventProducer<string, UserCreatedEvent> producer,
+            IDataFactory dataFactory,
+            IRoleManagement roleManagement,
+            CancellationToken cancellationToken)
         {
-            _userManager = userManager;
-            _roleManager = roleManager;
+            _userManagement = userManagement;
             _logger = logger;
-            _mapper = mapper;
-            _tokenService = tokenService;
-            _eventBus = eventBus;
+            _producer = producer;
+            _dataFactory = dataFactory;
+            _roleManagement = roleManagement;
+            _cancellationToken = cancellationToken;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        public async Task<ServiceResult<RegisterDto>> RegisterUserAsync(CreateUserDTO registerData)
         {
-            // Implement logic if needed to run background service
-            return Task.CompletedTask;
-        }
+            string userRole = RoleName.User.ToString();
+            await _roleManagement.EnsureRoleExistsAsync(userRole);
 
-        private bool DoPasswordsMatch(string password, string confirmPassword)
-        {
-            return password == confirmPassword;
-        }
-
-        private async Task<bool> DoesUserExistByUsername(string username)
-        {
-            var user = await _userManager.FindByNameAsync(username);
-            return user != null;
-        }
-
-        private async Task<bool> DoesUserExistByEmail(string email)
-        {
-            var user = await _userManager.FindByEmailAsync(email);
-            return user != null;
-        }
-
-        private async Task<bool> DoesRoleExists(string roleName)
-        {
-            return await _roleManager.RoleExistsAsync(roleName);
-        }
-
-        private Role CreateRole(string roleName)
-        {
-            return new Role
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = roleName
-            };
-        }
-
-        private User CreateUser(CreateUserDTO data)
-        {
-            var validDOB = DateTime.TryParseExact(data.DateOfBirth, GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob);
-
-            var user = _mapper.Map<User>(data);
-            user.LoyaltyPoints = 0;
-            user.MembershipLevel = MembershipLevels.Silver.ToString();
-            user.Id = Guid.NewGuid().ToString();
-            user.DateOfBirth = validDOB ? DateTime.SpecifyKind(dob, DateTimeKind.Utc) : (DateTime?)null;
-
-            return user;
-        }
-
-        private async Task<UserDTO> GetUserDTO(User user)
-        {
-            var userDto = _mapper.Map<UserDTO>(user);
-            var roles = await _userManager.GetRolesAsync(user);
-            userDto.Role = roles.FirstOrDefault()!;
-
-            return userDto;
-        }
-
-        public async Task<ServiceResult<RegisterDto>> RegisterUser(CreateUserDTO registerData)
-        {
-            if (!DoPasswordsMatch(registerData.Password, registerData.ConfirmPassword))
-            {
-                _logger.LogError(GlobalConstants.PasswordsDoNotMatch);
-                return ServiceResult<RegisterDto>.Failure(GlobalConstants.PasswordsDoNotMatch);
-            }
-
-            if (await DoesUserExistByUsername(registerData.Username))
-            {
-                _logger.LogError(GlobalConstants.UsernameAlreadyExists);
-                return ServiceResult<RegisterDto>.Failure(GlobalConstants.UsernameAlreadyExists);
-            }
-
-            if (await DoesUserExistByEmail(registerData.Email))
-            {
-                _logger.LogError(GlobalConstants.EmailAlreadyExists);
-                return ServiceResult<RegisterDto>.Failure(GlobalConstants.EmailAlreadyExists);
-            }
-
-            var role = CreateRole(RoleName.User.ToString());
-
-            if (!await DoesRoleExists(role.Name!))
-            {
-                await _roleManager.CreateAsync(role);
-            }
-
-            var user = CreateUser(registerData);
-
-            var userCreated = await _userManager.CreateAsync(user, registerData.Password);
+            UserManagementResult userCreated = await _userManagement.CreateUserAsync(registerData, userRole);
 
             if (!userCreated.Succeeded)
             {
-                string error = string.Format(GlobalConstants.PasswordsDoNotMeetRequirements, string.Join(Environment.NewLine, userCreated.Errors.Select(e => e.Description)));
-                _logger.LogError(error);
-                return ServiceResult<RegisterDto>.Failure(error);
+                return ServiceResult<RegisterDto>.Failure(userCreated.ErrorMessage);
             }
 
-            await _userManager.AddToRoleAsync(user, role.Name!);
-            await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), role.Name!));
+            await SendMessageToMessageBrokerAndSubscribers(userCreated.User!);
 
-            string successMessage = string.Format(GlobalConstants.UserCreatedSuccessfully, user.UserName);
+            string successMessage = string.Format(GlobalConstants.UserCreatedSuccessfully, userCreated.User!.UserName);
+            RegisterDto response = await GenerateDtoResponseAsync(userCreated.User!);
 
             _logger.LogInformation(successMessage);
 
-            var userDto = await GetUserDTO(user);
+            return ServiceResult<RegisterDto>.Success(response, successMessage);
+        }
 
-            var token = await _tokenService.GenerateJWTToken(user);
+        private async Task<RegisterDto> GenerateDtoResponseAsync(User user)
+        {
+            return await _dataFactory.CreateRegisterDtoAsync(user);
+        }
 
-            var tokenDto = new TokenDto
-            {
-                Token = token
-            };
-
-            var registerDto = new RegisterDto
-            {
-                TokenData = tokenDto,
-                UserData = userDto
-            };
-
-            var userCreatedEvent = new UserCreatedEvent 
-            { 
-                UserId = user.Id,
-                City = user.City,
-                Country = user.Country,
-                DateOfBirth = user.DateOfBirth.Value.ToString(GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture),
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                LoyaltyPoints = user.LoyaltyPoints,
-                MembershipLevel = user.MembershipLevel,
-                PhoneNumber = user.PhoneNumber,
-                PostalCode = user.PostalCode,
-                PreferredCurrency = user.PreferredCurrency,
-                PreferredLanguage = user.PreferredLanguage,
-                Role = role.Name,
-                State = user.State,
-                Street = user.Street,
-                Username = user.UserName
-            };
-            _eventBus.Publish(userCreatedEvent);
-
-            return ServiceResult<RegisterDto>.Success(registerDto, successMessage);
+        private async Task SendMessageToMessageBrokerAndSubscribers(User user)
+        {
+            UserCreatedEvent userCreatedEvent = _dataFactory.CreateSubscribeMessageEvent(user);
+            await _producer.SendEventAsync(GlobalConstants.KafkaTopic, GlobalConstants.UserCreatedKey, userCreatedEvent, _cancellationToken);
         }
     }
 }
