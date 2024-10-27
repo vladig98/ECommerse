@@ -3,12 +3,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Moq;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using UserManagementService.Events;
-using UserManagementService.Services.Interfacces;
 
 namespace UserManagementService.Tests
 {
@@ -78,7 +75,7 @@ namespace UserManagementService.Tests
             var dataFactory = new Mock<IDataFactory>();
             var roleManagement = new Mock<IRoleManagement>();
 
-            var registerService = new RegisterService(mockedUserManager.Object, mockedLogger.Object, 
+            var registerService = new RegisterService(mockedUserManager.Object, mockedLogger.Object,
                  eventBus.Object, dataFactory.Object, roleManagement.Object, CancellationToken.None);
 
             return registerService;

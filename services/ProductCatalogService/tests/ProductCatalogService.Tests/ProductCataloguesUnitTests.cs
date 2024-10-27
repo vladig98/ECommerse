@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using ProductCatalogService.DTOs;
 using ProductCatalogService.Events;
-using System;
 
 namespace ProductCatalogService.Tests
 {
@@ -99,7 +97,7 @@ namespace ProductCatalogService.Tests
         [Fact]
         public async Task CreateProduct_CreateExistingName_ShouldFail()
         {
-            using(var context = new ProductsDbContext(GetOptions()))
+            using (var context = new ProductsDbContext(GetOptions()))
             {
                 var productsService = CreateProductService(context);
 

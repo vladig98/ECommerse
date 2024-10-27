@@ -24,10 +24,10 @@ namespace UserManagementService.Events
 
         private Message<TKey, TValue> GenerateMessage(TKey key, TValue value)
         {
-            return new Message<TKey, TValue> 
-            { 
-                Key = key, 
-                Value = value, 
+            return new Message<TKey, TValue>
+            {
+                Key = key,
+                Value = value,
                 Timestamp = new Timestamp(DateTime.UtcNow)
             };
         }

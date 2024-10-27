@@ -1,12 +1,10 @@
+global using Moq;
 global using UserManagementService.Data;
 global using UserManagementService.DTOs;
 global using UserManagementService.Enums;
 global using UserManagementService.Events;
-global using UserManagementService.Events.Interfaces;
 global using UserManagementService.Helpers;
 global using UserManagementService.Models;
 global using UserManagementService.Services;
 global using UserManagementService.Services.Interfacces;
-global using UserManagementService.Utilities;
 global using Xunit;
-global using Moq;

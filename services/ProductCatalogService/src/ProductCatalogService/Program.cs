@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using ProductCatalogService.Events.Contracts;
 using ProductCatalogService.Events;
+using ProductCatalogService.Events.Contracts;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
