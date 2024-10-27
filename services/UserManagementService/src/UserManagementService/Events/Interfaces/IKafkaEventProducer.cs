@@ -1,4 +1,4 @@
-﻿namespace UserManagementService.Events.Contracts
+﻿namespace UserManagementService.Events.Interfaces
 {
     public interface IKafkaEventProducer<TKey, TValue>
     {

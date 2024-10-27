@@ -4,12 +4,7 @@ namespace UserManagementService.Models
 {
     public class Role : IdentityRole<string>
     {
-        public Role()
-        {
-            Users = new List<UserRole>();
-            Id = Guid.NewGuid().ToString();
-        }
-
-        public virtual ICollection<UserRole> Users { get; set; }
+        public virtual ICollection<UserRole> Users { get; } = new List<UserRole>();
+        public override string Id { get; set; } = Guid.NewGuid().ToString();
     }
 }

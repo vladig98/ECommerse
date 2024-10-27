@@ -1,94 +1,61 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace UserManagementService.Controllers
 {
     [ApiController]
     [Route("/api/[controller]/[action]")]
-    public class UsersController : ControllerBase
+    public class UsersController(IRegisterService registerService, ILoginService loginService, IProfileService profileService) : ControllerBase
     {
-        private readonly IRegisterService _registerService;
-        private readonly ILoginService _loginService;
-        private readonly IProfileService _profileService;
-
-        public UsersController(IRegisterService registerService, ILoginService loginService, IProfileService profileService)
-        {
-            _registerService = registerService;
-            _loginService = loginService;
-            _profileService = profileService;
-        }
+        private readonly IRegisterService _registerService = registerService;
+        private readonly ILoginService _loginService = loginService;
+        private readonly IProfileService _profileService = profileService;
 
         [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> Profile(string id)
         {
-            var result = await _profileService.GetUser(id);
-
-            var response = new APIResponse<UserDTO>(result.Data, result.Message);
-
-            if (!result.Succeeded)
-            {
-                response.SetStatus(BadRequest());
-                return BadRequest(response);
-            }
-
-            response.SetStatus(Ok());
-            return Ok(response);
+            APIResponse<UserDTO> result = await _profileService.GetUser(id);
+            return Ok(result);
         }
 
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> Profile(string id, EditUserDto editData)
         {
-            var result = await _profileService.UpdateUser(id, editData);
-
-            var response = new APIResponse<UserDTO>(result.Data, result.Message);
-
-            if (!result.Succeeded)
-            {
-                response.SetStatus(BadRequest());
-                return BadRequest(response);
-            }
-
-            response.SetStatus(Ok());
-
-            return Ok(response);
+            APIResponse<UserDTO> result = await _profileService.UpdateUser(id, editData);
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginDto loginData)
         {
-            var result = await _loginService.LoginUser(loginData);
-
-            var response = new APIResponse<TokenDto>(result.Data, result.Message);
-
-            if (!result.Succeeded)
+            if (IsAlreadyLoggedIn())
             {
-                response.SetStatus(BadRequest());
-                return BadRequest(response);
+                return BadRequest();
             }
 
-            response.SetStatus(Ok());
-            return Ok(response);
+            APIResponse<TokenDto> result = await _loginService.LoginUser(loginData);
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> Register(CreateUserDTO registerData)
         {
-            var result = await _registerService.RegisterUserAsync(registerData);
-
-            var response = new APIResponse<RegisterDto>(result.Data, result.Message);
-
-            if (!result.Succeeded)
+            if (IsAlreadyLoggedIn())
             {
-                response.SetStatus(BadRequest());
-                return BadRequest(response);
+                return BadRequest();
             }
 
-            var status = CreatedAtAction(nameof(Register), new { id = result.Data.UserData.Id }, response);
-            response.SetStatus(status);
+            APIResponse<RegisterDto> result = await _registerService.RegisterUserAsync(registerData);
 
-            return status;
+            return CreatedAtAction(nameof(Profile), new { id = result.Data.UserData.Id }, result);
+        }
+
+        private bool IsAlreadyLoggedIn()
+        {
+            return !Request.Headers.Authorization.IsNullOrEmpty();
         }
     }
 }

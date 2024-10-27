@@ -23,25 +23,25 @@ namespace UserManagementService.Services
         {
             UserManagementResult result = new UserManagementResult();
 
-            if (await UserExists(registerData, result))
+            if (await UserExists(registerData, result).ConfigureAwait(true))
             {
                 return result;
             }
 
-            using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync();
+            using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync().ConfigureAwait(true);
 
             User user = _dataFactory.CreateUserInstance(registerData);
 
-            IdentityResult userCreated = await _userManager.CreateAsync(user, registerData.Password);
-            await HandleIdentityResults(userCreated, result, transaction);
+            IdentityResult userCreated = await _userManager.CreateAsync(user, registerData.Password).ConfigureAwait(true);
+            await HandleIdentityResults(userCreated, result, transaction).ConfigureAwait(true);
 
-            IdentityResult addedToRole = await _userManager.AddToRoleAsync(user, roleName);
-            await HandleIdentityResults(addedToRole, result, transaction);
+            IdentityResult addedToRole = await _userManager.AddToRoleAsync(user, roleName).ConfigureAwait(true);
+            await HandleIdentityResults(addedToRole, result, transaction).ConfigureAwait(true);
 
-            IdentityResult addedClaims = await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), roleName));
-            await HandleIdentityResults(addedClaims, result, transaction);
+            IdentityResult addedClaims = await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), roleName)).ConfigureAwait(true);
+            await HandleIdentityResults(addedClaims, result, transaction).ConfigureAwait(true);
 
-            await transaction.CommitAsync();
+            await transaction.CommitAsync().ConfigureAwait(true);
 
             result.User = user;
             result.Succeeded = true;
@@ -51,7 +51,7 @@ namespace UserManagementService.Services
 
         private async Task<bool> UserExists(CreateUserDTO registerData, UserManagementResult result)
         {
-            User? user = await _userManager.FindByNameAsync(registerData.Username);
+            User? user = await _userManager.FindByNameAsync(registerData.Username).ConfigureAwait(true);
 
             if (user != null)
             {
@@ -59,7 +59,7 @@ namespace UserManagementService.Services
                 return true;
             }
 
-            user = await _userManager.FindByEmailAsync(registerData.Email);
+            user = await _userManager.FindByEmailAsync(registerData.Email).ConfigureAwait(true);
 
             if (user != null)
             {
@@ -77,7 +77,7 @@ namespace UserManagementService.Services
                 return;
             }
 
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync().ConfigureAwait(true);
 
             string message = string.Format(GlobalConstants.PasswordsDoNotMeetRequirements, string.Join(Environment.NewLine, identityResult.Errors.Select(x => x.Description)));
             HandleErrors(result, message);

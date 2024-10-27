@@ -7,14 +7,9 @@ namespace UserManagementService.Utilities
     {
         public DateTime? Convert(string source, DateTime? destination, ResolutionContext context)
         {
-            bool success = DateTime.TryParseExact(source, GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob);
+            bool isValidDate = DateTime.TryParseExact(source, GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob);
 
-            if (!success)
-            {
-                return null;
-            }
-
-            return dob;
+            return isValidDate ? dob : null;
         }
     }
 }

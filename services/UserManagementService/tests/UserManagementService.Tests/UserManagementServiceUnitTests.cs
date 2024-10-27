@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using UserManagementService.Events;
+using UserManagementService.Services.Interfacces;
 
 namespace UserManagementService.Tests
 {

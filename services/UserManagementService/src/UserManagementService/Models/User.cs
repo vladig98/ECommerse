@@ -5,46 +5,31 @@ namespace UserManagementService.Models
 {
     public class User : IdentityUser<string>
     {
-        public User()
-        {
-            FirstName = string.Empty;
-            LastName = string.Empty;
-            City = string.Empty;
-            Country = string.Empty;
-            Street = string.Empty;
-            PostalCode = string.Empty;
-            State = string.Empty;
-            Roles = new List<UserRole>();
-            DateCreated = DateTime.UtcNow;
-            DateUpdated = DateTime.UtcNow;
-            Id = Guid.NewGuid().ToString();
-            LoyaltyPoints = 0;
-            MembershipLevel = MembershipLevels.Silver.ToString();
-        }
+        public override string Id { get; set; } = Guid.NewGuid().ToString();
 
         [Required]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         [Required]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         [Required]
-        public string City { get; set; }
+        public string City { get; set; } = string.Empty;
 
         [Required]
-        public string Country { get; set; }
+        public string Country { get; set; } = string.Empty;
 
         [Required]
-        public string Street { get; set; }
+        public string Street { get; set; } = string.Empty;
 
         [Required]
-        public string PostalCode { get; set; }
+        public string PostalCode { get; set; } = string.Empty;
 
         [Required]
-        public string State { get; set; }
+        public string State { get; set; } = string.Empty;
 
-        public DateTime DateCreated { get; set; }
-        public DateTime DateUpdated { get; set; }
+        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+        public DateTime DateUpdated { get; set; } = DateTime.UtcNow;
 
         public DateTime? DateOfBirth { get; set; }
         public string? PreferredLanguage { get; set; }
@@ -52,6 +37,6 @@ namespace UserManagementService.Models
         public int? LoyaltyPoints { get; set; }
         public string? MembershipLevel { get; set; }
 
-        public virtual ICollection<UserRole> Roles { get; set; }
+        public virtual ICollection<UserRole> Roles { get; } = new List<UserRole>();
     }
 }

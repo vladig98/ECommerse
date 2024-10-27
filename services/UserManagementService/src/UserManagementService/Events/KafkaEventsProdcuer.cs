@@ -2,59 +2,70 @@
 
 namespace UserManagementService.Events
 {
-    public class KafkaEventsProdcuer<TKey, TValue> : IKafkaEventProducer<TKey, TValue>
+    public class KafkaEventsProdcuer<TKey, TValue>(IProducer<TKey, TValue> producer, LoggingFactory<KafkaEventsProdcuer<TKey, TValue>> logger) : IKafkaEventProducer<TKey, TValue>
     {
-        private readonly IProducer<TKey, TValue> _producer;
-        private readonly ILogger<KafkaEventsProdcuer<TKey, TValue>> _logger;
-
-        public KafkaEventsProdcuer(IProducer<TKey, TValue> producer, ILogger<Events.KafkaEventsProdcuer<TKey, TValue>> logger)
-        {
-            _producer = producer;
-            _logger = logger;
-        }
+        private readonly IProducer<TKey, TValue> _producer = producer;
+        private readonly LoggingFactory<KafkaEventsProdcuer<TKey, TValue>> _logger = logger;
 
         public void SendEvent(string topic, TKey key, TValue value)
         {
-            _producer.Produce(topic, new Message<TKey, TValue>() { Key = key, Value = value }, LogEventOutcome);
+            Message<TKey, TValue> message = GenerateMessage(key, value);
+
+            _producer.Produce(topic, message, LogEventOutcome);
         }
 
         public async Task SendEventAsync(string topic, TKey key, TValue value, CancellationToken cancellationToken)
         {
-            DeliveryResult<TKey, TValue> result = await _producer.ProduceAsync(topic, new Message<TKey, TValue>() { Key = key, Value = value }, cancellationToken);
+            Message<TKey, TValue> message = GenerateMessage(key, value);
+            DeliveryResult<TKey, TValue> result = await _producer.ProduceAsync(topic, message, cancellationToken);
 
             LogEventOutcome(result);
         }
 
+        private Message<TKey, TValue> GenerateMessage(TKey key, TValue value)
+        {
+            return new Message<TKey, TValue> 
+            { 
+                Key = key, 
+                Value = value, 
+                Timestamp = new Timestamp(DateTime.UtcNow)
+            };
+        }
+
         private void LogEventOutcome(DeliveryResult<TKey, TValue> result)
         {
+            string key = result.Key?.ToString() ?? string.Empty;
+            string value = result.Value?.ToString() ?? string.Empty;
+
             switch (result.Status)
             {
                 case PersistenceStatus.NotPersisted:
-                    _logger.LogError(GlobalConstants.LogError(GlobalConstants.KafkaHeader, string.Format(GlobalConstants.KafkaEventFailure, result.Topic, result.Key, result.Value, string.Empty)));
+                    _logger.LogError(GlobalConstants.KafkaHeader, GlobalConstants.KafkaEventFailure, result.Topic, key, value, string.Empty);
                     break;
                 case PersistenceStatus.PossiblyPersisted:
-                    _logger.LogWarning(GlobalConstants.LogWarning(GlobalConstants.KafkaHeader, string.Format(GlobalConstants.KafkaEventDeliveredButNotAcknowledged, result.Topic, result.Key, result.Value)));
+                    _logger.LogWarning(GlobalConstants.KafkaHeader, GlobalConstants.KafkaEventDeliveredButNotAcknowledged, result.Topic, key, value);
                     break;
                 case PersistenceStatus.Persisted:
-                    _logger.LogInformation(GlobalConstants.LogInfo(GlobalConstants.KafkaHeader, string.Format(GlobalConstants.KafkaEventDelivered, result.Topic, result.Key, result.Value)));
-                    break;
-                default:
+                    _logger.LogInfo(GlobalConstants.KafkaHeader, GlobalConstants.KafkaEventDelivered, result.Topic, key, value);
                     break;
             }
 
-            if (result is not DeliveryReport<TKey, TValue>)
+            LogErrorsIfAny(result, key, value);
+        }
+
+        private void LogErrorsIfAny(DeliveryResult<TKey, TValue> result, string key, string value)
+        {
+            if (result is not DeliveryReport<TKey, TValue> report)
             {
                 return;
             }
-
-            DeliveryReport<TKey, TValue> report = (DeliveryReport<TKey, TValue>)result;
 
             if (!report.Error.IsError)
             {
                 return;
             }
 
-            _logger.LogError(GlobalConstants.LogError(GlobalConstants.KafkaHeader, string.Format(GlobalConstants.KafkaEventFailure, report.Topic, report.Key, report.Value, report.Error.Reason)));
+            _logger.LogError(GlobalConstants.KafkaHeader, GlobalConstants.KafkaEventFailure, report.Topic, key, value, report.Error.Reason);
         }
     }
 }

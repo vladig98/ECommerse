@@ -2,11 +2,6 @@
 {
     public class TokenDto
     {
-        public TokenDto()
-        {
-            Token = string.Empty;
-        }
-
-        public string Token { get; set; }
+        public string Token { get; set; } = string.Empty;
     }
 }

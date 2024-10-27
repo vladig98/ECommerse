@@ -2,23 +2,17 @@
 
 namespace UserManagementService.Services
 {
-    public class DataFactory : IDataFactory
+    public class DataFactory(ITokenService tokenService, IMapper mapper) : IDataFactory
     {
-        private readonly ITokenService _tokenService;
-        private readonly IMapper _mapper;
-
-        public DataFactory(ITokenService tokenService, IMapper mapper)
-        {
-            _tokenService = tokenService;
-            _mapper = mapper;
-        }
+        private readonly ITokenService tokenService = tokenService;
+        private readonly IMapper mapper = mapper;
 
         public async Task<RegisterDto> CreateRegisterDtoAsync(User user)
         {
             return new RegisterDto
             {
-                TokenData = await CreateTokenDtoAsync(user),
-                UserData = await CreateUserDtoAsync(user)
+                TokenData = await this.CreateTokenDtoAsync(user),
+                UserData = this.CreateUserDto(user)
             };
         }
 
@@ -30,32 +24,32 @@ namespace UserManagementService.Services
             };
         }
 
-        public UserCreatedEvent CreateSubscribeMessageEvent(User user)
+        public UserCreatedEvent CreateUserCreatedEvent(User user)
         {
-            return _mapper.Map<UserCreatedEvent>(user);
+            return this.mapper.Map<UserCreatedEvent>(user);
         }
 
         public async Task<TokenDto> CreateTokenDtoAsync(User user)
         {
             return new TokenDto
             {
-                Token = await _tokenService.GenerateJWTToken(user)
+                Token = await this.tokenService.GenerateJWTToken(user)
             };
         }
 
-        public async Task<UserDTO> CreateUserDtoAsync(User user)
+        public UserDTO CreateUserDto(User user)
         {
-            return _mapper.Map<UserDTO>(user);
+            return this.mapper.Map<UserDTO>(user);
         }
 
         public User CreateUserInstance(CreateUserDTO registerData)
         {
-            return _mapper.Map<User>(registerData);
+            return this.mapper.Map<User>(registerData);
         }
 
         public User UpdateUser(EditUserDto data)
         {
-            return _mapper.Map<User>(data);
+            return this.mapper.Map<User>(data);
         }
     }
 }

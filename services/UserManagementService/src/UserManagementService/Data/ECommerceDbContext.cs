@@ -4,10 +4,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace UserManagementService.Data
 {
-    public class ECommerceDbContext : IdentityDbContext<User, Role, string, IdentityUserClaim<string>, UserRole, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>
+    public class ECommerceDbContext(DbContextOptions<ECommerceDbContext> options) : IdentityDbContext<
+        User,
+        Role,
+        string,
+        IdentityUserClaim<string>,
+        UserRole,
+        IdentityUserLogin<string>,
+        IdentityRoleClaim<string>,
+        IdentityUserToken<string>>(options)
     {
-        public ECommerceDbContext(DbContextOptions<ECommerceDbContext> options) : base(options) { }
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

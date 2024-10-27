@@ -2,13 +2,7 @@
 {
     public class RegisterDto
     {
-        public RegisterDto()
-        {
-            TokenData = new TokenDto();
-            UserData = new UserDTO();
-        }
-
-        public TokenDto TokenData { get; set; }
-        public UserDTO UserData { get; set; }
+        public TokenDto TokenData { get; set; } = new();
+        public UserDTO UserData { get; set; } = new();
     }
 }

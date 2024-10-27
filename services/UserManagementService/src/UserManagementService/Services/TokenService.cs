@@ -41,7 +41,7 @@ namespace UserManagementService.Services
             JwtSecurityToken token = new JwtSecurityToken(
                     issuer: jwtIssuer,
                     claims: claims,
-                    expires: DateTime.UtcNow.AddHours(1), // valid for 1 hour
+                    expires: DateTime.UtcNow.AddHours(1),
                     audience: jwtIssuer,
                     signingCredentials: credentials
             );

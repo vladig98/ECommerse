@@ -1,63 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using System.Net;
+﻿using System.Net;
 
 namespace UserManagementService.Helpers
 {
-    public class APIResponse<T>
+    public class APIResponse<T>(HttpStatusCode status, string message, T? data = default, params string[] messagePlaceholders)
     {
-        public int StatusCode { get; private set; }
-        public string Status { get; private set; }
-        public T Data { get; private set; }
-        public string Message { get; private set; }
-
-        public APIResponse()
-        {
-            Status = string.Empty;
-            Message = string.Empty;
-            Data = default(T)!;
-        }
-
-        public APIResponse(T data, string message)
-        {
-            Status = string.Empty;
-            Message = message;
-            Data = data;
-        }
-
-        public APIResponse(T data, string message, IActionResult status)
-        {
-            Message = message;
-            Data = data;
-            var statusCodeResult = (IStatusCodeActionResult)status;
-
-            Status = ((HttpStatusCode)statusCodeResult.StatusCode!.Value).ToString();
-            StatusCode = statusCodeResult.StatusCode!.Value;
-        }
-
-        public APIResponse(IActionResult status)
-        {
-            var statusCodeResult = (IStatusCodeActionResult)status;
-
-            Status = ((HttpStatusCode)statusCodeResult.StatusCode!.Value).ToString();
-            StatusCode = statusCodeResult.StatusCode.Value;
-
-            Message = string.Empty;
-            Data = default(T)!;
-        }
-
-        public void SetDataAndMessage(T data, string message)
-        {
-            Data = data;
-            Message = message;
-        }
-
-        public void SetStatus(IActionResult status)
-        {
-            var statusCodeResult = (IStatusCodeActionResult)status;
-
-            Status = ((HttpStatusCode)statusCodeResult.StatusCode!.Value).ToString();
-            StatusCode = statusCodeResult.StatusCode.Value;
-        }
+        public int StatusCode { get; private set; } = (int)status;
+        public string Status { get; private set; } = status.ToString();
+        public T? Data { get; private set; } = data;
+        public string Message { get; private set; } = string.Format(message, messagePlaceholders);
     }
 }

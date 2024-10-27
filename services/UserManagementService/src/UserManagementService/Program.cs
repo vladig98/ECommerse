@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
-using UserManagementService.Utilities;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration[GlobalConstants.ConnectionString] ?? throw new InvalidOperationException(GlobalConstants.InvalidConnectionString);
+#region Database
+string connectionString = builder.Configuration[GlobalConstants.ConnectionString] ?? throw new InvalidOperationException(GlobalConstants.InvalidConnectionString);
 
 builder.Services.AddDbContext<ECommerceDbContext>(options =>
 {
@@ -18,7 +18,6 @@ builder.Services.AddDbContext<ECommerceDbContext>(options =>
     {
         npgsqlOptions.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
 
-        //Configuring Connection Resiliency:
         npgsqlOptions.
             EnableRetryOnFailure(maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(30),
@@ -27,9 +26,11 @@ builder.Services.AddDbContext<ECommerceDbContext>(options =>
 });
 
 builder.Services.AddIdentityCore<User>().AddSignInManager().AddRoles<Role>().AddEntityFrameworkStores<ECommerceDbContext>().AddDefaultTokenProviders();
+#endregion
 
-var jwtIssuer = builder.Configuration[GlobalConstants.JWTIssuer];
-var jwtKey = builder.Configuration[GlobalConstants.JWTKey];
+#region JWT_Configuration
+string jwtIssuer = builder.Configuration[GlobalConstants.JWTIssuer] ?? throw new InvalidOperationException(GlobalConstants.InvalidJWT);
+string jwtKey = builder.Configuration[GlobalConstants.JWTKey] ?? throw new InvalidOperationException(GlobalConstants.InvalidJWT);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
  .AddJwtBearer(options =>
@@ -47,13 +48,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
          ClockSkew = TimeSpan.Zero
      };
  });
+#endregion
 
-builder.Services.AddAuthorization();
-
-var mapper = AutoMapperConfig.Initialize();
-builder.Services.AddSingleton(mapper);
-
-builder.Services.AddDataProtection();
+#region Services_registration
+builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.AddTransient<IRegisterService, RegisterService>();
@@ -62,7 +60,6 @@ builder.Services.AddTransient<IProfileService, ProfileService>();
 builder.Services.AddTransient<IRoleManagement, RoleManagement>();
 builder.Services.AddTransient<IDataFactory, DataFactory>();
 builder.Services.AddTransient<IUserManagement, UserManagement>();
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(CancellationToken), cfg =>
 {
     IHttpContextAccessor httpContext = cfg.GetRequiredService<IHttpContextAccessor>();
@@ -76,13 +73,18 @@ builder.Services.AddSingleton(cfg =>
     return new ProducerBuilder<string, UserCreatedEvent>(config).SetValueSerializer(new KafkaValueSerializer<UserCreatedEvent>()).Build();
 });
 builder.Services.AddTransient<IKafkaEventProducer<string, UserCreatedEvent>, KafkaEventsProdcuer<string, UserCreatedEvent>>();
+#endregion
 
+#region ASP_Services
+builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
+#endregion
 
+#region App_Building
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -94,7 +96,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
+#endregion

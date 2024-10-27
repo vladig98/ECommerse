@@ -1,4 +1,4 @@
-﻿namespace UserManagementService.Services.Contracts
+﻿namespace UserManagementService.Services.Interfacces
 {
     public interface IUserManagement
     {

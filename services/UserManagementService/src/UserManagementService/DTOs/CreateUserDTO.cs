@@ -4,43 +4,27 @@ namespace UserManagementService.DTOs
 {
     public class CreateUserDTO
     {
-        public CreateUserDTO()
-        {
-            Username = string.Empty;
-            Password = string.Empty;
-            ConfirmPassword = string.Empty;
-            Email = string.Empty;
-            FirstName = string.Empty;
-            LastName = string.Empty;
-            PhoneNumber = string.Empty;
-            City = string.Empty;
-            Country = string.Empty;
-            PostalCode = string.Empty;
-            Street = string.Empty;
-            State = string.Empty;
-        }
-
         [Required]
-        public string Username { get; set; }
+        public string Username { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Password)]
         [Compare(nameof(Password))]
-        public string ConfirmPassword { get; set; }
+        public string ConfirmPassword { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [Required]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         [Required]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         public string? DateOfBirth { get; set; }
 
@@ -50,21 +34,21 @@ namespace UserManagementService.DTOs
 
         [Required]
         [Phone]
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
 
         [Required]
-        public string City { get; set; }
+        public string City { get; set; } = string.Empty;
 
         [Required]
-        public string Country { get; set; }
+        public string Country { get; set; } = string.Empty;
 
         [Required]
-        public string PostalCode { get; set; }
+        public string PostalCode { get; set; } = string.Empty;
 
         [Required]
-        public string Street { get; set; }
+        public string Street { get; set; } = string.Empty;
 
         [Required]
-        public string State { get; set; }
+        public string State { get; set; } = string.Empty;
     }
 }
