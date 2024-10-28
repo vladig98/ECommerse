@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Newtonsoft.Json;
 using System.Net;
 
 namespace UserManagementService.Services
