@@ -5,6 +5,8 @@ namespace UserManagementService.Utilities
 {
     public class AutoMapperConfig : Profile
     {
+        private const string DateTimeFormat = "dd/MM/yyyy";
+
         public AutoMapperConfig()
         {
             CreateMap<string, DateTime?>().ConvertUsing<DateTimeTypeConverter>();
@@ -17,7 +19,7 @@ namespace UserManagementService.Utilities
                 .ForMember(dest => dest.DateUpdated, opt => opt.MapFrom(src => DateTime.UtcNow));
             CreateMap<User, UserCreatedEvent>()
                 .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.Roles.Select(r => r.Role.Name)))
-                .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth.Value.ToString(GlobalConstants.DateTimeFormat, CultureInfo.InvariantCulture)));
+                .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth.Value.ToString(DateTimeFormat, CultureInfo.InvariantCulture)));
         }
     }
 }

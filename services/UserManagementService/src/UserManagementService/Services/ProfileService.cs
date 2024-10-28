@@ -9,8 +9,10 @@ namespace UserManagementService.Services
         private readonly LoggingFactory<ProfileService> _logger = logger;
         private readonly IDataFactory _dataFactory = dataFactory;
 
-        private const string UserNotFound = "User {0} does not exist!";
+        private const string UserNotFound = "User with Id {0} does not exist!";
         private const string EmailAlreadyExists = "User with this email address {0} already exists!";
+        private const string UserRetrieved = "User {0} retrieved successfully!";
+        private const string UserUpdated = "User {0} updated successfully!";
         private const string Failure = nameof(Failure);
         private const string Success = nameof(Success);
 
@@ -21,15 +23,15 @@ namespace UserManagementService.Services
             if (user == null)
             {
                 _logger.LogError(Failure, UserNotFound, userId);
-                return new APIResponse<UserDTO>(HttpStatusCode.BadRequest, "");
+                return new APIResponse<UserDTO>(HttpStatusCode.BadRequest, UserNotFound, null, userId);
             }
 
             UserDTO userDto = _dataFactory.CreateUserDto(user);
 
-            string success = string.Format(GlobalConstants.UserRetrieved, user.UserName);
+            string success = string.Format(UserRetrieved, user.UserName);
             _logger.LogInfo(Success, success);
 
-            return GetSuccessResponse(userDto, success);
+            return new APIResponse<UserDTO>(HttpStatusCode.OK, success, userDto);
         }
 
         public async Task<APIResponse<UserDTO>> UpdateUser(string userId, EditUserDto updatedData)
@@ -39,7 +41,7 @@ namespace UserManagementService.Services
             if (user == null)
             {
                 _logger.LogError(Failure, UserNotFound, userId);
-                return new APIResponse<UserDTO>(HttpStatusCode.BadRequest, string.Format(UserNotFound, userId));
+                return new APIResponse<UserDTO>(HttpStatusCode.BadRequest, UserNotFound, null, userId);
             }
 
             User? userEmail = await _userManager.FindByEmailAsync(updatedData.Email!);
@@ -47,7 +49,7 @@ namespace UserManagementService.Services
             if (userEmail != null)
             {
                 _logger.LogError(Failure, EmailAlreadyExists, updatedData.Email);
-                return new APIResponse<UserDTO>(HttpStatusCode.BadRequest, string.Format(EmailAlreadyExists, updatedData.Email));
+                return new APIResponse<UserDTO>(HttpStatusCode.BadRequest, EmailAlreadyExists, null, updatedData.Email);
             }
 
             user = _dataFactory.UpdateUser(updatedData);
@@ -55,17 +57,10 @@ namespace UserManagementService.Services
 
             UserDTO userDto = _dataFactory.CreateUserDto(user);
 
-            string success = string.Format(GlobalConstants.UserUpdated, user.UserName);
+            string success = string.Format(UserUpdated, user.UserName);
             _logger.LogInfo(Success, success);
 
-            return GetSuccessResponse(userDto, success);
-        }
-
-        private static APIResponse<UserDTO> GetSuccessResponse(UserDTO userDto, string message)
-        {
-            APIResponse<UserDTO> response = new APIResponse<UserDTO>(HttpStatusCode.OK, message, userDto);
-
-            return response;
+            return new APIResponse<UserDTO>(HttpStatusCode.OK, success, userDto);
         }
     }
 }

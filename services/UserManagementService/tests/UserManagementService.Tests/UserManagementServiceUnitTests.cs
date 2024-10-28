@@ -75,7 +75,7 @@ namespace UserManagementService.Tests
             var dataFactory = new Mock<IDataFactory>();
             var roleManagement = new Mock<IRoleManagement>();
 
-            var registerService = new RegisterService(mockedUserManager.Object, mockedLogger.Object,
+            var registerService = new RegisterService(mockedUserManager.Object, mockedLogger.Object, 
                  eventBus.Object, dataFactory.Object, roleManagement.Object, CancellationToken.None);
 
             return registerService;

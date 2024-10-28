@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace UserManagementService.Helpers
+namespace UserManagementService.Models
 {
     public class APIResponse<T>(HttpStatusCode status, string message, T? data = default, params string[] messagePlaceholders)
     {

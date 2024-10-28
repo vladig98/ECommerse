@@ -6,18 +6,17 @@ using System.Text;
 
 namespace UserManagementService.Services
 {
-    public class TokenService : ITokenService
+    public class TokenService(UserManager<User> userManager, LoggingFactory<TokenService> logger, IConfiguration configuration) : ITokenService
     {
-        private readonly UserManager<User> _userManager;
-        private readonly ILogger<TokenService> _logger;
-        private readonly IConfiguration _configuration;
+        private readonly UserManager<User> _userManager = userManager;
+        private readonly LoggingFactory<TokenService> _logger = logger;
+        private readonly IConfiguration _configuration = configuration;
 
-        public TokenService(UserManager<User> userManager, ILogger<TokenService> logger, IConfiguration configuration)
-        {
-            _userManager = userManager;
-            _logger = logger;
-            _configuration = configuration;
-        }
+        private const string JWT = "JWT";
+        private const string LoginProvider = "Ecoomerse-Vladi";
+        private const string JWTIssuer = "UserManagement:JWT:Issuer";
+        private const string JWTKey = "UserManagement:JWT:Key";
+        private const string JWTTokenSucces = "Token generated for user {0}";
 
         public async Task<string> GenerateJWTToken(User user)
         {
@@ -31,8 +30,8 @@ namespace UserManagementService.Services
                 new Claim(JwtRegisteredClaimNames.Email, user.Email!)
             };
 
-            string jwtIssuer = _configuration[GlobalConstants.JWTIssuer]!;
-            string jwtKey = _configuration[GlobalConstants.JWTKey]!;
+            string jwtIssuer = _configuration[JWTIssuer]!;
+            string jwtKey = _configuration[JWTKey]!;
 
             byte[] jwtKeyBytes = Encoding.ASCII.GetBytes(jwtKey);
             SymmetricSecurityKey key = new SymmetricSecurityKey(jwtKeyBytes);
@@ -49,9 +48,9 @@ namespace UserManagementService.Services
             string jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
             await _userManager.AddClaimsAsync(user, claims);
-            await _userManager.SetAuthenticationTokenAsync(user, GlobalConstants.LoginProvider, GlobalConstants.JWT, jwt);
+            await _userManager.SetAuthenticationTokenAsync(user, LoginProvider, JWT, jwt);
 
-            _logger.LogInformation(string.Format(GlobalConstants.JWTTokenSucces, user.UserName));
+            _logger.LogInfo(nameof(TokenService), JWTTokenSucces, user.UserName);
 
             return jwt;
         }

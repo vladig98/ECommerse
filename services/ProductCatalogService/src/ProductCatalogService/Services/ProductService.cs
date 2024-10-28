@@ -107,8 +107,8 @@ namespace ProductCatalogService.Services
 
             var productDto = GenerateProductDto(product);
 
-            var productCreatedEvent = new ProductCreatedEvent
-            {
+            var productCreatedEvent = new ProductCreatedEvent 
+            { 
                 ProductId = product.Id,
                 Category = product.Category.ToString(),
                 CreationDate = product.CreationDate,
@@ -192,7 +192,7 @@ namespace ProductCatalogService.Services
             }
 
             var (updatedDateValid, updatedDate) = ParseDate(updatedData.UpdatedDate);
-
+            
             if (!updatedDateValid)
             {
                 updatedDate = product.UpdatedDate;

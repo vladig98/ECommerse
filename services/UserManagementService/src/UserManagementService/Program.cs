@@ -9,7 +9,7 @@ using System.Text;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 #region Database
-string connectionString = builder.Configuration[GlobalConstants.ConnectionString] ?? throw new InvalidOperationException(GlobalConstants.InvalidConnectionString);
+string connectionString = builder.Configuration["ConnectionStrings:PostgreSQL"] ?? throw new InvalidOperationException("Connection string not found.");
 
 builder.Services.AddDbContext<ECommerceDbContext>(options =>
 {
@@ -29,8 +29,8 @@ builder.Services.AddIdentityCore<User>().AddSignInManager().AddRoles<Role>().Add
 #endregion
 
 #region JWT_Configuration
-string jwtIssuer = builder.Configuration[GlobalConstants.JWTIssuer] ?? throw new InvalidOperationException(GlobalConstants.InvalidJWT);
-string jwtKey = builder.Configuration[GlobalConstants.JWTKey] ?? throw new InvalidOperationException(GlobalConstants.InvalidJWT);
+string jwtIssuer = builder.Configuration["UserManagement:JWT:Issuer"] ?? throw new InvalidOperationException("Invalid JWT configuration");
+string jwtKey = builder.Configuration["UserManagement:JWT:Key"] ?? throw new InvalidOperationException("Invalid JWT configuration");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
  .AddJwtBearer(options =>
@@ -68,7 +68,7 @@ builder.Services.AddScoped(typeof(CancellationToken), cfg =>
 builder.Services.AddSingleton(cfg =>
 {
     ProducerConfig config = new ProducerConfig();
-    config.BootstrapServers = GlobalConstants.KafkaHost;
+    config.BootstrapServers = "localhost:9092";
 
     return new ProducerBuilder<string, UserCreatedEvent>(config).SetValueSerializer(new KafkaValueSerializer<UserCreatedEvent>()).Build();
 });

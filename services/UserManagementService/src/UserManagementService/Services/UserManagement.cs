@@ -1,47 +1,46 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Security.Claims;
+using System.Text;
 
 namespace UserManagementService.Services
 {
-    public class UserManagement : IUserManagement
+    public class UserManagement(UserManager<User> userManager, IDataFactory dataFactory, LoggingFactory<UserManagement> logger, ECommerceDbContext context) : IUserManagement
     {
-        private readonly UserManager<User> _userManager;
-        private readonly IDataFactory _dataFactory;
-        private readonly ILogger<UserManagement> _logger;
-        private readonly ECommerceDbContext _context;
+        private readonly UserManager<User> _userManager = userManager;
+        private readonly IDataFactory _dataFactory = dataFactory;
+        private readonly LoggingFactory<UserManagement> _logger = logger;
+        private readonly ECommerceDbContext _context = context;
 
-        public UserManagement(UserManager<User> userManager, IDataFactory dataFactory, ILogger<UserManagement> logger, ECommerceDbContext context)
-        {
-            _userManager = userManager;
-            _dataFactory = dataFactory;
-            _logger = logger;
-            _context = context;
-        }
+        private const string UsernameAlreadyExists = "User with this username {0} already exists!";
+        private const string EmailAlreadyExists = "User with this email address {0} already exists!";
+        private const string PasswordsDoNotMeetRequirements = "{0}";
+        private const string PasswordValidationErrorsFormat = "Error code: {0}, Error Message: {1}";
+        private const string Failure = nameof(Failure);
 
         public async Task<UserManagementResult> CreateUserAsync(CreateUserDTO registerData, string roleName)
         {
             UserManagementResult result = new UserManagementResult();
 
-            if (await UserExists(registerData, result).ConfigureAwait(true))
+            if (await UserExists(registerData, result))
             {
                 return result;
             }
 
-            using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync().ConfigureAwait(true);
+            using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync();
 
             User user = _dataFactory.CreateUserInstance(registerData);
 
-            IdentityResult userCreated = await _userManager.CreateAsync(user, registerData.Password).ConfigureAwait(true);
-            await HandleIdentityResults(userCreated, result, transaction).ConfigureAwait(true);
+            IdentityResult userCreated = await _userManager.CreateAsync(user, registerData.Password);
+            await HandleIdentityResults(userCreated, result, transaction);
 
-            IdentityResult addedToRole = await _userManager.AddToRoleAsync(user, roleName).ConfigureAwait(true);
-            await HandleIdentityResults(addedToRole, result, transaction).ConfigureAwait(true);
+            IdentityResult addedToRole = await _userManager.AddToRoleAsync(user, roleName);
+            await HandleIdentityResults(addedToRole, result, transaction);
 
-            IdentityResult addedClaims = await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), roleName)).ConfigureAwait(true);
-            await HandleIdentityResults(addedClaims, result, transaction).ConfigureAwait(true);
+            IdentityResult addedClaims = await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), roleName));
+            await HandleIdentityResults(addedClaims, result, transaction);
 
-            await transaction.CommitAsync().ConfigureAwait(true);
+            await transaction.CommitAsync();
 
             result.User = user;
             result.Succeeded = true;
@@ -51,19 +50,19 @@ namespace UserManagementService.Services
 
         private async Task<bool> UserExists(CreateUserDTO registerData, UserManagementResult result)
         {
-            User? user = await _userManager.FindByNameAsync(registerData.Username).ConfigureAwait(true);
+            User? user = await _userManager.FindByNameAsync(registerData.Username);
 
             if (user != null)
             {
-                HandleErrors(result, string.Format(GlobalConstants.UsernameAlreadyExists, registerData.Username));
+                GenerateError(result, UsernameAlreadyExists, registerData.Username);
                 return true;
             }
 
-            user = await _userManager.FindByEmailAsync(registerData.Email).ConfigureAwait(true);
+            user = await _userManager.FindByEmailAsync(registerData.Email);
 
             if (user != null)
             {
-                HandleErrors(result, string.Format(GlobalConstants.EmailAlreadyExists, registerData.Email));
+                GenerateError(result, EmailAlreadyExists, registerData.Email);
                 return true;
             }
 
@@ -77,18 +76,30 @@ namespace UserManagementService.Services
                 return;
             }
 
-            await transaction.RollbackAsync().ConfigureAwait(true);
+            await transaction.RollbackAsync();
 
-            string message = string.Format(GlobalConstants.PasswordsDoNotMeetRequirements, string.Join(Environment.NewLine, identityResult.Errors.Select(x => x.Description)));
-            HandleErrors(result, message);
+            GenerateError(result, PasswordsDoNotMeetRequirements, ExtractErrorsFromIdentityResult(identityResult));
         }
 
-        private void HandleErrors(UserManagementResult result, string message)
+        private string ExtractErrorsFromIdentityResult(IdentityResult result)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (IdentityError error in result.Errors)
+            {
+                _logger.LogError(Failure, PasswordValidationErrorsFormat, error.Code, error.Description);
+                sb.AppendLine(error.Description);
+            }
+
+            return sb.ToString();
+        }
+
+        private void GenerateError(UserManagementResult result, string message, params string[] messageParameters)
         {
             result.Succeeded = false;
             result.ErrorMessage = message;
 
-            _logger.LogError(message);
+            _logger.LogError(Failure, message, messageParameters);
         }
     }
 }

@@ -2,16 +2,10 @@
 
 namespace UserManagementService.Services
 {
-    public class RoleManagement : IRoleManagement
+    public class RoleManagement(RoleManager<Role> roleManager, IDataFactory dataFactory) : IRoleManagement
     {
-        private readonly RoleManager<Role> _roleManager;
-        private readonly IDataFactory _dataFactory;
-
-        public RoleManagement(RoleManager<Role> roleManager, IDataFactory dataFactory)
-        {
-            _roleManager = roleManager;
-            _dataFactory = dataFactory;
-        }
+        private readonly RoleManager<Role> _roleManager = roleManager;
+        private readonly IDataFactory _dataFactory = dataFactory;
 
         public async Task EnsureRoleExistsAsync(string roleName)
         {
