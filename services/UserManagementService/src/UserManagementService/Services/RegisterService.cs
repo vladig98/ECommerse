@@ -11,7 +11,7 @@ namespace UserManagementService.Services
         CancellationToken cancellationToken) : IRegisterService
     {
         private readonly IUserManagement _userManagement = userManagement;
-        private readonly LoggingFactory<IRegisterService> _logger = logger;
+        private readonly ILoggingFactory<IRegisterService> _logger = logger;
         private readonly IKafkaEventProducer<string, UserCreatedEvent> _producer = producer;
         private readonly IDataFactory _dataFactory = dataFactory;
         private readonly IRoleManagement _roleManagement = roleManagement;
