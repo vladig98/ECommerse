@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.Net;
+﻿using System.Net;
 
 namespace UserManagementService.Services
 {
-    public class ProfileService(UserManager<User> userManager, LoggingFactory<ProfileService> logger, IDataFactory dataFactory) : IProfileService
+    public class ProfileService(IUserManagement userManager, ILoggingFactory<IProfileService> logger, IDataFactory dataFactory) : IProfileService
     {
-        private readonly UserManager<User> _userManager = userManager;
-        private readonly LoggingFactory<ProfileService> _logger = logger;
+        private readonly IUserManagement _userManager = userManager;
+        private readonly ILoggingFactory<IProfileService> _logger = logger;
         private readonly IDataFactory _dataFactory = dataFactory;
 
         private const string UserNotFound = "User with Id {0} does not exist!";

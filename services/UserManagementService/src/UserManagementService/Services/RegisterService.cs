@@ -4,7 +4,7 @@ namespace UserManagementService.Services
 {
     public class RegisterService(
         IUserManagement userManagement,
-        LoggingFactory<IRegisterService> logger,
+        ILoggingFactory<IRegisterService> logger,
         IKafkaEventProducer<string, UserCreatedEvent> producer,
         IDataFactory dataFactory,
         IRoleManagement roleManagement,

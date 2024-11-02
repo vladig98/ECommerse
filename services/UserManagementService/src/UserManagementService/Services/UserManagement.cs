@@ -1,16 +1,15 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Storage;
 using System.Security.Claims;
 using System.Text;
+using System.Transactions;
 
 namespace UserManagementService.Services
 {
-    public class UserManagement(UserManager<User> userManager, IDataFactory dataFactory, LoggingFactory<UserManagement> logger, ECommerceDbContext context) : IUserManagement
+    public class UserManagement(UserManager<User> userManager, IDataFactory dataFactory, ILoggingFactory<IUserManagement> logger) : IUserManagement
     {
         private readonly UserManager<User> _userManager = userManager;
         private readonly IDataFactory _dataFactory = dataFactory;
-        private readonly LoggingFactory<UserManagement> _logger = logger;
-        private readonly ECommerceDbContext _context = context;
+        private readonly ILoggingFactory<IUserManagement> _logger = logger;
 
         private const string UsernameAlreadyExists = "User with this username {0} already exists!";
         private const string EmailAlreadyExists = "User with this email address {0} already exists!";
@@ -27,20 +26,35 @@ namespace UserManagementService.Services
                 return result;
             }
 
-            using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync();
+            using TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
             User user = _dataFactory.CreateUserInstance(registerData);
 
             IdentityResult userCreated = await _userManager.CreateAsync(user, registerData.Password);
-            await HandleIdentityResults(userCreated, result, transaction);
+            await HandleIdentityResults(userCreated, result);
+
+            if (!result.Succeeded)
+            {
+                return result;
+            }
 
             IdentityResult addedToRole = await _userManager.AddToRoleAsync(user, roleName);
-            await HandleIdentityResults(addedToRole, result, transaction);
+            await HandleIdentityResults(addedToRole, result);
+
+            if (!result.Succeeded)
+            {
+                return result;
+            }
 
             IdentityResult addedClaims = await _userManager.AddClaimAsync(user, claim: new Claim(ClaimTypes.Role.ToString(), roleName));
-            await HandleIdentityResults(addedClaims, result, transaction);
+            await HandleIdentityResults(addedClaims, result);
 
-            await transaction.CommitAsync();
+            if (!result.Succeeded)
+            {
+                return result;
+            }
+
+            scope.Complete();
 
             result.User = user;
             result.Succeeded = true;
@@ -69,14 +83,12 @@ namespace UserManagementService.Services
             return false;
         }
 
-        private async Task HandleIdentityResults(IdentityResult identityResult, UserManagementResult result, IDbContextTransaction transaction)
+        private async Task HandleIdentityResults(IdentityResult identityResult, UserManagementResult result)
         {
             if (identityResult.Succeeded)
             {
                 return;
             }
-
-            await transaction.RollbackAsync();
 
             GenerateError(result, PasswordsDoNotMeetRequirements, ExtractErrorsFromIdentityResult(identityResult));
         }
@@ -100,6 +112,41 @@ namespace UserManagementService.Services
             result.ErrorMessage = message;
 
             _logger.LogError(Failure, message, messageParameters);
+        }
+
+        public async Task<User?> FindByNameAsync(string name)
+        {
+            return await _userManager.FindByNameAsync(name);
+        }
+
+        public async Task<bool> CheckPasswordAsync(User user, string password)
+        {
+            return await _userManager.CheckPasswordAsync(user, password);
+        }
+
+        public async Task<User?> FindByIdAsync(string id)
+        {
+            return await _userManager.FindByIdAsync(id);
+        }
+
+        public async Task<User?> FindByEmailAsync(string email)
+        {
+            return await _userManager.FindByEmailAsync(email);
+        }
+
+        public async Task<IdentityResult> UpdateAsync(User user)
+        {
+            return await _userManager.UpdateAsync(user);
+        }
+
+        public async Task<IdentityResult> AddClaimsAsync(User user, Claim[] claims)
+        {
+            return await _userManager.AddClaimsAsync(user, claims);
+        }
+
+        public async Task<IdentityResult> SetAuthenticationTokenAsync(User user, string loginProvider, string tokenName, string tokenValue)
+        {
+            return await _userManager.SetAuthenticationTokenAsync(user, loginProvider, tokenName, tokenValue);
         }
     }
 }

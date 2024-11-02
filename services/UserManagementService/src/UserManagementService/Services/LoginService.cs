@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.Net;
+﻿using System.Net;
 
 namespace UserManagementService.Services
 {
-    public class LoginService(UserManager<User> userManager, LoggingFactory<LoginService> logger, IDataFactory dataFactory) : ILoginService
+    public class LoginService(IUserManagement userManager, ILoggingFactory<ILoginService> logger, IDataFactory dataFactory) : ILoginService
     {
-        private readonly UserManager<User> _userManager = userManager;
-        private readonly LoggingFactory<LoginService> _logger = logger;
+        private readonly IUserManagement _userManager = userManager;
+        private readonly ILoggingFactory<ILoginService> _logger = logger;
         private readonly IDataFactory _dataFactory = dataFactory;
 
         private const string FailedLogin = "Login failed!";

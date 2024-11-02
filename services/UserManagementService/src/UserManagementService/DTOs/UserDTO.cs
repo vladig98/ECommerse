@@ -19,5 +19,10 @@
         public string Street { get; set; } = string.Empty;
         public string State { get; set; } = string.Empty;
         public ICollection<string> Roles { get; } = new List<string>();
+
+        public void AddRole(string role)
+        {
+            Roles.Add(role);
+        }
     }
 }

@@ -38,5 +38,10 @@ namespace UserManagementService.Models
         public string? MembershipLevel { get; set; }
 
         public virtual ICollection<UserRole> Roles { get; } = new List<UserRole>();
+
+        public void AddRole(UserRole role)
+        {
+            Roles.Add(role);
+        }
     }
 }

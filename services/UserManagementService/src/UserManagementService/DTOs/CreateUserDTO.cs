@@ -13,7 +13,7 @@ namespace UserManagementService.DTOs
 
         [Required]
         [DataType(DataType.Password)]
-        [Compare(nameof(Password))]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match!")]
         public string ConfirmPassword { get; set; } = string.Empty;
 
         [Required]
