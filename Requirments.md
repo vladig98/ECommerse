@@ -50,7 +50,7 @@ Each service is described with four attributes: what it does, what it's built on
 ### 2.2 Product Catalog Service
 - **Features**: CRUD for products, categories/taxonomy, variants, rich media, structured product data (schema.org/JSON-LD) for SEO and AI-agent discoverability
 - **Tech stack**: ASP.NET Core 10, EF Core, PostgreSQL 18, Redis (read-through cache)
-- **Key endpoints**: `GET /api/catalog/products`, `GET /api/catalog/products/{id}`, `POST/PUT/DELETE /api/catalog/products/{id}`, `GET /api/catalog/categories`
+- **Key endpoints**: `GET /api/catalog/products`, `POST /api/catalog/products`, `GET/PUT/DELETE /api/catalog/products/{id}`, `GET /api/catalog/categories`
 - **Publishes**: `ProductCreated`, `ProductUpdated`, `ProductDeleted`, `ProductPriceChanged`
 - **Consumes**: `InventoryLevelChanged` (to surface stock badges)
 

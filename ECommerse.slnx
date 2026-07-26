@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="ECommerse.Catalog/ECommerse.Catalog.csproj" Id="262d4106-2334-448e-913e-d201a883e559" />
   <Project Path="ECommerse.Identity/ECommerse.Identity.csproj" Id="bf259d07-35a7-4109-8f3b-55282d81271f" />
 </Solution>

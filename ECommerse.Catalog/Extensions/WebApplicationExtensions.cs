@@ -1,4 +1,4 @@
-﻿namespace ECommerse.Identity.Extentions;
+﻿namespace ECommerse.Catalog.Extensions;
 
 public static class WebApplicationExtensions
 {
@@ -14,7 +14,7 @@ public static class WebApplicationExtensions
             app.MapOpenApi().AllowAnonymous();
             app.MapScalarApiReference(options =>
             {
-                options.WithTitle("ECommerse Identity API")
+                options.WithTitle("ECommerse Catalog API")
                     .WithTheme(ScalarTheme.Purple)
                     .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
             }).AllowAnonymous();
@@ -35,10 +35,9 @@ public static class WebApplicationExtensions
 
         public WebApplication MapIdentityEndpoints()
         {
-            app.MapGroup("/api/identity")
-               //.MapIdentityApi<IdentityUser>()
-               .AddIdentityEndpoints<IdentityUser>()
-               .AllowAnonymous();
+            app.MapGroup("/api/catalog")
+                .MapProductEndpoints()
+                .MapCategoryEndpoints();
 
             return app;
         }
@@ -48,7 +47,14 @@ public static class WebApplicationExtensions
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.MapControllers();
+            app.ConfigureSerilogMiddleware();
+
+            return app;
+        }
+
+        private WebApplication ConfigureSerilogMiddleware()
+        {
+            app.UseSerilogRequestLogging();
 
             return app;
         }
