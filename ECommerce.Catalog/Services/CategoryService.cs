@@ -2,60 +2,68 @@
 
 public class CategoryService(MainDbContext dbContext, ILogger logger) : ICategoryService
 {
-    public async Task<ApiResponse<CategoryDto>> CreateAsync(string username, CreateCategoryDto dto, CancellationToken token)
+    public ApiResponse<CategoryDto> Create(string username, CreateCategoryDto dto)
     {
-        Category category = new()
-        {
-            Name = dto.Name,
-            ParentCategoryId = dto.ParentCategoryId,
-            Slug = dto.Slug
-        };
-
         try
         {
-            dbContext.Categories.Add(category);
-            await dbContext.SaveChangesAsync(token);
+            Category category = new()
+            {
+                Name = dto.Name,
+                ParentCategoryId = dto.ParentCategoryId,
+                Slug = dto.Slug
+            };
 
-            logger.Information("Added a new category 'name = {Name}'. User '{Username}'", dto.Name, username);
+            dbContext.Categories.Add(category);
+
+            logger.Information(
+                "Successfully prepared category '{CategoryName}' for creation. User: '{Username}'",
+                category.Name, username);
 
             return new ApiResponse<CategoryDto>(Data: category.ToDto());
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Failed to add category 'name = {Name}'. User '{Username}'", dto.Name, username);
-            return new ApiResponse<CategoryDto>(Error: $"Failed to add category with name {dto.Name}.", Code: ErrorCodes.Generic);
+            logger.Error(ex,
+                "Memory/Tracker failure while preparing category '{CategoryName}'. User: '{Username}'",
+                dto.Name, username);
+
+            return new ApiResponse<CategoryDto>(Error: "An unexpected error occurred while processing your request. Please try again later.", Code: ErrorCodes.Generic);
         }
     }
 
-    public async Task<ApiResponse<CategoryDto>> DeleteAsync(string username, string id, Guid version, CancellationToken token)
+    public async Task<ApiResponse<CategoryDto>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
     {
-        Category? category = await dbContext.Categories.FindAsync(keyValues: [id], cancellationToken: token);
-
-        if (category is null)
-        {
-            logger.Warning("Missing category 'id = {Id}' on delete. User '{Username}'.", id, username);
-            return new ApiResponse<CategoryDto>(Error: $"No category with id {id} was found", Code: ErrorCodes.NotFound);
-        }
-
-        dbContext.Entry(category).Property(p => p.Version).OriginalValue = version;
-        dbContext.Categories.Remove(category);
-
         try
         {
-            await dbContext.SaveChangesAsync(token);
+            Category? category = await dbContext.Categories
+                .Include(x => x.SubCategories)
+                .FirstOrDefaultAsync(x => x.Id == id, token);
 
-            logger.Information("Category 'id = {Id}' was deleted successfully. User '{Username}'.", id, username);
+            if (category is null)
+            {
+                logger.Warning(
+                    "Delete aborted: Category '{CategoryId}' was not found. User: '{Username}'",
+                    id, username);
+
+                return new ApiResponse<CategoryDto>(Error: "The requested category could not be found. It may have already been removed.", Code: ErrorCodes.NotFound);
+            }
+
+            dbContext.Entry(category).Property(p => p.Version).OriginalValue = version;
+            dbContext.Categories.Remove(category);
+
+            logger.Information(
+                "Successfully prepared category '{CategoryId}' for deletion. User: '{Username}'.",
+                id, username);
+
             return new ApiResponse<CategoryDto>(Data: category.ToDto());
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            logger.Warning(ex, "Category 'id = {Id}' couldn't be deleted due to concurrency conflict. User '{Username}'.", id, username);
-            return new ApiResponse<CategoryDto>(Error: "This category was modified by another request. Please reload and try again.", Code: ErrorCodes.Conflict);
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Category 'id = {Id}' couldn't be deleted. User '{Username}'.", id, username);
-            return new ApiResponse<CategoryDto>(Error: "This category couldn't be deleted. Please reload and try again.", Code: ErrorCodes.Generic);
+            logger.Error(ex,
+                "Failure while preparing to delete category '{CategoryId}'. User: '{Username}'",
+                id, username);
+
+            return new ApiResponse<CategoryDto>(Error: "An unexpected error occurred while processing the deletion. Please try again later.", Code: ErrorCodes.Generic);
         }
     }
 
@@ -63,75 +71,95 @@ public class CategoryService(MainDbContext dbContext, ILogger logger) : ICategor
     {
         try
         {
-            IEnumerable<CategoryDto> categories = await dbContext.Categories.Select(x => x.ToDto()).ToListAsync(token);
-            logger.Information("Retrieved all categories. User '{Username}'", username);
+            List<CategoryDto> categories = await dbContext.Categories.Select(x => x.ToDto()).ToListAsync(token);
+
+            logger.Debug(
+                "Retrieved {Count} categories. User: '{Username}'",
+                categories.Count, username);
 
             return new ApiResponse<IEnumerable<CategoryDto>>(Data: categories);
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Failed to get all categories. User '{Username}'", username);
-            return new ApiResponse<IEnumerable<CategoryDto>>(Error: "Failed to get all categories.", Code: ErrorCodes.Generic);
+            logger.Error(ex,
+                "Database failure while retrieving all categories. User: '{Username}'",
+                username);
+
+            return new ApiResponse<IEnumerable<CategoryDto>>(Error: "An unexpected error occurred while retrieving the data.", Code: ErrorCodes.Generic);
         }
     }
 
-    public async Task<ApiResponse<CategoryDto>> GetAsync(string username, string id, CancellationToken token)
+    public async Task<ApiResponse<CategoryDto>> GetAsync(string username, Guid id, CancellationToken token)
     {
         try
         {
-            Category? category = await dbContext.Categories.FindAsync(keyValues: [id], cancellationToken: token);
+            Category? category = await dbContext.Categories
+                .Include(x => x.SubCategories)
+                .FirstOrDefaultAsync(x => x.Id == id, token);
+
             if (category is null)
             {
-                logger.Warning("Missing category 'id = {Id}' on get. User '{Username}'.", id, username);
-                return new ApiResponse<CategoryDto>(Error: $"No category with id {id} was found", Code: ErrorCodes.NotFound);
+                logger.Warning(
+                    "Read aborted: Category '{CategoryId}' was not found. User: '{Username}'.",
+                    id, username);
+
+                return new ApiResponse<CategoryDto>(Error: "The requested category could not be found.", Code: ErrorCodes.NotFound);
             }
 
-            logger.Information("Retrieved category 'id = {Id}'. User '{Username}'", id, username);
+            logger.Debug(
+                "Retrieved category '{CategoryId}'. User: '{Username}'",
+                id, username);
 
             return new ApiResponse<CategoryDto>(Data: category.ToDto());
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Failed to get category 'id = {Id}'. User '{Username}'", id, username);
-            return new ApiResponse<CategoryDto>(Error: $"Failed to get category with id = {id}.", Code: ErrorCodes.Generic);
+            logger.Error(ex,
+                "Database failure while retrieving category '{CategoryId}'. User: '{Username}'",
+                id, username);
+
+            return new ApiResponse<CategoryDto>(Error: "An unexpected error occurred while retrieving the data.", Code: ErrorCodes.Generic);
         }
     }
 
-    public async Task<ApiResponse<CategoryDto>> UpdateAsync(string username, string id, Guid version, UpdateCategoryDto dto, CancellationToken token)
+    public async Task<ApiResponse<CategoryDto>> UpdateAsync(string username, Guid id, Guid version, UpdateCategoryDto dto, CancellationToken token)
     {
-        Category? category = await dbContext.Categories.FindAsync(keyValues: [id], cancellationToken: token);
-
-        if (category is null)
-        {
-            logger.Warning("Missing category 'id = {Id}' on update. User '{Username}'.", id, username);
-            return new ApiResponse<CategoryDto>(Error: $"No category with id {id} was found", Code: ErrorCodes.NotFound);
-        }
-
-        dbContext.Entry(category).Property(p => p.Version).OriginalValue = version;
-
-        category.Name = dto.Name;
-        category.Slug = dto.Slug;
-        category.ParentCategoryId = dto.ParentCategoryId;
-        category.UpdatedAt = DateTime.UtcNow;
-
-        category.Version = Guid.NewGuid();
-
         try
         {
-            await dbContext.SaveChangesAsync(token);
+            Category? category = await dbContext.Categories
+                .Include(x => x.SubCategories)
+                .FirstOrDefaultAsync(x => x.Id == id, token);
 
-            logger.Information("Category 'id = {Id}' was updated successfully. User '{Username}'.", id, username);
+            if (category is null)
+            {
+                logger.Warning(
+                    "Update aborted: Category '{CategoryId}' was not found. User: '{Username}'.",
+                    id, username);
+
+                return new ApiResponse<CategoryDto>(Error: "The requested category could not be found.", Code: ErrorCodes.NotFound);
+            }
+
+            dbContext.Entry(category).Property(p => p.Version).OriginalValue = version;
+
+            category.Name = dto.Name;
+            category.Slug = dto.Slug;
+            category.ParentCategoryId = dto.ParentCategoryId;
+            category.UpdatedAt = DateTime.UtcNow;
+            category.Version = Guid.NewGuid();
+
+            logger.Information(
+                "Successfully prepared category '{CategoryId}' for update. User: '{Username}'.",
+                id, username);
+
             return new ApiResponse<CategoryDto>(Data: category.ToDto());
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            logger.Warning(ex, "Category 'id = {Id}' couldn't be updated due to concurrency conflict. User '{Username}'.", id, username);
-            return new ApiResponse<CategoryDto>(Error: "This category was modified by another request. Please reload and try again.", Code: ErrorCodes.Conflict);
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Category 'id = {Id}' couldn't be updated. User '{Username}'.", id, username);
-            return new ApiResponse<CategoryDto>(Error: "This category couldn't be updated. Please reload and try again.", Code: ErrorCodes.Generic);
+            logger.Error(ex,
+                "Failure while preparing to update category '{CategoryId}'. User: '{Username}'.",
+                id, username);
+
+            return new ApiResponse<CategoryDto>(Error: "An unexpected error occurred while processing the update. Please try again later.", Code: ErrorCodes.Generic);
         }
     }
 }

@@ -32,7 +32,7 @@ public static class ProductApis
         }
 
         private static async Task<IResult> GetProductAsync(
-            [FromRoute] string id,
+            [FromRoute] Guid id,
             [FromServices] IProductsService productsService,
             HttpContext context,
             CancellationToken token)
@@ -50,12 +50,12 @@ public static class ProductApis
 
         private static async Task<IResult> CreateProductAsync(
             [FromBody] CreateProductDto dto,
-            [FromServices] IProductsService productsService,
+            [FromServices] ProductCreationOrchestrator orchestrator,
             HttpContext context,
             CancellationToken token)
         {
             string username = context.User.Identity?.Name ?? "Anonymous";
-            ApiResponse<ProductDto> response = await productsService.CreateAsync(username, dto, token);
+            ApiResponse<ProductDto> response = await orchestrator.ExecuteAsync(username, dto, token);
 
             if (!string.IsNullOrWhiteSpace(response.Error))
             {
@@ -70,7 +70,7 @@ public static class ProductApis
         }
 
         private static async Task<IResult> UpdateProductAsync(
-            [FromRoute] string id,
+            [FromRoute] Guid id,
             [FromHeader(Name = "If-Match")] Guid version,
             [FromBody] UpdateProductDto dto,
             [FromServices] IProductsService productsService,
@@ -89,7 +89,7 @@ public static class ProductApis
         }
 
         private static async Task<IResult> DeleteProductAsync(
-            [FromRoute] string id,
+            [FromRoute] Guid id,
             [FromHeader(Name = "If-Match")] Guid version,
             [FromServices] IProductsService productsService,
             HttpContext context,

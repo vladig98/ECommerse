@@ -48,6 +48,9 @@ public static class WebBuilderExtensions
         {
             builder.Services.AddScoped<IProductsService, ProductsService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IProductMediaService, ProductMediaService>();
+            builder.Services.AddScoped<IProductVariantService, ProductVariantService>();
+            builder.Services.AddScoped<IVariantAttributeService, VariantAttributeService>();
 
             return builder;
         }

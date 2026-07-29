@@ -10,4 +10,5 @@ public class ProductVariant : BaseModel
     public string? Gtin { get; set; }
 
     public ICollection<ProductVariantAttribute> VariantAttributes { get; set; } = [];
+    public ICollection<ProductMedia> Media { get; set; } = [];
 }

@@ -7,5 +7,7 @@ public record class CreateProductDto
     string? Description,
     string? Brand,
     bool IsActive,
-    Guid CategoryId
+    Guid CategoryId,
+    List<CreateProductMediaDto> ProductMedia,
+    List<CreateProductVariantDto> ProductVariants
 );
