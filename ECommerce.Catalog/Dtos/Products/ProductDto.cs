@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.Products;
 
-public readonly record struct ProductDto(
+public record class ProductDto(
     Guid Id,
     DateTime CreatedAt,
     DateTime UpdatedAt,
@@ -10,5 +10,7 @@ public readonly record struct ProductDto(
     string? Description,
     string? Brand,
     bool IsActive,
-    Guid CategoryId
+    CategoryDto? Category,
+    List<ProductMediaDto> Media,
+    List<ProductVariantDto> Variants
 );

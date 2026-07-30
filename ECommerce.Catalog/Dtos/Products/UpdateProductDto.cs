@@ -7,5 +7,7 @@ public record class UpdateProductDto
     string? Description,
     string? Brand,
     bool IsActive,
-    Guid CategoryId
+    Guid CategoryId,
+    List<UpdateProductMediaDto> ProductMedia,
+    List<UpdateProductVariantDto> ProductVariants
 );

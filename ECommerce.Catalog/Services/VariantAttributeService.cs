@@ -1,154 +1,138 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-public class VariantAttributeService(MainDbContext dbContext, ILogger logger) : IVariantAttributeService
+public class VariantAttributeService(
+    IVariantAttributeRepository variantAttributeRepository,
+    MainDbContext dbContext,
+    ILogger logger) : IVariantAttributeService
 {
-    public ApiResponse<VariantAttributeDto> Create(string username, CreateVariantAttributeDto dto)
+    public async Task<ApiResponse<VariantAttributeDto>> CreateAsync(string username, CreateVariantAttributeDto dto, CancellationToken token)
     {
+        ApiResponse<VariantAttribute> variantAttributeResponse = variantAttributeRepository.Create(username, dto);
+        if (!string.IsNullOrWhiteSpace(variantAttributeResponse.Error))
+        {
+            logger.Warning("Aborting variant attribute creation: Failed to prepare attribute '{Name}: {Value}'. User: '{Username}'", dto.Name, dto.Value, username);
+            return ApiResponse<VariantAttributeDto>.FromResponse(variantAttributeResponse);
+        }
+
+        VariantAttribute variantAttribute = variantAttributeResponse.Data!;
+
         try
         {
-            VariantAttribute attribute = new()
-            {
-                Name = dto.Name,
-                Value = dto.Value
-            };
-
-            dbContext.VariantAttributes.Add(attribute);
-
-            logger.Information(
-                "Successfully prepared variant attribute '{AttributeName}' for creation. User: '{Username}'",
-                attribute.Name, username);
-
-            return new ApiResponse<VariantAttributeDto>(Data: attribute.ToDto());
+            await dbContext.SaveChangesAsync(token);
+            logger.Information("Successfully committed variant attribute '{Name}: {Value}' (ID: {AttributeId}). User: '{Username}'", variantAttribute.Name, variantAttribute.Value, variantAttribute.Id, username);
+        }
+        catch (DbUpdateConcurrencyException conflict)
+        {
+            logger.Error(conflict, "Concurrency update error while saving attribute '{Name}: {Value}'. User: '{Username}'", dto.Name, dto.Value, username);
+            return ApiResponse<VariantAttributeDto>.Conflict("The entity has been modified by another process. Please try again.");
+        }
+        catch (DbUpdateException dbEx)
+        {
+            logger.Error(dbEx, "Database constraint violation while saving attribute '{Name}: {Value}'. User: '{Username}'", dto.Name, dto.Value, username);
+            return ApiResponse<VariantAttributeDto>.Failure("A database constraint was violated. This attribute name and value combination might already exist.");
         }
         catch (Exception ex)
         {
-            logger.Error(ex,
-                "Memory/Tracker failure while preparing variant attribute '{AttributeName}'. User: '{Username}'",
-                dto.Name, username);
-
-            return new ApiResponse<VariantAttributeDto>(Error: "An unexpected error occurred while processing your request. Please try again later.", Code: ErrorCodes.Generic);
+            logger.Error(ex, "Unexpected failure while committing attribute '{Name}: {Value}' to the database. User: '{Username}'", dto.Name, dto.Value, username);
+            return ApiResponse<VariantAttributeDto>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
+
+        return ApiResponse<VariantAttributeDto>.Success(variantAttribute.ToDto());
     }
 
     public async Task<ApiResponse<VariantAttributeDto>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
     {
+        ApiResponse<VariantAttribute> attributeResponse = await variantAttributeRepository.DeleteAsync(username, id, version, token);
+        if (!string.IsNullOrWhiteSpace(attributeResponse.Error))
+        {
+            logger.Warning("Aborting variant attribute deletion: Failed to prepare attribute '{AttributeId}' for deletion. User: '{Username}'. Reason: {Error}", id, username, attributeResponse.Error);
+            return ApiResponse<VariantAttributeDto>.FromResponse(attributeResponse);
+        }
+
+        VariantAttribute attribute = attributeResponse.Data!;
+
         try
         {
-            VariantAttribute? attribute = await dbContext.VariantAttributes.FindAsync(keyValues: [id], cancellationToken: token);
-            if (attribute is null)
-            {
-                logger.Warning(
-                    "Delete aborted: Variant attribute '{AttributeId}' was not found. User: '{Username}'",
-                    id, username);
-
-                return new ApiResponse<VariantAttributeDto>(Error: "The requested variant attribute could not be found. It may have already been removed.", Code: ErrorCodes.NotFound);
-            }
-
-            dbContext.Entry(attribute).Property(p => p.Version).OriginalValue = version;
-            dbContext.VariantAttributes.Remove(attribute);
-
-            logger.Information(
-                "Successfully prepared variant attribute '{AttributeId}' for deletion. User: '{Username}'.",
-                id, username);
-
-            return new ApiResponse<VariantAttributeDto>(Data: attribute.ToDto());
+            await dbContext.SaveChangesAsync(token);
+            logger.Information("Successfully committed deletion for variant attribute '{Name}: {Value}' (ID: {AttributeId}). User: '{Username}'", attribute.Name, attribute.Value, attribute.Id, username);
+        }
+        catch (DbUpdateConcurrencyException conflict)
+        {
+            logger.Error(conflict, "Concurrency error while deleting attribute '{Name}: {Value}' (ID: {AttributeId}). User: '{Username}'", attribute.Name, attribute.Value, id, username);
+            return ApiResponse<VariantAttributeDto>.Conflict("The attribute has been modified by another process. Please refresh and try again.");
+        }
+        catch (DbUpdateException dbEx)
+        {
+            logger.Error(dbEx, "Database constraint violation while deleting attribute '{Name}: {Value}' (ID: {AttributeId}). User: '{Username}'", attribute.Name, attribute.Value, id, username);
+            return ApiResponse<VariantAttributeDto>.Failure("This attribute cannot be deleted because it is currently assigned to one or more product variants.");
         }
         catch (Exception ex)
         {
-            logger.Error(ex,
-                "Failure while preparing to delete variant attribute '{AttributeId}'. User: '{Username}'",
-                id, username);
-
-            return new ApiResponse<VariantAttributeDto>(Error: "An unexpected error occurred while processing the deletion. Please try again later.", Code: ErrorCodes.Generic);
+            logger.Error(ex, "Unexpected failure while committing deletion of attribute '{Name}: {Value}' (ID: {AttributeId}) to the database. User: '{Username}'", attribute.Name, attribute.Value, id, username);
+            return ApiResponse<VariantAttributeDto>.Failure("An unexpected error occurred while processing the deletion. Please try again later.");
         }
+
+        return ApiResponse<VariantAttributeDto>.Success(attribute.ToDto());
     }
 
-    public async Task<ApiResponse<IEnumerable<VariantAttributeDto>>> GetAllAsync(string username, CancellationToken token)
+    public async Task<ApiResponse<List<VariantAttributeDto>>> GetAllAsync(string username, CancellationToken token)
     {
-        try
+        ApiResponse<List<VariantAttribute>> attributeResponse = await variantAttributeRepository.GetAllAsync(username, token);
+        if (!string.IsNullOrWhiteSpace(attributeResponse.Error))
         {
-            List<VariantAttributeDto> attributes = await dbContext.VariantAttributes.Select(x => x.ToDto()).ToListAsync(token);
-
-            logger.Debug(
-                "Retrieved {Count} variant attributes. User: '{Username}'",
-                attributes.Count, username);
-
-            return new ApiResponse<IEnumerable<VariantAttributeDto>>(Data: attributes);
+            logger.Warning("Failed to retrieve variant attributes. User: '{Username}'. Reason: {Error}", username, attributeResponse.Error);
+            return ApiResponse<List<VariantAttributeDto>>.FromResponse(attributeResponse);
         }
-        catch (Exception ex)
-        {
-            logger.Error(ex,
-                "Database failure while retrieving all variant attributes. User: '{Username}'",
-                username);
 
-            return new ApiResponse<IEnumerable<VariantAttributeDto>>(Error: "An unexpected error occurred while retrieving the data.", Code: ErrorCodes.Generic);
-        }
+        List<VariantAttribute> attributes = attributeResponse.Data!;
+        return ApiResponse<List<VariantAttributeDto>>.Success([.. attributes.Select(x => x.ToDto())]);
     }
 
     public async Task<ApiResponse<VariantAttributeDto>> GetAsync(string username, Guid id, CancellationToken token)
     {
-        try
+        ApiResponse<VariantAttribute> attributeResponse = await variantAttributeRepository.GetAsync(username, id, token);
+        if (!string.IsNullOrWhiteSpace(attributeResponse.Error))
         {
-            VariantAttribute? attribute = await dbContext.VariantAttributes.FindAsync(keyValues: [id], cancellationToken: token);
-            if (attribute is null)
-            {
-                logger.Warning(
-                    "Read aborted: Variant attribute '{AttributeId}' was not found. User: '{Username}'.",
-                    id, username);
-
-                return new ApiResponse<VariantAttributeDto>(Error: "The requested variant attribute could not be found.", Code: ErrorCodes.NotFound);
-            }
-
-            logger.Debug(
-                "Retrieved variant attribute '{AttributeId}'. User: '{Username}'",
-                id, username);
-
-            return new ApiResponse<VariantAttributeDto>(Data: attribute.ToDto());
+            logger.Warning("Failed to retrieve variant attribute '{AttributeId}'. User: '{Username}'. Reason: {Error}", id, username, attributeResponse.Error);
+            return ApiResponse<VariantAttributeDto>.FromResponse(attributeResponse);
         }
-        catch (Exception ex)
-        {
-            logger.Error(ex,
-                "Database failure while retrieving variant attribute '{AttributeId}'. User: '{Username}'",
-                id, username);
 
-            return new ApiResponse<VariantAttributeDto>(Error: "An unexpected error occurred while retrieving the data.", Code: ErrorCodes.Generic);
-        }
+        VariantAttribute attribute = attributeResponse.Data!;
+        return ApiResponse<VariantAttributeDto>.Success(attribute.ToDto());
     }
 
     public async Task<ApiResponse<VariantAttributeDto>> UpdateAsync(string username, Guid id, Guid version, UpdateVariantAttributeDto dto, CancellationToken token)
     {
+        ApiResponse<VariantAttribute> attributeResponse = await variantAttributeRepository.UpdateAsync(username, id, version, dto, token);
+        if (!string.IsNullOrWhiteSpace(attributeResponse.Error))
+        {
+            logger.Warning("Aborting variant attribute update: Failed to update attribute '{AttributeId}'. User: '{Username}'", id, username);
+            return ApiResponse<VariantAttributeDto>.FromResponse(attributeResponse);
+        }
+
+        VariantAttribute attribute = attributeResponse.Data!;
+
         try
         {
-            VariantAttribute? attribute = await dbContext.VariantAttributes.FindAsync(keyValues: [id], cancellationToken: token);
-            if (attribute is null)
-            {
-                logger.Warning(
-                    "Update aborted: Variant attribute '{AttributeId}' was not found. User: '{Username}'.",
-                    id, username);
-
-                return new ApiResponse<VariantAttributeDto>(Error: "The requested variant attribute could not be found.", Code: ErrorCodes.NotFound);
-            }
-
-            dbContext.Entry(attribute).Property(p => p.Version).OriginalValue = version;
-
-            attribute.Name = dto.Name;
-            attribute.Value = dto.Value;
-            attribute.UpdatedAt = DateTime.UtcNow;
-            attribute.Version = Guid.NewGuid();
-
-            logger.Information(
-                "Successfully prepared variant attribute '{AttributeId}' for update. User: '{Username}'.",
-                id, username);
-
-            return new ApiResponse<VariantAttributeDto>(Data: attribute.ToDto());
+            await dbContext.SaveChangesAsync(token);
+            logger.Information("Successfully committed update for variant attribute '{Name}: {Value}' (ID: {AttributeId}). User: '{Username}'", attribute.Name, attribute.Value, attribute.Id, username);
+        }
+        catch (DbUpdateConcurrencyException conflict)
+        {
+            logger.Error(conflict, "Concurrency update error while saving attribute '{Name}: {Value}'. User: '{Username}'", dto.Name, dto.Value, username);
+            return ApiResponse<VariantAttributeDto>.Conflict("The entity has been modified by another process. Please try again.");
+        }
+        catch (DbUpdateException dbEx)
+        {
+            logger.Error(dbEx, "Database constraint violation while saving attribute '{Name}: {Value}'. User: '{Username}'", dto.Name, dto.Value, username);
+            return ApiResponse<VariantAttributeDto>.Failure("A database constraint was violated. This attribute name and value combination might already exist.");
         }
         catch (Exception ex)
         {
-            logger.Error(ex,
-                "Failure while preparing to update variant attribute '{AttributeId}'. User: '{Username}'.",
-                id, username);
-
-            return new ApiResponse<VariantAttributeDto>(Error: "An unexpected error occurred while processing the update. Please try again later.", Code: ErrorCodes.Generic);
+            logger.Error(ex, "Unexpected failure while committing attribute '{Name}: {Value}' to the database. User: '{Username}'", dto.Name, dto.Value, username);
+            return ApiResponse<VariantAttributeDto>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
+
+        return ApiResponse<VariantAttributeDto>.Success(attribute.ToDto());
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.ProductMediaDtos;
 
-public readonly record struct ProductMediaDto
+public record class ProductMediaDto
 (
     Guid Id,
     DateTime CreatedAt,

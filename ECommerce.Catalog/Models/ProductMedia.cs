@@ -6,10 +6,10 @@ public class ProductMedia : BaseModel
     public Product Product { get; set; } = null!;
 
     public string Url { get; set; } = string.Empty;
-    public string? AltText { get; set; } 
+    public string? AltText { get; set; }
     public MediaType Type { get; set; } = MediaType.Image;
     public int DisplayOrder { get; set; } = 0;
-    public bool IsPrimary { get; set; } = false; 
+    public bool IsPrimary { get; set; } = false;
 
     public Guid? ProductVariantId { get; set; }
     public ProductVariant? ProductVariant { get; set; }

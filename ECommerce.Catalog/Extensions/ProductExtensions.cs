@@ -17,7 +17,9 @@ public static class ProductExtensions
                 Description: product.Description,
                 Brand: product.Brand,
                 IsActive: product.IsActive,
-                CategoryId: product.CategoryId
+                Category: product.Category?.ToDto(),
+                Media: product.Media?.Select(x => x.ToDto()).ToList() ?? [],
+                Variants: product.Variants?.Select(x => x.ToDto()).ToList() ?? []
             );
         }
     }

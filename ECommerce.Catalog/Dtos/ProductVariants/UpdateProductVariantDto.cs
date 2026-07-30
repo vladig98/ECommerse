@@ -2,9 +2,11 @@
 
 public record class UpdateProductVariantDto
 (
+    Guid Id,
+    Guid Version,
     string Sku,
     decimal BasePrice,
     string? Gtin,
-    List<UpdateVariantAttributeDto> VariantAttributes,
-    List<UpdateProductMediaDto> VariantMedia
+    List<UpdateProductMediaDto> Media,
+    List<Guid> Attributes
 );

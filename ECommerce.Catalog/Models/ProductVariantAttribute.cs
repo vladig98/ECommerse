@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Models;
 
-public class ProductVariantAttribute : BaseModel
+public class ProductVariantAttribute
 {
     public Guid VariantId { get; set; }
     public ProductVariant Variant { get; set; } = null!;

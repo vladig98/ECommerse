@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.VariantAttributes;
 
-public readonly record struct VariantAttributeDto
+public record class VariantAttributeDto
 (
     Guid Id,
     DateTime CreatedAt,

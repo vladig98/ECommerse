@@ -13,7 +13,9 @@ public static class ProductVariantExtensions
                 Version: productVariant.Version,
                 Sku: productVariant.Sku,
                 BasePrice: productVariant.BasePrice,
-                Gtin: productVariant.Gtin
+                Gtin: productVariant.Gtin,
+                Media: productVariant.Media?.Select(x => x.ToDto()).ToList() ?? [],
+                Attributes: productVariant.VariantAttributes?.Select(x => x.Attribute.ToDto()).ToList() ?? []
             );
         }
     }

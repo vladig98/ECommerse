@@ -46,10 +46,16 @@ public static class WebBuilderExtensions
 
         public WebApplicationBuilder RegisterApplicationServices()
         {
-            builder.Services.AddScoped<IProductsService, ProductsService>();
+            // Repositories
+            builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<IProductMediaRepository, ProductMediaRepository>();
+            builder.Services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
+            builder.Services.AddScoped<IVariantAttributeRepository, VariantAttributeRepository>();
+
+            // Services
+            builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
-            builder.Services.AddScoped<IProductMediaService, ProductMediaService>();
-            builder.Services.AddScoped<IProductVariantService, ProductVariantService>();
             builder.Services.AddScoped<IVariantAttributeService, VariantAttributeService>();
 
             return builder;

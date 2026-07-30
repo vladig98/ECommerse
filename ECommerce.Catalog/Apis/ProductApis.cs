@@ -14,106 +14,96 @@ public static class ProductApis
 
             return router;
         }
+    }
 
-        private static async Task<IResult> GetProductsAsync(
-            [FromServices] IProductsService productsService,
+    private static async Task<IResult> GetProductsAsync(
+            [FromServices] IProductService productsService,
             HttpContext context,
             CancellationToken token)
+    {
+        string username = context.User.Identity?.Name ?? "Anonymous";
+        ApiResponse<List<ProductDto>> response = await productsService.GetAllAsync(username, token);
+
+        if (!string.IsNullOrWhiteSpace(response.Error))
         {
-            string username = context.User.Identity?.Name ?? "Anonymous";
-            ApiResponse<IEnumerable<ProductDto>> response = await productsService.GetAllAsync(username, token);
-
-            if (!string.IsNullOrWhiteSpace(response.Error))
-            {
-                return GetErrorResponse(response);
-            }
-
-            return TypedResults.Ok(response.Data);
+            return response.ToErrorResult();
         }
 
-        private static async Task<IResult> GetProductAsync(
-            [FromRoute] Guid id,
-            [FromServices] IProductsService productsService,
-            HttpContext context,
-            CancellationToken token)
+        return TypedResults.Ok(response.Data);
+    }
+
+    private static async Task<IResult> GetProductAsync(
+        [FromRoute] Guid id,
+        [FromServices] IProductService productsService,
+        HttpContext context,
+        CancellationToken token)
+    {
+        string username = context.User.Identity?.Name ?? "Anonymous";
+        ApiResponse<ProductDto> response = await productsService.GetAsync(username, id, token);
+
+        if (!string.IsNullOrWhiteSpace(response.Error))
         {
-            string username = context.User.Identity?.Name ?? "Anonymous";
-            ApiResponse<ProductDto> response = await productsService.GetAsync(username, id, token);
-
-            if (!string.IsNullOrWhiteSpace(response.Error))
-            {
-                return GetErrorResponse(response);
-            }
-
-            return TypedResults.Ok(response.Data);
+            return response.ToErrorResult();
         }
 
-        private static async Task<IResult> CreateProductAsync(
-            [FromBody] CreateProductDto dto,
-            [FromServices] ProductCreationOrchestrator orchestrator,
-            HttpContext context,
-            CancellationToken token)
+        return TypedResults.Ok(response.Data);
+    }
+
+    private static async Task<IResult> CreateProductAsync(
+        [FromBody] CreateProductDto dto,
+        [FromServices] IProductService productService,
+        HttpContext context,
+        CancellationToken token)
+    {
+        string username = context.User.Identity?.Name ?? "Anonymous";
+        ApiResponse<ProductDto> response = await productService.CreateAsync(username, dto, token);
+
+        if (!string.IsNullOrWhiteSpace(response.Error))
         {
-            string username = context.User.Identity?.Name ?? "Anonymous";
-            ApiResponse<ProductDto> response = await orchestrator.ExecuteAsync(username, dto, token);
-
-            if (!string.IsNullOrWhiteSpace(response.Error))
-            {
-                return GetErrorResponse(response);
-            }
-
-            return TypedResults.CreatedAtRoute(
-                value: response.Data,
-                routeName: nameof(GetProductAsync),
-                routeValues: new { id = response.Data.Id }
-            );
+            return response.ToErrorResult();
         }
 
-        private static async Task<IResult> UpdateProductAsync(
-            [FromRoute] Guid id,
-            [FromHeader(Name = "If-Match")] Guid version,
-            [FromBody] UpdateProductDto dto,
-            [FromServices] IProductsService productsService,
-            HttpContext context,
-            CancellationToken token)
+        return TypedResults.CreatedAtRoute(
+            value: response.Data,
+            routeName: nameof(GetProductAsync),
+            routeValues: new { id = response.Data.Id }
+        );
+    }
+
+    private static async Task<IResult> UpdateProductAsync(
+        [FromRoute] Guid id,
+        [FromHeader(Name = "If-Match")] Guid version,
+        [FromBody] UpdateProductDto dto,
+        [FromServices] IProductService productsService,
+        HttpContext context,
+        CancellationToken token)
+    {
+        string username = context.User.Identity?.Name ?? "Anonymous";
+        ApiResponse<ProductDto> response = await productsService.UpdateAsync(username, id, version, dto, token);
+
+        if (!string.IsNullOrWhiteSpace(response.Error))
         {
-            string username = context.User.Identity?.Name ?? "Anonymous";
-            ApiResponse<ProductDto> response = await productsService.UpdateAsync(username, id, version, dto, token);
-
-            if (!string.IsNullOrWhiteSpace(response.Error))
-            {
-                return GetErrorResponse(response);
-            }
-
-            return TypedResults.Ok(response.Data);
+            return response.ToErrorResult();
         }
 
-        private static async Task<IResult> DeleteProductAsync(
-            [FromRoute] Guid id,
-            [FromHeader(Name = "If-Match")] Guid version,
-            [FromServices] IProductsService productsService,
-            HttpContext context,
-            CancellationToken token)
+        return TypedResults.Ok(response.Data);
+    }
+
+    private static async Task<IResult> DeleteProductAsync(
+        [FromRoute] Guid id,
+        [FromHeader(Name = "If-Match")] Guid version,
+        [FromServices] IProductService productsService,
+        HttpContext context,
+        CancellationToken token)
+    {
+        string username = context.User.Identity?.Name ?? "Anonymous";
+        ApiResponse<ProductDto> response = await productsService.DeleteAsync(username, id, version, token);
+
+        if (!string.IsNullOrWhiteSpace(response.Error))
         {
-            string username = context.User.Identity?.Name ?? "Anonymous";
-            ApiResponse<ProductDto> response = await productsService.DeleteAsync(username, id, version, token);
-
-            if (!string.IsNullOrWhiteSpace(response.Error))
-            {
-                return GetErrorResponse(response);
-            }
-
-            return TypedResults.Ok(response.Data);
+            return response.ToErrorResult();
         }
 
-        private static IResult GetErrorResponse<T>(ApiResponse<T> result)
-        {
-            return result.Code switch
-            {
-                ErrorCodes.NotFound => TypedResults.NotFound(result.Error),
-                ErrorCodes.Conflict => TypedResults.StatusCode(StatusCodes.Status412PreconditionFailed),
-                _ => TypedResults.InternalServerError(result.Error)
-            };
-        }
+        return TypedResults.Ok(response.Data);
     }
 }

@@ -2,10 +2,15 @@
 
 public static class CategoryExtensions
 {
-    extension(Category category)
+    extension(Category? category)
     {
-        public CategoryDto ToDto()
+        public CategoryDto? ToDto()
         {
+            if (category is null)
+            {
+                return null;
+            }
+
             return new CategoryDto
             (
                 Id: category.Id,
@@ -14,7 +19,8 @@ public static class CategoryExtensions
                 Version: category.Version,
                 Name: category.Name,
                 Slug: category.Slug,
-                ParentCategoryId: category.ParentCategoryId
+                ParentCategory: category.ParentCategory?.ToDto(),
+                SubCategories: category.SubCategories?.Select(x => x.ToDto()).ToList() ?? []
             );
         }
     }

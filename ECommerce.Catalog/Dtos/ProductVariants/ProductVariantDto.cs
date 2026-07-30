@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.ProductVariants;
 
-public readonly record struct ProductVariantDto
+public record class ProductVariantDto
 (
     Guid Id,
     DateTime CreatedAt,
@@ -8,5 +8,7 @@ public readonly record struct ProductVariantDto
     Guid Version,
     string Sku,
     decimal BasePrice,
-    string? Gtin
+    string? Gtin,
+    List<ProductMediaDto> Media,
+    List<VariantAttributeDto> Attributes
 );

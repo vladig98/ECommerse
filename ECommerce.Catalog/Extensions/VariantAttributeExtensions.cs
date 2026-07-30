@@ -7,11 +7,11 @@ public static class VariantAttributeExtensions
         public VariantAttributeDto ToDto()
         {
             return new VariantAttributeDto(
-                Id: attribute.Id, 
+                Id: attribute.Id,
                 CreatedAt: attribute.CreatedAt,
                 UpdatedAt: attribute.UpdatedAt,
                 Version: attribute.Version,
-                Name: attribute.Name, 
+                Name: attribute.Name,
                 Value: attribute.Value
             );
         }
