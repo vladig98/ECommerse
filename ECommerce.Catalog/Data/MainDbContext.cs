@@ -7,6 +7,7 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
     public DbSet<Category> Categories { get; set; }
     public DbSet<VariantAttribute> VariantAttributes { get; set; }
     public DbSet<ProductMedia> ProductMedia { get; set; }
+    public DbSet<EventMessage> EventMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

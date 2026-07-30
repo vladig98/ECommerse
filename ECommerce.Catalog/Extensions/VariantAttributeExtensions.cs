@@ -15,5 +15,15 @@ public static class VariantAttributeExtensions
                 Value: attribute.Value
             );
         }
+
+        public VariantAttributeEventDto ToEventData()
+        {
+            return new VariantAttributeEventDto
+            (
+                Id: attribute.Id,
+                Name: attribute.Name,
+                Value: attribute.Value
+            );
+        }
     }
 }

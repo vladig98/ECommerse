@@ -23,5 +23,22 @@ public static class CategoryExtensions
                 SubCategories: category.SubCategories?.Select(x => x.ToDto()).ToList() ?? []
             );
         }
+
+        public CategoryEventDto ToEventData()
+        {
+            if (category is null)
+            {
+                throw new InvalidOperationException("Impossible to hit");
+            }
+
+            CategoryEventDto categoryEventData = new
+            (
+                Id: category.Id,
+                Name: category.Name,
+                Slug: category.Slug
+            );
+
+            return categoryEventData;
+        }
     }
 }

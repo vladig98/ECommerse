@@ -18,5 +18,18 @@ public static class ProductVariantExtensions
                 Attributes: productVariant.VariantAttributes?.Select(x => x.Attribute.ToDto()).ToList() ?? []
             );
         }
+
+        public ProductVariantEventDto ToEventData()
+        {
+            return new ProductVariantEventDto
+            (
+                Id: productVariant.Id,
+                Sku: productVariant.Sku,
+                BasePrice: productVariant.BasePrice,
+                Gtin: productVariant.Gtin,
+                Media: productVariant.Media?.Select(x => x.ToEventData()).ToList() ?? [],
+                Attributes: productVariant.VariantAttributes?.Select(x => x.Attribute.ToEventData()).ToList() ?? []
+            );
+        }
     }
 }

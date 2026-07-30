@@ -15,6 +15,12 @@ public static class WebBuilderExtensions
             return builder;
         }
 
+        public WebApplicationBuilder MapSettings()
+        {
+            builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("KafkaSettings"));
+            return builder;
+        }
+
         public WebApplicationBuilder ConfigureRouting()
         {
             builder.Services.AddOpenApi();
@@ -57,6 +63,9 @@ public static class WebBuilderExtensions
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IVariantAttributeService, VariantAttributeService>();
+
+            // Background service
+            builder.Services.AddHostedService<KafkaEventProducer>();
 
             return builder;
         }

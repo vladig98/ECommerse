@@ -10,6 +10,7 @@ try
         .ConfigureRouting()
         .ConfigureSerilog()
         .ConfigureAuth()
+        .MapSettings()
         .RegisterApplicationServices();
 
     WebApplication app = builder.Build();

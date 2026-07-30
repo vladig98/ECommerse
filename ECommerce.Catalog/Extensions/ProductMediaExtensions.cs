@@ -19,5 +19,18 @@ public static class ProductMediaExtensions
                 IsPrimary: productMedia.IsPrimary
             );
         }
+
+        public ProductMediaEventDto ToEventData()
+        {
+            return new ProductMediaEventDto
+            (
+                Id: productMedia.Id,
+                Url: productMedia.Url,
+                AltText: productMedia.AltText,
+                Type: productMedia.Type,
+                DisplayOrder: productMedia.DisplayOrder,
+                IsPrimary: productMedia.IsPrimary
+            );
+        }
     }
 }

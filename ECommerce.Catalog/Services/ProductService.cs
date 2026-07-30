@@ -109,6 +109,16 @@ public class ProductService(
             }
         }
 
+        ProductCreated eventCreated = product.ToEventData();
+        EventMessage productCreatedMessage = new()
+        {
+            Key = product.Id.ToString(),
+            EventType = nameof(ProductCreated),
+            Value = JsonSerializer.Serialize(eventCreated)
+        };
+
+        dbContext.EventMessages.Add(productCreatedMessage);
+
         try
         {
             await dbContext.SaveChangesAsync(token);
@@ -144,6 +154,19 @@ public class ProductService(
         }
 
         Product product = productResponse.Data!;
+        ProductDeleted eventDeleted = new
+        (
+            Id: product.Id
+        );
+
+        EventMessage productDeletedMessage = new()
+        {
+            Key = product.Id.ToString(),
+            EventType = nameof(ProductDeleted),
+            Value = JsonSerializer.Serialize(eventDeleted)
+        };
+
+        dbContext.EventMessages.Add(productDeletedMessage);
 
         try
         {
@@ -236,6 +259,8 @@ public class ProductService(
             }
         }
 
+        Dictionary<Guid, decimal> originalPrices = product.Variants.ToDictionary(x => x.Id, x => x.BasePrice);
+
         foreach (UpdateProductVariantDto variantDto in dto.ProductVariants)
         {
             if (!variants.TryGetValue(variantDto.Id, out ProductVariant? variant))
@@ -291,6 +316,44 @@ public class ProductService(
                 {
                     Attribute = attrResponse.Data!
                 });
+            }
+        }
+
+        ProductUpdated eventUpdated = product.ToEventDataUpdate();
+        EventMessage productUpdatedMessage = new()
+        {
+            Key = product.Id.ToString(),
+            EventType = nameof(ProductUpdated),
+            Value = JsonSerializer.Serialize(eventUpdated)
+        };
+
+        dbContext.EventMessages.Add(productUpdatedMessage);
+
+        foreach (ProductVariant variant in product.Variants)
+        {
+            if (!originalPrices.TryGetValue(variant.Id, out decimal originalPrice))
+            {
+                continue;
+            }
+
+            if(variant.BasePrice != originalPrice)
+            {
+                ProductPriceChanged eventPriceChanged = new
+                (
+                    ProductId: product.Id,
+                    VariantId: variant.Id,
+                    Sku: variant.Sku,
+                    NewPrice: variant.BasePrice
+                );
+
+                EventMessage productPriceChangedMessage = new()
+                {
+                    Key = product.Id.ToString(),
+                    EventType = nameof(ProductPriceChanged),
+                    Value = JsonSerializer.Serialize(eventPriceChanged)
+                };
+
+                dbContext.EventMessages.Add(productPriceChangedMessage);
             }
         }
 
