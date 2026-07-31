@@ -66,7 +66,7 @@ public static class ProductApis
         return TypedResults.CreatedAtRoute(
             value: response.Data,
             routeName: nameof(GetProductAsync),
-            routeValues: new { id = response.Data.Id }
+            routeValues: new { id = response.Data!.Id }
         );
     }
 
