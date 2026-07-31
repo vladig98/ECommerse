@@ -18,7 +18,16 @@ public class KafkaEventConsumer(
         EnableAutoCommit = false
     };
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        return Task.Factory.StartNew(
+            () => RunConsumerLoop(stoppingToken),
+            stoppingToken,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default).Unwrap();
+    }
+
+    private async Task RunConsumerLoop(CancellationToken stoppingToken)
     {
         logger.Information("Starting Kafka Inventory Consumer...");
 
