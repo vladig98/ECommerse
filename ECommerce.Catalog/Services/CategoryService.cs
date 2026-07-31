@@ -3,6 +3,7 @@
 public class CategoryService(
     ICategoryRepository categoryRepository,
     MainDbContext dbContext,
+    HybridCache hybridCache,
     ILogger logger) : ICategoryService
 {
     public async Task<ApiResponse<CategoryDto>> CreateAsync(string username, CreateCategoryDto dto, CancellationToken token)
@@ -29,9 +30,15 @@ public class CategoryService(
             category.ParentCategory = parent;
         }
 
+        CategoryDto categoryDto = category.ToDto()!;
+
         try
         {
             await dbContext.SaveChangesAsync(token);
+
+            await hybridCache.SetAsync(string.Format(CacheKeys.CategoryKey, category.Id), categoryDto, cancellationToken: token);
+            await hybridCache.RemoveAsync(CacheKeys.AllCategoriesKey, cancellationToken: token);
+
             logger.Information("Successfully committed category '{CategoryName}' (ID: {CategoryId}). User: '{Username}'", category.Name, category.Id, username);
         }
         catch (DbUpdateConcurrencyException conflict)
@@ -50,7 +57,7 @@ public class CategoryService(
             return ApiResponse<CategoryDto>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
 
-        return ApiResponse<CategoryDto>.Success(category.ToDto()!);
+        return ApiResponse<CategoryDto>.Success(categoryDto);
     }
 
     public async Task<ApiResponse<CategoryDto>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
@@ -67,6 +74,10 @@ public class CategoryService(
         try
         {
             await dbContext.SaveChangesAsync(token);
+
+            await hybridCache.RemoveAsync(string.Format(CacheKeys.CategoryKey, category.Id), cancellationToken: token);
+            await hybridCache.RemoveAsync(CacheKeys.AllCategoriesKey, cancellationToken: token);
+
             logger.Information("Successfully committed deletion for category '{CategoryName}' (ID: {CategoryId}). User: '{Username}'", category.Name, category.Id, username);
         }
         catch (DbUpdateConcurrencyException conflict)
@@ -90,28 +101,41 @@ public class CategoryService(
 
     public async Task<ApiResponse<List<CategoryDto>>> GetAllAsync(string username, CancellationToken token)
     {
-        ApiResponse<List<Category>> categoryResponse = await categoryRepository.GetAllAsync(username, token);
-        if (!string.IsNullOrWhiteSpace(categoryResponse.Error))
+        List<CategoryDto> categoryDtos = await hybridCache.GetOrCreateAsync(CacheKeys.AllCategoriesKey, async (token) =>
         {
-            logger.Warning("Failed to retrieve categories. User: '{Username}'. Reason: {Error}", username, categoryResponse.Error);
-            return ApiResponse<List<CategoryDto>>.FromResponse(categoryResponse);
-        }
+            ApiResponse<List<Category>> categoryResponse = await categoryRepository.GetAllAsync(username, token);
+            if (!string.IsNullOrWhiteSpace(categoryResponse.Error))
+            {
+                logger.Warning("Failed to retrieve categories. User: '{Username}'. Reason: {Error}", username, categoryResponse.Error);
+                return [];
+            }
 
-        List<Category> categories = categoryResponse.Data!;
-        return ApiResponse<List<CategoryDto>>.Success([.. categories.Select(x => x.ToDto()!)]);
+            return categoryResponse.Data!.Select(x => x.ToDto()!).ToList();
+        }, cancellationToken: token);
+
+        return ApiResponse<List<CategoryDto>>.Success(categoryDtos);
     }
 
     public async Task<ApiResponse<CategoryDto>> GetAsync(string username, Guid id, CancellationToken token)
     {
-        ApiResponse<Category> categoryResponse = await categoryRepository.GetAsync(username, id, token);
-        if (!string.IsNullOrWhiteSpace(categoryResponse.Error))
+        CategoryDto? categoryDto = await hybridCache.GetOrCreateAsync(string.Format(CacheKeys.CategoryKey, id), async (token) =>
         {
-            logger.Warning("Failed to retrieve category '{CategoryId}'. User: '{Username}'. Reason: {Error}", id, username, categoryResponse.Error);
-            return ApiResponse<CategoryDto>.FromResponse(categoryResponse);
+            ApiResponse<Category> categoryResponse = await categoryRepository.GetAsync(username, id, token);
+            if (!string.IsNullOrWhiteSpace(categoryResponse.Error))
+            {
+                logger.Warning("Failed to retrieve category '{CategoryId}'. User: '{Username}'. Reason: {Error}", id, username, categoryResponse.Error);
+                return null;
+            }
+
+            return categoryResponse.Data!.ToDto()!;
+        }, cancellationToken: token);
+
+        if (categoryDto is null)
+        {
+            return ApiResponse<CategoryDto>.NotFound("The requested category could not be found.");
         }
 
-        Category category = categoryResponse.Data!;
-        return ApiResponse<CategoryDto>.Success(category.ToDto()!);
+        return ApiResponse<CategoryDto>.Success(categoryDto);
     }
 
     public async Task<ApiResponse<CategoryDto>> UpdateAsync(string username, Guid id, Guid version, UpdateCategoryDto dto, CancellationToken token)
@@ -143,9 +167,15 @@ public class CategoryService(
             category.ParentCategory = null;
         }
 
+        CategoryDto categoryDto = category.ToDto()!;
+
         try
         {
             await dbContext.SaveChangesAsync(token);
+
+            await hybridCache.SetAsync(string.Format(CacheKeys.CategoryKey, category.Id), categoryDto, cancellationToken: token);
+            await hybridCache.RemoveAsync(CacheKeys.AllCategoriesKey, cancellationToken: token);
+
             logger.Information("Successfully committed update for category graph '{CategoryName}' (ID: {CategoryId}). User: '{Username}'", category.Name, category.Id, username);
         }
         catch (DbUpdateConcurrencyException conflict)
@@ -164,6 +194,6 @@ public class CategoryService(
             return ApiResponse<CategoryDto>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
 
-        return ApiResponse<CategoryDto>.Success(category.ToDto()!);
+        return ApiResponse<CategoryDto>.Success(categoryDto);
     }
 }

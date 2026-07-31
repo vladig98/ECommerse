@@ -11,6 +11,7 @@ try
         .ConfigureSerilog()
         .ConfigureAuth()
         .MapSettings()
+        .AddCache()
         .RegisterApplicationServices();
 
     WebApplication app = builder.Build();

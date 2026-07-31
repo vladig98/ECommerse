@@ -15,6 +15,18 @@ public static class WebBuilderExtensions
             return builder;
         }
 
+        public WebApplicationBuilder AddCache()
+        {
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetConnectionString("Redis");
+            });
+
+            builder.Services.AddHybridCache();
+
+            return builder;
+        }
+
         public WebApplicationBuilder MapSettings()
         {
             builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("KafkaSettings"));
@@ -66,6 +78,7 @@ public static class WebBuilderExtensions
 
             // Background service
             builder.Services.AddHostedService<KafkaEventProducer>();
+            builder.Services.AddHostedService<KafkaEventConsumer>();
 
             return builder;
         }

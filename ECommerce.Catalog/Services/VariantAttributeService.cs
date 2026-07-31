@@ -3,6 +3,7 @@
 public class VariantAttributeService(
     IVariantAttributeRepository variantAttributeRepository,
     MainDbContext dbContext,
+    HybridCache hybridCache,
     ILogger logger) : IVariantAttributeService
 {
     public async Task<ApiResponse<VariantAttributeDto>> CreateAsync(string username, CreateVariantAttributeDto dto, CancellationToken token)
@@ -15,10 +16,15 @@ public class VariantAttributeService(
         }
 
         VariantAttribute variantAttribute = variantAttributeResponse.Data!;
+        VariantAttributeDto attributeDto = variantAttribute.ToDto();
 
         try
         {
             await dbContext.SaveChangesAsync(token);
+
+            await hybridCache.SetAsync(string.Format(CacheKeys.AttributeKey, variantAttribute.Id), attributeDto, cancellationToken: token);
+            await hybridCache.RemoveAsync(CacheKeys.AllAttributesKey, cancellationToken: token);
+
             logger.Information("Successfully committed variant attribute '{Name}: {Value}' (ID: {AttributeId}). User: '{Username}'", variantAttribute.Name, variantAttribute.Value, variantAttribute.Id, username);
         }
         catch (DbUpdateConcurrencyException conflict)
@@ -37,7 +43,7 @@ public class VariantAttributeService(
             return ApiResponse<VariantAttributeDto>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
 
-        return ApiResponse<VariantAttributeDto>.Success(variantAttribute.ToDto());
+        return ApiResponse<VariantAttributeDto>.Success(attributeDto);
     }
 
     public async Task<ApiResponse<VariantAttributeDto>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
@@ -54,6 +60,10 @@ public class VariantAttributeService(
         try
         {
             await dbContext.SaveChangesAsync(token);
+
+            await hybridCache.RemoveAsync(string.Format(CacheKeys.AttributeKey, id), cancellationToken: token);
+            await hybridCache.RemoveAsync(CacheKeys.AllAttributesKey, cancellationToken: token);
+
             logger.Information("Successfully committed deletion for variant attribute '{Name}: {Value}' (ID: {AttributeId}). User: '{Username}'", attribute.Name, attribute.Value, attribute.Id, username);
         }
         catch (DbUpdateConcurrencyException conflict)
@@ -77,28 +87,41 @@ public class VariantAttributeService(
 
     public async Task<ApiResponse<List<VariantAttributeDto>>> GetAllAsync(string username, CancellationToken token)
     {
-        ApiResponse<List<VariantAttribute>> attributeResponse = await variantAttributeRepository.GetAllAsync(username, token);
-        if (!string.IsNullOrWhiteSpace(attributeResponse.Error))
+        List<VariantAttributeDto> attributes = await hybridCache.GetOrCreateAsync(CacheKeys.AllAttributesKey, async (token) =>
         {
-            logger.Warning("Failed to retrieve variant attributes. User: '{Username}'. Reason: {Error}", username, attributeResponse.Error);
-            return ApiResponse<List<VariantAttributeDto>>.FromResponse(attributeResponse);
-        }
+            ApiResponse<List<VariantAttribute>> attributeResponse = await variantAttributeRepository.GetAllAsync(username, token);
+            if (!string.IsNullOrWhiteSpace(attributeResponse.Error))
+            {
+                logger.Warning("Failed to retrieve variant attributes. User: '{Username}'. Reason: {Error}", username, attributeResponse.Error);
+                return [];
+            }
 
-        List<VariantAttribute> attributes = attributeResponse.Data!;
-        return ApiResponse<List<VariantAttributeDto>>.Success([.. attributes.Select(x => x.ToDto())]);
+            return attributeResponse.Data!.Select(x => x.ToDto()).ToList();
+        }, cancellationToken: token);
+
+        return ApiResponse<List<VariantAttributeDto>>.Success(attributes);
     }
 
     public async Task<ApiResponse<VariantAttributeDto>> GetAsync(string username, Guid id, CancellationToken token)
     {
-        ApiResponse<VariantAttribute> attributeResponse = await variantAttributeRepository.GetAsync(username, id, token);
-        if (!string.IsNullOrWhiteSpace(attributeResponse.Error))
+        VariantAttributeDto? attributeDto = await hybridCache.GetOrCreateAsync(string.Format(CacheKeys.AttributeKey, id), async (token) =>
         {
-            logger.Warning("Failed to retrieve variant attribute '{AttributeId}'. User: '{Username}'. Reason: {Error}", id, username, attributeResponse.Error);
-            return ApiResponse<VariantAttributeDto>.FromResponse(attributeResponse);
+            ApiResponse<VariantAttribute> attributeResponse = await variantAttributeRepository.GetAsync(username, id, token);
+            if (!string.IsNullOrWhiteSpace(attributeResponse.Error))
+            {
+                logger.Warning("Failed to retrieve variant attribute '{AttributeId}'. User: '{Username}'. Reason: {Error}", id, username, attributeResponse.Error);
+                return null;
+            }
+
+            return attributeResponse.Data!.ToDto();
+        }, cancellationToken: token);
+
+        if (attributeDto is null)
+        {
+            return ApiResponse<VariantAttributeDto>.NotFound("The requested variant attribute could not be found.");
         }
 
-        VariantAttribute attribute = attributeResponse.Data!;
-        return ApiResponse<VariantAttributeDto>.Success(attribute.ToDto());
+        return ApiResponse<VariantAttributeDto>.Success(attributeDto);
     }
 
     public async Task<ApiResponse<VariantAttributeDto>> UpdateAsync(string username, Guid id, Guid version, UpdateVariantAttributeDto dto, CancellationToken token)
@@ -111,10 +134,15 @@ public class VariantAttributeService(
         }
 
         VariantAttribute attribute = attributeResponse.Data!;
+        VariantAttributeDto attributeDto = attribute.ToDto();
 
         try
         {
             await dbContext.SaveChangesAsync(token);
+
+            await hybridCache.SetAsync(string.Format(CacheKeys.AttributeKey, attribute.Id), attributeDto, cancellationToken: token);
+            await hybridCache.RemoveAsync(CacheKeys.AllAttributesKey, cancellationToken: token);
+
             logger.Information("Successfully committed update for variant attribute '{Name}: {Value}' (ID: {AttributeId}). User: '{Username}'", attribute.Name, attribute.Value, attribute.Id, username);
         }
         catch (DbUpdateConcurrencyException conflict)
@@ -133,6 +161,6 @@ public class VariantAttributeService(
             return ApiResponse<VariantAttributeDto>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
 
-        return ApiResponse<VariantAttributeDto>.Success(attribute.ToDto());
+        return ApiResponse<VariantAttributeDto>.Success(attributeDto);
     }
 }

@@ -7,6 +7,7 @@ public class ProductService(
     IVariantAttributeRepository variantAttributeService,
     ICategoryRepository categoryRepository,
     MainDbContext dbContext,
+    HybridCache hybridCache,
     ILogger logger) : IProductService
 {
     public async Task<ApiResponse<ProductDto>> CreateAsync(string username, CreateProductDto dto, CancellationToken token)
@@ -118,10 +119,14 @@ public class ProductService(
         };
 
         dbContext.EventMessages.Add(productCreatedMessage);
+        ProductDto productDto = product.ToDto();
 
         try
         {
             await dbContext.SaveChangesAsync(token);
+
+            await hybridCache.SetAsync(string.Format(CacheKeys.ProductKey, product.Id), productDto, cancellationToken: token);
+            await hybridCache.RemoveAsync(CacheKeys.AllProductsKey, cancellationToken: token);
 
             logger.Information("Successfully committed full product graph for '{ProductTitle}' (ID: {ProductId}). User: '{Username}'", product.Title, product.Id, username);
         }
@@ -141,7 +146,7 @@ public class ProductService(
             return ApiResponse<ProductDto>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
 
-        return ApiResponse<ProductDto>.Success(product.ToDto());
+        return ApiResponse<ProductDto>.Success(productDto);
     }
 
     public async Task<ApiResponse<ProductDto>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
@@ -171,6 +176,10 @@ public class ProductService(
         try
         {
             await dbContext.SaveChangesAsync(token);
+
+            await hybridCache.RemoveAsync(string.Format(CacheKeys.ProductKey, product.Id), cancellationToken: token);
+            await hybridCache.RemoveAsync(CacheKeys.AllProductsKey, cancellationToken: token);
+
             logger.Information("Successfully committed deletion for product '{ProductTitle}' (ID: {ProductId}). User: '{Username}'", product.Title, product.Id, username);
         }
         catch (DbUpdateConcurrencyException conflict)
@@ -194,28 +203,41 @@ public class ProductService(
 
     public async Task<ApiResponse<List<ProductDto>>> GetAllAsync(string username, CancellationToken token)
     {
-        ApiResponse<List<Product>> productResponse = await productsService.GetAllAsync(username, token);
-        if (!string.IsNullOrWhiteSpace(productResponse.Error))
+        List<ProductDto> products = await hybridCache.GetOrCreateAsync(CacheKeys.AllProductsKey, async (token) =>
         {
-            logger.Warning("Failed to retrieve products. User: '{Username}'. Reason: {Error}", username, productResponse.Error);
-            return ApiResponse<List<ProductDto>>.FromResponse(productResponse);
-        }
+            ApiResponse<List<Product>> productResponse = await productsService.GetAllAsync(username, token);
+            if (!string.IsNullOrWhiteSpace(productResponse.Error))
+            {
+                logger.Warning("Failed to retrieve products. User: '{Username}'. Reason: {Error}", username, productResponse.Error);
+                return [];
+            }
 
-        List<Product> products = productResponse.Data!;
-        return ApiResponse<List<ProductDto>>.Success([.. products.Select(x => x.ToDto())]);
+            return productResponse.Data!.Select(x => x.ToDto()).ToList();
+        }, cancellationToken: token);
+
+        return ApiResponse<List<ProductDto>>.Success(products);
     }
 
     public async Task<ApiResponse<ProductDto>> GetAsync(string username, Guid id, CancellationToken token)
     {
-        ApiResponse<Product> productResponse = await productsService.GetAsync(username, id, token);
-        if (!string.IsNullOrWhiteSpace(productResponse.Error))
+        ProductDto? product = await hybridCache.GetOrCreateAsync(string.Format(CacheKeys.ProductKey, id), async (token) =>
         {
-            logger.Warning("Failed to retrieve product '{ProductId}'. User: '{Username}'. Reason: {Error}", id, username, productResponse.Error);
-            return ApiResponse<ProductDto>.FromResponse(productResponse);
+            ApiResponse<Product> productResponse = await productsService.GetAsync(username, id, token);
+            if (!string.IsNullOrWhiteSpace(productResponse.Error))
+            {
+                logger.Warning("Failed to retrieve product '{ProductId}'. User: '{Username}'. Reason: {Error}", id, username, productResponse.Error);
+                return null;
+            }
+
+            return productResponse.Data!.ToDto();
+        }, cancellationToken: token);
+
+        if (product is null)
+        {
+            return ApiResponse<ProductDto>.NotFound("The requested product could not be found.");
         }
 
-        Product product = productResponse.Data!;
-        return ApiResponse<ProductDto>.Success(product.ToDto());
+        return ApiResponse<ProductDto>.Success(product);
     }
 
     public async Task<ApiResponse<ProductDto>> UpdateAsync(string username, Guid id, Guid version, UpdateProductDto dto, CancellationToken token)
@@ -357,9 +379,15 @@ public class ProductService(
             }
         }
 
+        ProductDto productDto = product.ToDto();
+
         try
         {
             await dbContext.SaveChangesAsync(token);
+
+            await hybridCache.SetAsync(string.Format(CacheKeys.ProductKey, product.Id), productDto, cancellationToken: token);
+            await hybridCache.RemoveAsync(CacheKeys.AllProductsKey, cancellationToken: token);
+
             logger.Information("Successfully committed update for product graph '{ProductTitle}' (ID: {ProductId}). User: '{Username}'", product.Title, product.Id, username);
         }
         catch (DbUpdateConcurrencyException conflict)
@@ -378,6 +406,6 @@ public class ProductService(
             return ApiResponse<ProductDto>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
 
-        return ApiResponse<ProductDto>.Success(product.ToDto());
+        return ApiResponse<ProductDto>.Success(productDto);
     }
 }
