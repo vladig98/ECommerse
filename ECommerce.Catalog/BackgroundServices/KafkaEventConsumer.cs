@@ -9,10 +9,7 @@ public class KafkaEventConsumer(
     private readonly ConsumerConfig config = new()
     {
         BootstrapServers = options.Value.Server,
-        SaslUsername = options.Value.Username,
-        SaslPassword = options.Value.Password,
-        SecurityProtocol = SecurityProtocol.SaslSsl,
-        SaslMechanism = SaslMechanism.Plain,
+        SecurityProtocol = SecurityProtocol.Plaintext,
         GroupId = "catalog-service-inventory-consumer",
         AutoOffsetReset = AutoOffsetReset.Earliest,
         EnableAutoCommit = false

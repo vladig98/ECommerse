@@ -27,7 +27,7 @@ public class ProductMediaConfiguration : BaseModelConfiguration<ProductMedia>
 
         // Optional Variant association (for variant-specific photos)
         builder.HasOne(pm => pm.ProductVariant)
-            .WithMany()
+            .WithMany(pv => pv.Media)
             .HasForeignKey(pm => pm.ProductVariantId)
             .OnDelete(DeleteBehavior.SetNull);
     }

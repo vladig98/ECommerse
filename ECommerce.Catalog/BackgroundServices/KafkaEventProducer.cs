@@ -9,10 +9,7 @@ public class KafkaEventProducer(
     private readonly ProducerConfig config = new()
     {
         BootstrapServers = options.Value.Server,
-        SaslUsername = options.Value.Username,
-        SaslPassword = options.Value.Password,
-        SecurityProtocol = SecurityProtocol.SaslSsl,
-        SaslMechanism = SaslMechanism.Plain,
+        SecurityProtocol = SecurityProtocol.Plaintext,
         Acks = Acks.All
     };
 
