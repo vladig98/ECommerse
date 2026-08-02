@@ -15,7 +15,11 @@ public static class ProductVariantExtensions
                 BasePrice: productVariant.BasePrice,
                 Gtin: productVariant.Gtin,
                 Media: productVariant.Media?.Select(x => x.ToDto()).ToList() ?? [],
-                Attributes: productVariant.VariantAttributes?.Select(x => x.Attribute.ToDto()).ToList() ?? []
+                Attributes: productVariant.VariantAttributes?
+                    .Select(x => x.Attribute?.ToDto())
+                    .Where(x => x is not null)
+                    .Select(x => x!)
+                    .ToList() ?? []
             );
         }
 
@@ -28,7 +32,11 @@ public static class ProductVariantExtensions
                 BasePrice: productVariant.BasePrice,
                 Gtin: productVariant.Gtin,
                 Media: productVariant.Media?.Select(x => x.ToEventData()).ToList() ?? [],
-                Attributes: productVariant.VariantAttributes?.Select(x => x.Attribute.ToEventData()).ToList() ?? []
+                Attributes: productVariant.VariantAttributes?
+                    .Select(x => x.Attribute?.ToEventData())
+                    .Where(x => x is not null)
+                    .Select(x => x!)
+                    .ToList() ?? []
             );
         }
     }

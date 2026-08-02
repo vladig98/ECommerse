@@ -24,11 +24,11 @@ public static class CategoryExtensions
             );
         }
 
-        public CategoryEventDto ToEventData()
+        public CategoryEventDto? ToEventData()
         {
             if (category is null)
             {
-                throw new InvalidOperationException("Impossible to hit");
+                return null;
             }
 
             CategoryEventDto categoryEventData = new
