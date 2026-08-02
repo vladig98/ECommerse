@@ -21,5 +21,6 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         modelBuilder.ApplyConfiguration(new ProductVariantConfiguration());
         modelBuilder.ApplyConfiguration(new ProductVariantAttributeConfiguration());
         modelBuilder.ApplyConfiguration(new VariantAttributeConfiguration());
+        modelBuilder.ApplyConfiguration(new EventMessageConfiguration());
     }
 }
