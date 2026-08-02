@@ -4,6 +4,17 @@ public static class ProductMediaExtensions
 {
     extension(ProductMedia productMedia)
     {
+        public void Update(UpdateProductMediaDto updateProductMediaDto)
+        {
+            productMedia.AltText = updateProductMediaDto.AltText;
+            productMedia.DisplayOrder = updateProductMediaDto.DisplayOrder;
+            productMedia.IsPrimary = updateProductMediaDto.IsPrimary;
+            productMedia.Type = updateProductMediaDto.Type;
+            productMedia.UpdatedAt = DateTime.UtcNow;
+            productMedia.Url = updateProductMediaDto.Url;
+            productMedia.Version = Guid.NewGuid();
+        }
+
         public ProductMediaDto ToDto()
         {
             return new ProductMediaDto

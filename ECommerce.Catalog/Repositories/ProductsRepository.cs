@@ -2,76 +2,70 @@
 
 public class ProductsRepository(MainDbContext dbContext, ILogger logger) : IProductsRepository
 {
-    public ApiResponse<Product> Create(string username, CreateProductDto dto)
+    public async Task<ApiResponse<Product>> CreateAsync(string username, CreateProductDto dto, CancellationToken token)
     {
         try
         {
-            Product product = new()
-            {
-                Title = dto.Title,
-                Slug = dto.Slug,
-                Description = dto.Description,
-                Brand = dto.Brand,
-                IsActive = true
-            };
-
+            Product product = dto.ToModel();
             dbContext.Products.Add(product);
+            await dbContext.SaveChangesAsync(token);
 
-            logger.Information(
-                "Successfully prepared product '{ProductTitle}' for creation. User: '{Username}'",
-                product.Title, username);
+            logger.Information("Successfully created product '{ProductTitle}'. User: '{Username}'", product.Title, username);
 
             return ApiResponse<Product>.Success(product);
         }
+        catch (DbUpdateException dbEx)
+        {
+            logger.Error(dbEx, "Database constraint violation while saving product '{ProductTitle}'. User: '{Username}'", dto.Title, username);
+            return ApiResponse<Product>.Failure("A database constraint was violated (e.g., duplicate attribute or SKU). Please check your data and try again.");
+        }
         catch (Exception ex)
         {
-            logger.Error(ex,
-                "Memory/Tracker failure while preparing product '{ProductTitle}'. User: '{Username}'",
-                dto.Title, username);
-
+            logger.Error(ex, "Unexpected failure while committing product '{ProductTitle}' to the database. User: '{Username}'", dto.Title, username);
             return ApiResponse<Product>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
     }
 
     public async Task<ApiResponse<Product>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
     {
+        string title = "N/A";
+
         try
         {
             Product? product = await dbContext.Products
-                .Include(x => x.Variants)
-                    .ThenInclude(x => x.Media)
-                .Include(x => x.Variants)
-                    .ThenInclude(x => x.VariantAttributes)
-                        .ThenInclude(x => x.Attribute)
-                .Include(x => x.Category)
-                    .ThenInclude(x => x.SubCategories)
-                .Include(x => x.Media)
+                .GetAllRelatedEntities()
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: token);
 
             if (product is null)
             {
-                logger.Warning(
-                    "Delete aborted: Product '{ProductId}' was not found. User: '{Username}'.",
-                    id, username);
-
+                logger.Warning("Delete aborted: Product '{ProductId}' was not found. User: '{Username}'.", id, username);
                 return ApiResponse<Product>.NotFound("The requested product could not be found. It may have already been removed.");
             }
+
+            title = product.Title;
 
             dbContext.Entry(product).Property(p => p.Version).OriginalValue = version;
             dbContext.Products.Remove(product);
 
-            logger.Information(
-                "Successfully prepared product '{ProductId}' for deletion. User: '{Username}'.",
-                id, username);
+            await dbContext.SaveChangesAsync(token);
+
+            logger.Information("Successfully prepared product '{ProductId}' for deletion. User: '{Username}'.", id, username);
 
             return ApiResponse<Product>.Success(product);
         }
+        catch (DbUpdateConcurrencyException conflict)
+        {
+            logger.Error(conflict, "Concurrency error while deleting product {ProductTitle} (ID: {ProductId}). User: '{Username}'", title, id, username);
+            return ApiResponse<Product>.Conflict("The product has been modified by another process. Please refresh and try again.");
+        }
+        catch (DbUpdateException dbEx)
+        {
+            logger.Error(dbEx, "Database constraint violation while deleting product {ProductTitle} (ID: {ProductId}). User: '{Username}'", title, id, username);
+            return ApiResponse<Product>.Failure("This product cannot be deleted because it is currently referenced by other records in the system.");
+        }
         catch (Exception ex)
         {
-            logger.Error(ex,
-                "Failure while preparing to delete product '{ProductId}'. User: '{Username}'.",
-                id, username);
-
+            logger.Error(ex, "Unexpected failure while committing deletion of product {ProductTitle} (ID: {ProductId}) to the database. User: '{Username}'", title, id, username);
             return ApiResponse<Product>.Failure("An unexpected error occurred while processing the deletion. Please try again later.");
         }
     }
@@ -82,18 +76,13 @@ public class ProductsRepository(MainDbContext dbContext, ILogger logger) : IProd
         {
             List<Product> products = await dbContext.Products.ToListAsync(token);
 
-            logger.Debug(
-                "Retrieved {Count} products. User: '{Username}'",
-                products.Count, username);
+            logger.Debug("Retrieved {Count} products. User: '{Username}'", products.Count, username);
 
             return ApiResponse<List<Product>>.Success(products);
         }
         catch (Exception ex)
         {
-            logger.Error(ex,
-                "Database failure while retrieving all products. User: '{Username}'",
-                username);
-
+            logger.Error(ex, "Database failure while retrieving all products. User: '{Username}'", username);
             return ApiResponse<List<Product>>.Failure("An unexpected error occurred while retrieving the data.");
         }
     }
@@ -103,36 +92,22 @@ public class ProductsRepository(MainDbContext dbContext, ILogger logger) : IProd
         try
         {
             Product? product = await dbContext.Products
-                .Include(x => x.Variants)
-                    .ThenInclude(x => x.Media)
-                .Include(x => x.Variants)
-                    .ThenInclude(x => x.VariantAttributes)
-                .Include(x => x.Category)
-                    .ThenInclude(x => x.ParentCategory)
-                .Include(x => x.Media)
+                .GetAllRelatedEntities()
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: token);
 
             if (product is null)
             {
-                logger.Warning(
-                    "Read aborted: Product '{ProductId}' was not found. User: '{Username}'.",
-                    id, username);
-
+                logger.Warning("Read aborted: Product '{ProductId}' was not found. User: '{Username}'.", id, username);
                 return ApiResponse<Product>.NotFound("The requested product could not be found.");
             }
 
-            logger.Debug(
-                "Retrieved product '{ProductId}'. User: '{Username}'",
-                id, username);
+            logger.Debug("Retrieved product '{ProductId}'. User: '{Username}'", id, username);
 
             return ApiResponse<Product>.Success(product);
         }
         catch (Exception ex)
         {
-            logger.Error(ex,
-                "Database failure while retrieving product '{ProductId}'. User: '{Username}'",
-                id, username);
-
+            logger.Error(ex, "Database failure while retrieving product '{ProductId}'. User: '{Username}'", id, username);
             return ApiResponse<Product>.Failure("An unexpected error occurred while retrieving the data.");
         }
     }
@@ -142,49 +117,38 @@ public class ProductsRepository(MainDbContext dbContext, ILogger logger) : IProd
         try
         {
             Product? product = await dbContext.Products
-                .Include(x => x.Variants)
-                    .ThenInclude(x => x.Media)
-                .Include(x => x.Variants)
-                    .ThenInclude(x => x.VariantAttributes)
-                        .ThenInclude(x => x.Attribute)
-                .Include(x => x.Category)
-                    .ThenInclude(x => x.ParentCategory)
-                .Include(x => x.Media)
+                .GetAllRelatedEntities()
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: token);
 
             if (product is null)
             {
-                logger.Warning(
-                    "Update aborted: Product '{ProductId}' was not found. User: '{Username}'.",
-                    id, username);
-
+                logger.Warning("Update aborted: Product '{ProductId}' was not found. User: '{Username}'.", id, username);
                 return ApiResponse<Product>.NotFound("The requested product could not be found.");
             }
 
             dbContext.Entry(product).Property(p => p.Version).OriginalValue = version;
+            product.Update(dto);
 
-            product.Title = dto.Title;
-            product.Slug = dto.Slug;
-            product.Description = dto.Description;
-            product.Brand = dto.Brand;
-            product.IsActive = dto.IsActive;
-            product.CategoryId = dto.CategoryId;
-            product.UpdatedAt = DateTime.UtcNow;
-            product.Version = Guid.NewGuid();
+            await dbContext.SaveChangesAsync(token);
 
-            logger.Information(
-                "Successfully prepared product '{ProductId}' for update. User: '{Username}'.",
-                id, username);
+            logger.Information("Successfully prepared product '{ProductId}' for update. User: '{Username}'.", id, username);
 
             return ApiResponse<Product>.Success(product);
         }
+        catch (DbUpdateConcurrencyException conflict)
+        {
+            logger.Error(conflict, "Concurrency update error while saving product '{ProductTitle}'. User: '{Username}'", dto.Title, username);
+            return ApiResponse<Product>.Conflict("The entity has been modified by another process. Please try again.");
+        }
+        catch (DbUpdateException dbEx)
+        {
+            logger.Error(dbEx, "Database constraint violation while saving product '{ProductTitle}'. User: '{Username}'", dto.Title, username);
+            return ApiResponse<Product>.Failure("A database constraint was violated. Please check your data and try again.");
+        }
         catch (Exception ex)
         {
-            logger.Error(ex,
-                "Failure while preparing to update product '{ProductId}'. User: '{Username}'.",
-                id, username);
-
-            return ApiResponse<Product>.Failure("An unexpected error occurred while processing the update. Please try again later.");
+            logger.Error(ex, "Unexpected failure while committing product '{ProductTitle}' to the database. User: '{Username}'", dto.Title, username);
+            return ApiResponse<Product>.Failure("An unexpected error occurred while processing your request. Please try again later.");
         }
     }
 }
