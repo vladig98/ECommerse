@@ -17,12 +17,14 @@ public static class CategoryApis
     }
 
     private static async Task<IResult> GetCategoriesAsync(
-            [FromServices] ICategoryService categoriesService,
+            [FromKeyedServices(KeyedServices.CachedCategoryService)] ICategoryService categoriesService,
             HttpContext context,
-            CancellationToken token)
+            CancellationToken token,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 100)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<List<CategoryDto>> response = await categoriesService.GetAllAsync(username, token);
+        ApiResponse<PagedResult<CategoryDto>> response = await categoriesService.GetAllAsync(username, pageNumber, pageSize, token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -34,7 +36,7 @@ public static class CategoryApis
 
     private static async Task<IResult> GetCategoryAsync(
         [FromRoute] Guid id,
-        [FromServices] ICategoryService categoriesService,
+        [FromKeyedServices(KeyedServices.CachedCategoryService)] ICategoryService categoriesService,
         HttpContext context,
         CancellationToken token)
     {
@@ -51,7 +53,7 @@ public static class CategoryApis
 
     private static async Task<IResult> CreateCategoryAsync(
         [FromBody] CreateCategoryDto dto,
-        [FromServices] ICategoryService categoriesService,
+        [FromKeyedServices(KeyedServices.CachedCategoryService)] ICategoryService categoriesService,
         HttpContext context,
         CancellationToken token)
     {
@@ -74,7 +76,7 @@ public static class CategoryApis
         [FromRoute] Guid id,
         [FromHeader(Name = "If-Match")] Guid version,
         [FromBody] UpdateCategoryDto dto,
-        [FromServices] ICategoryService categoriesService,
+        [FromKeyedServices(KeyedServices.CachedCategoryService)] ICategoryService categoriesService,
         HttpContext context,
         CancellationToken token)
     {
@@ -92,7 +94,7 @@ public static class CategoryApis
     private static async Task<IResult> DeleteCategoryAsync(
         [FromRoute] Guid id,
         [FromHeader(Name = "If-Match")] Guid version,
-        [FromServices] ICategoryService categoriesService,
+        [FromKeyedServices(KeyedServices.CachedCategoryService)] ICategoryService categoriesService,
         HttpContext context,
         CancellationToken token)
     {

@@ -6,6 +6,5 @@ public record class CreateProductVariantDto
     decimal BasePrice,
     string? Gtin,
     List<CreateProductMediaDto> Media,
-    List<CreateVariantAttributeDto> NewAttributes,
     List<Guid> Attributes
 );

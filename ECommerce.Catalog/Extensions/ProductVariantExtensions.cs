@@ -6,24 +6,12 @@ public static class ProductVariantExtensions
     {
         public void Update(UpdateProductVariantDto updateProductVariantDto)
         {
-            Dictionary<Guid, UpdateProductMediaDto> mediaMap = updateProductVariantDto.Media.ToDictionary(x => x.Id, x => x);
-
             productVariant.BasePrice = updateProductVariantDto.BasePrice;
             productVariant.Gtin = updateProductVariantDto.Gtin;
             productVariant.Sku = updateProductVariantDto.Sku;
-            productVariant.UpdatedAt = DateTime.UtcNow;
-            productVariant.VariantAttributes = [.. updateProductVariantDto.Attributes.Select(x => new ProductVariantAttribute() { AttributeId = x })];
-            productVariant.Version = Guid.NewGuid();
 
-            foreach (ProductMedia media in productVariant.Media)
-            {
-                if (!mediaMap.TryGetValue(media.Id, out UpdateProductMediaDto? updateProductMediaDto))
-                {
-                    continue;
-                }
-
-                media.Update(updateProductMediaDto);
-            }
+            UpdateProductVariantMedia(productVariant, updateProductVariantDto);
+            UpdateProductVariantAttributes(productVariant, updateProductVariantDto);
         }
 
         public ProductVariantDto ToDto()
@@ -45,6 +33,17 @@ public static class ProductVariantExtensions
             );
         }
 
+        public ProductPriceChanged ToPricheChangeEventData()
+        {
+            return new ProductPriceChanged
+            (
+                ProductId: productVariant.ProductId,
+                VariantId: productVariant.Id,
+                Sku: productVariant.Sku,
+                NewPrice: productVariant.BasePrice
+            );
+        }
+
         public ProductVariantEventDto ToEventData()
         {
             return new ProductVariantEventDto
@@ -60,6 +59,87 @@ public static class ProductVariantExtensions
                     .Select(x => x!)
                     .ToList() ?? []
             );
+        }
+    }
+
+    private static void UpdateProductVariantMedia(ProductVariant productVariant, UpdateProductVariantDto updateProductVariantDto)
+    {
+        Dictionary<Guid, UpdateProductMediaDto> mediaMap = [];
+        List<ProductMedia> mediaToInsert = [];
+
+        foreach (UpdateProductMediaDto updateMediaDto in updateProductVariantDto.Media)
+        {
+            if (updateMediaDto.Id.Equals(default) || updateMediaDto.Id.Equals(Guid.Empty))
+            {
+                mediaToInsert.Add(updateMediaDto.ToModel());
+                continue;
+            }
+
+            mediaMap[updateMediaDto.Id] = updateMediaDto;
+        }
+
+        List<ProductMedia> mediaToRemove = [];
+        foreach (ProductMedia media in productVariant.Media)
+        {
+            if (!mediaMap.TryGetValue(media.Id, out UpdateProductMediaDto? mediaDto))
+            {
+                mediaToRemove.Add(media);
+                continue;
+            }
+
+            media.Update(mediaDto);
+        }
+
+        foreach (ProductMedia toRemove in mediaToRemove)
+        {
+            productVariant.Media.Remove(toRemove);
+        }
+
+        foreach (ProductMedia toInsert in mediaToInsert)
+        {
+            productVariant.Media.Add(toInsert);
+        }
+    }
+
+    private static void UpdateProductVariantAttributes(ProductVariant productVariant, UpdateProductVariantDto updateProductVariantDto)
+    {
+        HashSet<Guid> incomingIds = [.. updateProductVariantDto.Attributes];
+        HashSet<Guid> existingIds = [.. productVariant.VariantAttributes.Select(x => x.AttributeId)];
+        
+        List<ProductVariantAttribute> toRemove = [];
+        foreach (ProductVariantAttribute variantAttribute in productVariant.VariantAttributes)
+        {
+            if (incomingIds.Contains(variantAttribute.AttributeId))
+            {
+                continue;
+            }
+
+            toRemove.Add(variantAttribute);
+        }
+
+        List<Guid> toInsert = [];
+        foreach (Guid attributeId in updateProductVariantDto.Attributes)
+        {
+            if (existingIds.Contains(attributeId))
+            {
+                continue;
+            }
+
+            toInsert.Add(attributeId);
+        }
+
+        foreach (ProductVariantAttribute attributeToRemove in toRemove)
+        {
+            productVariant.VariantAttributes.Remove(attributeToRemove);
+        }
+
+        foreach (Guid attributeId in toInsert)
+        {
+            productVariant.VariantAttributes.Add(new ProductVariantAttribute()
+            {
+                AttributeId = attributeId,
+                VariantId = productVariant.Id
+            });
         }
     }
 }

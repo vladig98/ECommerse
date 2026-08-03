@@ -9,8 +9,17 @@ public static class WebBuilderExtensions
             string connectionString = builder.Configuration.GetConnectionString("Main")
                 ?? throw new InvalidOperationException("Missing connection string.");
 
-            builder.Services.AddDbContext<MainDbContext>(options =>
-                options.UseNpgsql(connectionString));
+            builder.Services.AddSingleton<AuditInterceptor>();
+            builder.Services.AddSingleton<OutboxInterceptor>();
+
+            builder.Services.AddDbContext<MainDbContext>((serviceProvider, options) =>
+            {
+                AuditInterceptor auditInterceptor = serviceProvider.GetRequiredService<AuditInterceptor>();
+                OutboxInterceptor outboxInterceptor = serviceProvider.GetRequiredService<OutboxInterceptor>();
+
+                options.UseNpgsql(connectionString)
+                   .AddInterceptors(auditInterceptor, outboxInterceptor);
+            });
 
             return builder;
         }
@@ -64,21 +73,28 @@ public static class WebBuilderExtensions
 
         public WebApplicationBuilder RegisterApplicationServices()
         {
+            // Messaging Abstractions
+            builder.Services.AddSingleton<IMessageProducer, KafkaMessageProducer>();
+            builder.Services.AddSingleton<IMessageConsumer, KafkaMessageConsumer>();
+
             // Repositories
             builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-            builder.Services.AddScoped<IProductMediaRepository, ProductMediaRepository>();
-            builder.Services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
             builder.Services.AddScoped<IVariantAttributeRepository, VariantAttributeRepository>();
 
             // Services
-            builder.Services.AddScoped<IProductService, ProductService>();
-            builder.Services.AddScoped<ICategoryService, CategoryService>();
-            builder.Services.AddScoped<IVariantAttributeService, VariantAttributeService>();
+            builder.Services.AddKeyedScoped<IProductService, ProductService>(KeyedServices.ProductService);
+            builder.Services.AddKeyedScoped<IProductService, CachedProductService>(KeyedServices.CachedProductService);
 
-            // Background service
-            builder.Services.AddHostedService<KafkaEventProducer>();
-            builder.Services.AddHostedService<KafkaEventConsumer>();
+            builder.Services.AddKeyedScoped<ICategoryService, CategoryService>(KeyedServices.CategoryService);
+            builder.Services.AddKeyedScoped<ICategoryService, CachedCategoryService>(KeyedServices.CachedCategoryService);
+
+            builder.Services.AddKeyedScoped<IVariantAttributeService, VariantAttributeService>(KeyedServices.AttributeService);
+            builder.Services.AddKeyedScoped<IVariantAttributeService, CachedVariantAttributeService>(KeyedServices.CachedAttributeService);
+
+            // Background Services
+            builder.Services.AddHostedService<OutboxPublisherService>();
+            builder.Services.AddHostedService<InventoryConsumerService>();
 
             return builder;
         }

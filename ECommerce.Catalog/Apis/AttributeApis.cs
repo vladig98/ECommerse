@@ -17,12 +17,14 @@ public static class AttributeApis
     }
 
     private static async Task<IResult> GetAttributesAsync(
-            [FromServices] IVariantAttributeService attributeService,
+            [FromKeyedServices(KeyedServices.CachedAttributeService)] IVariantAttributeService attributeService,
             HttpContext context,
-            CancellationToken token)
+            CancellationToken token,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 100)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<List<VariantAttributeDto>> response = await attributeService.GetAllAsync(username, token);
+        ApiResponse<PagedResult<VariantAttributeDto>> response = await attributeService.GetAllAsync(username, pageNumber, pageSize, token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -34,7 +36,7 @@ public static class AttributeApis
 
     private static async Task<IResult> GetAttributeAsync(
         [FromRoute] Guid id,
-        [FromServices] IVariantAttributeService attributeService,
+        [FromKeyedServices(KeyedServices.CachedAttributeService)] IVariantAttributeService attributeService,
         HttpContext context,
         CancellationToken token)
     {
@@ -51,7 +53,7 @@ public static class AttributeApis
 
     private static async Task<IResult> CreateAttributeAsync(
         [FromBody] CreateVariantAttributeDto dto,
-        [FromServices] IVariantAttributeService attributeService,
+        [FromKeyedServices(KeyedServices.CachedAttributeService)] IVariantAttributeService attributeService,
         HttpContext context,
         CancellationToken token)
     {
@@ -74,7 +76,7 @@ public static class AttributeApis
         [FromRoute] Guid id,
         [FromHeader(Name = "If-Match")] Guid version,
         [FromBody] UpdateVariantAttributeDto dto,
-        [FromServices] IVariantAttributeService attributeService,
+        [FromKeyedServices(KeyedServices.CachedAttributeService)] IVariantAttributeService attributeService,
         HttpContext context,
         CancellationToken token)
     {
@@ -92,7 +94,7 @@ public static class AttributeApis
     private static async Task<IResult> DeleteAttributeAsync(
         [FromRoute] Guid id,
         [FromHeader(Name = "If-Match")] Guid version,
-        [FromServices] IVariantAttributeService attributeService,
+        [FromKeyedServices(KeyedServices.CachedAttributeService)] IVariantAttributeService attributeService,
         HttpContext context,
         CancellationToken token)
     {

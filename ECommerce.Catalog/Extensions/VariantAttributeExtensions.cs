@@ -16,6 +16,12 @@ public static class VariantAttributeExtensions
             );
         }
 
+        public void Update(UpdateVariantAttributeDto updateVariantAttributeDto)
+        {
+            attribute.Name = updateVariantAttributeDto.Name;
+            attribute.Value = updateVariantAttributeDto.Value;
+        }
+
         public VariantAttributeEventDto ToEventData()
         {
             return new VariantAttributeEventDto

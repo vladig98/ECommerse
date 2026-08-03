@@ -24,6 +24,19 @@ public static class CategoryExtensions
             );
         }
 
+        public void Update(UpdateCategoryDto updateCategoryDto)
+        {
+            if (category is null)
+            {
+                return;
+            }
+
+            category.Name = updateCategoryDto.Name;
+            category.ParentCategoryId = updateCategoryDto.ParentCategoryId;
+            category.ParentCategory = null;
+            category.Slug = updateCategoryDto.Slug;
+        }
+
         public CategoryEventDto? ToEventData()
         {
             if (category is null)

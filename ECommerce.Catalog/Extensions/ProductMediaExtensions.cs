@@ -10,9 +10,7 @@ public static class ProductMediaExtensions
             productMedia.DisplayOrder = updateProductMediaDto.DisplayOrder;
             productMedia.IsPrimary = updateProductMediaDto.IsPrimary;
             productMedia.Type = updateProductMediaDto.Type;
-            productMedia.UpdatedAt = DateTime.UtcNow;
             productMedia.Url = updateProductMediaDto.Url;
-            productMedia.Version = Guid.NewGuid();
         }
 
         public ProductMediaDto ToDto()

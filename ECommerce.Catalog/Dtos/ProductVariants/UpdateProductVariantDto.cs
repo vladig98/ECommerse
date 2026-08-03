@@ -3,7 +3,6 @@
 public record class UpdateProductVariantDto
 (
     Guid Id,
-    Guid Version,
     string Sku,
     decimal BasePrice,
     string? Gtin,

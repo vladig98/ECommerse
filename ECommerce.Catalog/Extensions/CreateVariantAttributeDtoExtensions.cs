@@ -12,13 +12,5 @@ public static class CreateVariantAttributeDtoExtensions
                 Value = createVariantAttributeDto.Value
             };
         }
-
-        public ProductVariantAttribute ToModelMap()
-        {
-            return new ProductVariantAttribute()
-            {
-                Attribute = createVariantAttributeDto.ToModel()
-            };
-        }
     }
 }

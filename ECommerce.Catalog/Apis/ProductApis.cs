@@ -17,12 +17,14 @@ public static class ProductApis
     }
 
     private static async Task<IResult> GetProductsAsync(
-            [FromServices] IProductService productsService,
+            [FromKeyedServices(KeyedServices.CachedProductService)] IProductService productsService,
             HttpContext context,
-            CancellationToken token)
+            CancellationToken token,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 100)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<List<ProductDto>> response = await productsService.GetAllAsync(username, token);
+        ApiResponse<PagedResult<ProductDto>> response = await productsService.GetAllAsync(username, pageNumber, pageSize, token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -34,7 +36,7 @@ public static class ProductApis
 
     private static async Task<IResult> GetProductAsync(
         [FromRoute] Guid id,
-        [FromServices] IProductService productsService,
+        [FromKeyedServices(KeyedServices.CachedProductService)] IProductService productsService,
         HttpContext context,
         CancellationToken token)
     {
@@ -51,12 +53,12 @@ public static class ProductApis
 
     private static async Task<IResult> CreateProductAsync(
         [FromBody] CreateProductDto dto,
-        [FromServices] IProductService productService,
+        [FromKeyedServices(KeyedServices.CachedProductService)] IProductService productsService,
         HttpContext context,
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<ProductDto> response = await productService.CreateAsync(username, dto, token);
+        ApiResponse<ProductDto> response = await productsService.CreateAsync(username, dto, token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -74,7 +76,7 @@ public static class ProductApis
         [FromRoute] Guid id,
         [FromHeader(Name = "If-Match")] Guid version,
         [FromBody] UpdateProductDto dto,
-        [FromServices] IProductService productsService,
+        [FromKeyedServices(KeyedServices.CachedProductService)] IProductService productsService,
         HttpContext context,
         CancellationToken token)
     {
@@ -92,7 +94,7 @@ public static class ProductApis
     private static async Task<IResult> DeleteProductAsync(
         [FromRoute] Guid id,
         [FromHeader(Name = "If-Match")] Guid version,
-        [FromServices] IProductService productsService,
+        [FromKeyedServices(KeyedServices.CachedProductService)] IProductService productsService,
         HttpContext context,
         CancellationToken token)
     {

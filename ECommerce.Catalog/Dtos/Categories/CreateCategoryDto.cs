@@ -4,6 +4,5 @@ public record class CreateCategoryDto
 (
     string Name,
     string Slug,
-    Guid? ParentCategoryId,
-    List<CreateCategoryDto> SubCategories
+    Guid? ParentCategoryId
 );

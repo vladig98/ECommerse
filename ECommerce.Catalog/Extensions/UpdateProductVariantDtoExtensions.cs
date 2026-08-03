@@ -12,8 +12,7 @@ public static class UpdateProductVariantDtoExtensions
                 Gtin = updateProductVariantDto.Gtin,
                 Sku = updateProductVariantDto.Sku,
                 Media = [.. updateProductVariantDto.Media.Select(x => x.ToModel())],
-                VariantAttributes = [.. updateProductVariantDto.NewAttributes.Select(x => x.ToModelMap()),
-                    .. updateProductVariantDto.Attributes.Select(x => new ProductVariantAttribute() { AttributeId = x })]
+                VariantAttributes = [.. updateProductVariantDto.Attributes.Select(x => new ProductVariantAttribute() { AttributeId = x })]
             };
         }
     }
