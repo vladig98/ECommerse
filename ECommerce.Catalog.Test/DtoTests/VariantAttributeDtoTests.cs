@@ -98,21 +98,13 @@ public class VariantAttributeDtoTests
     [Fact]
     public void UpdateVariantAttributeDto_Record_Instantiates_Correctly()
     {
-        // Arrange
-        Guid id = Guid.NewGuid();
-        Guid version = Guid.NewGuid();
-
         // Act
         UpdateVariantAttributeDto dto = new(
-            Id: id,
-            Version: version,
             Name: "Weight",
             Value: "1.5kg"
         );
 
         // Assert
-        Assert.Equal(id, dto.Id);
-        Assert.Equal(version, dto.Version);
         Assert.Equal("Weight", dto.Name);
         Assert.Equal("1.5kg", dto.Value);
     }

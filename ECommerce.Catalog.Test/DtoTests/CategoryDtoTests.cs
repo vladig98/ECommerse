@@ -191,15 +191,18 @@ public class CategoryDtoTests
     }
 
     [Fact]
-    public void CreateCategoryDto_Record_Supports_Nesting()
+    public void CreateCategoryDto_Record_Instantiates_Correctly()
     {
         // Arrange
-        CreateCategoryDto child = new("Smartphones", "smartphones", null, []);
-        CreateCategoryDto parent = new("Mobile", "mobile", null, [child]);
+        Guid? parentId = Guid.NewGuid();
+
+        // Act
+        CreateCategoryDto dto = new("Smartphones", "smartphones", parentId);
 
         // Assert
-        Assert.Single(parent.SubCategories);
-        Assert.Equal("Smartphones", parent.SubCategories[0].Name);
+        Assert.Equal("Smartphones", dto.Name);
+        Assert.Equal("smartphones", dto.Slug);
+        Assert.Equal(parentId, dto.ParentCategoryId);
     }
 
     [Fact]

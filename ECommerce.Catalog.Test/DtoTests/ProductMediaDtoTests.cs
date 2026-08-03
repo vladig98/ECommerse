@@ -150,12 +150,10 @@ public class ProductMediaDtoTests
     {
         // Arrange
         Guid id = Guid.NewGuid();
-        Guid version = Guid.NewGuid();
 
-        // Act
+        // Act (Version removed)
         UpdateProductMediaDto dto = new(
             Id: id,
-            Version: version,
             Url: "https://cdn.example.com/updated.jpg",
             AltText: "Updated Alt",
             Type: MediaType.Image,
@@ -165,7 +163,6 @@ public class ProductMediaDtoTests
 
         // Assert
         Assert.Equal(id, dto.Id);
-        Assert.Equal(version, dto.Version);
         Assert.Equal(5, dto.DisplayOrder);
     }
 
