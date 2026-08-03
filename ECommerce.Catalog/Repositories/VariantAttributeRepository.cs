@@ -2,153 +2,69 @@
 
 public class VariantAttributeRepository(MainDbContext dbContext, ILogger logger) : IVariantAttributeRepository
 {
-    public ApiResponse<VariantAttribute> Create(string username, CreateVariantAttributeDto dto)
+    public async Task<VariantAttribute> AddAsync(VariantAttribute attribute, CancellationToken token)
     {
-        try
-        {
-            VariantAttribute attribute = new()
-            {
-                Name = dto.Name,
-                Value = dto.Value
-            };
+        logger.Debug("Executing INSERT for new Variant Attribute in database.");
 
-            dbContext.VariantAttributes.Add(attribute);
+        dbContext.VariantAttributes.Add(attribute);
+        await dbContext.SaveChangesAsync(token);
 
-            logger.Information(
-                "Successfully prepared variant attribute '{AttributeName}' for creation. User: '{Username}'",
-                attribute.Name, username);
+        VariantAttribute? createdAttribute = await GetAsync(attribute.Id, token);
 
-            return ApiResponse<VariantAttribute>.Success(attribute);
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex,
-                "Memory/Tracker failure while preparing variant attribute '{AttributeName}'. User: '{Username}'",
-                dto.Name, username);
-
-            return ApiResponse<VariantAttribute>.Failure("An unexpected error occurred while processing your request. Please try again later.");
-        }
+        return createdAttribute!;
     }
 
-    public async Task<ApiResponse<VariantAttribute>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
+    public async Task<VariantAttribute?> DeleteAsync(Guid id, Guid version, CancellationToken token)
     {
-        try
+        VariantAttribute? attribute = await GetAsync(id, token);
+        if (attribute is null)
         {
-            VariantAttribute? attribute = await dbContext.VariantAttributes.FindAsync(keyValues: [id], cancellationToken: token);
-            if (attribute is null)
-            {
-                logger.Warning(
-                    "Delete aborted: Variant attribute '{AttributeId}' was not found. User: '{Username}'",
-                    id, username);
-
-                return ApiResponse<VariantAttribute>.NotFound("The requested variant attribute could not be found. It may have already been removed.");
-            }
-
-            dbContext.Entry(attribute).Property(p => p.Version).OriginalValue = version;
-            dbContext.VariantAttributes.Remove(attribute);
-
-            logger.Information(
-                "Successfully prepared variant attribute '{AttributeId}' for deletion. User: '{Username}'.",
-                id, username);
-
-            return ApiResponse<VariantAttribute>.Success(attribute);
+            return attribute;
         }
-        catch (Exception ex)
-        {
-            logger.Error(ex,
-                "Failure while preparing to delete variant attribute '{AttributeId}'. User: '{Username}'",
-                id, username);
 
-            return ApiResponse<VariantAttribute>.Failure("An unexpected error occurred while processing the deletion. Please try again later.");
-        }
+        logger.Debug("Executing DELETE for Variant Attribute '{AttributeId}' in database.", id);
+
+        dbContext.Entry(attribute).Property(p => p.Version).OriginalValue = version;
+        dbContext.VariantAttributes.Remove(attribute);
+
+        await dbContext.SaveChangesAsync(token);
+
+        return attribute;
     }
 
-    public async Task<ApiResponse<List<VariantAttribute>>> GetAllAsync(string username, CancellationToken token)
+    public async Task<PagedResult<VariantAttribute>> GetAllAsync(int pageNumber = 1, int itemsPerPage = 100, CancellationToken token = default)
     {
-        try
-        {
-            List<VariantAttribute> attributes = await dbContext.VariantAttributes.ToListAsync(token);
+        logger.Debug("Executing COUNT and SELECT for paginated Variant Attributes.");
 
-            logger.Debug(
-                "Retrieved {Count} variant attributes. User: '{Username}'",
-                attributes.Count, username);
+        int totalCount = await dbContext.VariantAttributes.CountAsync(token);
+        int totalPages = (int)Math.Ceiling(totalCount / (double)itemsPerPage);
 
-            return ApiResponse<List<VariantAttribute>>.Success(attributes);
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex,
-                "Database failure while retrieving all variant attributes. User: '{Username}'",
-                username);
+        int realPageNumber = Math.Clamp(pageNumber - 1, 0, totalPages);
+        int itemsToSkip = realPageNumber * itemsPerPage;
 
-            return ApiResponse<List<VariantAttribute>>.Failure("An unexpected error occurred while retrieving the data.");
-        }
+        List<VariantAttribute> items = await dbContext.VariantAttributes
+            .AsNoTracking()
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip(itemsToSkip)
+            .Take(itemsPerPage)
+            .ToListAsync(token);
+
+        return new PagedResult<VariantAttribute>(items, totalCount, pageNumber, itemsPerPage, totalPages);
     }
 
-    public async Task<ApiResponse<VariantAttribute>> GetAsync(string username, Guid id, CancellationToken token)
+    public async Task<VariantAttribute?> GetAsync(Guid id, CancellationToken token)
     {
-        try
-        {
-            VariantAttribute? attribute = await dbContext.VariantAttributes.FindAsync(keyValues: [id], cancellationToken: token);
-            if (attribute is null)
-            {
-                logger.Warning(
-                    "Read aborted: Variant attribute '{AttributeId}' was not found. User: '{Username}'.",
-                    id, username);
+        logger.Debug("Executing SELECT for Variant Attribute '{AttributeId}'.", id);
 
-                return ApiResponse<VariantAttribute>.NotFound("The requested variant attribute could not be found.");
-            }
-
-            logger.Debug(
-                "Retrieved variant attribute '{AttributeId}'. User: '{Username}'",
-                id, username);
-
-            return ApiResponse<VariantAttribute>.Success(attribute);
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex,
-                "Database failure while retrieving variant attribute '{AttributeId}'. User: '{Username}'",
-                id, username);
-
-            return ApiResponse<VariantAttribute>.Failure("An unexpected error occurred while retrieving the data.");
-        }
+        return await dbContext.VariantAttributes
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: token);
     }
 
-    public async Task<ApiResponse<VariantAttribute>> UpdateAsync(string username, Guid id, Guid version, UpdateVariantAttributeDto dto, CancellationToken token)
+    public async Task UpdateAsync(VariantAttribute attribute, Guid version, CancellationToken token)
     {
-        try
-        {
-            VariantAttribute? attribute = await dbContext.VariantAttributes.FindAsync(keyValues: [id], cancellationToken: token);
-            if (attribute is null)
-            {
-                logger.Warning(
-                    "Update aborted: Variant attribute '{AttributeId}' was not found. User: '{Username}'.",
-                    id, username);
+        logger.Debug("Executing UPDATE for Variant Attribute '{AttributeId}' in database.", attribute.Id);
 
-                return ApiResponse<VariantAttribute>.NotFound("The requested variant attribute could not be found.");
-            }
-
-            dbContext.Entry(attribute).Property(p => p.Version).OriginalValue = version;
-
-            attribute.Name = dto.Name;
-            attribute.Value = dto.Value;
-            attribute.UpdatedAt = DateTime.UtcNow;
-            attribute.Version = Guid.NewGuid();
-
-            logger.Information(
-                "Successfully prepared variant attribute '{AttributeId}' for update. User: '{Username}'.",
-                id, username);
-
-            return ApiResponse<VariantAttribute>.Success(attribute);
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex,
-                "Failure while preparing to update variant attribute '{AttributeId}'. User: '{Username}'.",
-                id, username);
-
-            return ApiResponse<VariantAttribute>.Failure("An unexpected error occurred while processing the update. Please try again later.");
-        }
+        dbContext.Entry(attribute).Property(p => p.Version).OriginalValue = version;
+        await dbContext.SaveChangesAsync(token);
     }
 }

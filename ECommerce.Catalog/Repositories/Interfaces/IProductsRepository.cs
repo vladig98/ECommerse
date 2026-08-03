@@ -2,9 +2,9 @@
 
 public interface IProductsRepository
 {
-    Task<ApiResponse<List<Product>>> GetAllAsync(string username, CancellationToken token);
-    Task<ApiResponse<Product>> GetAsync(string username, Guid id, CancellationToken token);
-    Task<ApiResponse<Product>> CreateAsync(string username, CreateProductDto dto, CancellationToken token);
-    Task<ApiResponse<Product>> UpdateAsync(string username, Guid id, Guid version, UpdateProductDto dto, CancellationToken token);
-    Task<ApiResponse<Product>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token);
+    Task<PagedResult<Product>> GetAllAsync(int pageNumber = 1, int itemsPerPage = 100, CancellationToken token = default);
+    Task<Product?> GetAsync(Guid id, CancellationToken token);
+    Task<Product> AddAsync(Product product, CancellationToken token);
+    Task UpdateAsync(Product product, Guid version, CancellationToken token);
+    Task<Product?> DeleteAsync(Guid id, Guid version, CancellationToken token);
 }

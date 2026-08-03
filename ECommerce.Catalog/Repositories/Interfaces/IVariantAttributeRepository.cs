@@ -2,9 +2,9 @@
 
 public interface IVariantAttributeRepository
 {
-    Task<ApiResponse<List<VariantAttribute>>> GetAllAsync(string username, CancellationToken token);
-    Task<ApiResponse<VariantAttribute>> GetAsync(string username, Guid id, CancellationToken token);
-    ApiResponse<VariantAttribute> Create(string username, CreateVariantAttributeDto dto);
-    Task<ApiResponse<VariantAttribute>> UpdateAsync(string username, Guid id, Guid version, UpdateVariantAttributeDto dto, CancellationToken token);
-    Task<ApiResponse<VariantAttribute>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token);
+    Task<PagedResult<VariantAttribute>> GetAllAsync(int pageNumber = 1, int itemsPerPage = 100, CancellationToken token = default);
+    Task<VariantAttribute?> GetAsync(Guid id, CancellationToken token);
+    Task<VariantAttribute> AddAsync(VariantAttribute attribute, CancellationToken token);
+    Task UpdateAsync(VariantAttribute attribute, Guid version, CancellationToken token);
+    Task<VariantAttribute?> DeleteAsync(Guid id, Guid version, CancellationToken token);
 }
