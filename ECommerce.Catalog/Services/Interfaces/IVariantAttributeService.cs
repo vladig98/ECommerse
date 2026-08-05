@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Services.Interfaces;
 
-public interface IVariantAttributeService
+internal interface IVariantAttributeService
 {
     Task<ApiResponse<VariantAttributeDto>> CreateAsync(string username, CreateVariantAttributeDto dto, CancellationToken token);
     Task<ApiResponse<VariantAttributeDto>> GetAsync(string username, Guid id, CancellationToken token);

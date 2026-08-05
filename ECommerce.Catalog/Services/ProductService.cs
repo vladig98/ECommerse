@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-public class ProductService(IProductsRepository productRepository, ILogger logger) : IProductService
+internal class ProductService(IProductsRepository productRepository, ILogger logger) : IProductService
 {
     public async Task<ApiResponse<ProductDto>> CreateAsync(string username, CreateProductDto dto, CancellationToken token)
     {
@@ -8,7 +8,7 @@ public class ProductService(IProductsRepository productRepository, ILogger logge
         {
             Product product = dto.ToModel();
 
-            Product createdProduct = await productRepository.AddAsync(product, token);
+            Product createdProduct = await productRepository.AddAsync(product, token).ConfigureAwait(true);
             ProductDto productDto = createdProduct.ToDto();
 
             logger.Information("Successfully created product '{ProductTitle}'. User: '{Username}'", product.Title, username);
@@ -31,7 +31,7 @@ public class ProductService(IProductsRepository productRepository, ILogger logge
     {
         try
         {
-            Product? product = await productRepository.DeleteAsync(id, version, token);
+            Product? product = await productRepository.DeleteAsync(id, version, token).ConfigureAwait(true);
             if (product is null)
             {
                 logger.Warning("Delete aborted: Product '{ProductId}' was not found. User: '{Username}'.", id, username);
@@ -65,7 +65,7 @@ public class ProductService(IProductsRepository productRepository, ILogger logge
     {
         try
         {
-            PagedResult<Product> pagedModels = await productRepository.GetAllAsync(pageNumber, itemsPerPage, token);
+            PagedResult<Product> pagedModels = await productRepository.GetAllAsync(pageNumber, itemsPerPage, token).ConfigureAwait(true);
 
             List<ProductDto> dtos = [.. pagedModels.Items.Select(x => x.ToDto())];
 
@@ -92,7 +92,7 @@ public class ProductService(IProductsRepository productRepository, ILogger logge
     {
         try
         {
-            Product? product = await productRepository.GetAsync(id, token);
+            Product? product = await productRepository.GetAsync(id, token).ConfigureAwait(true);
             if (product is null)
             {
                 logger.Warning("Read aborted: Product '{ProductId}' was not found. User: '{Username}'", id, username);
@@ -115,7 +115,7 @@ public class ProductService(IProductsRepository productRepository, ILogger logge
     {
         try
         {
-            Product? product = await productRepository.GetAsync(id, token);
+            Product? product = await productRepository.GetAsync(id, token).ConfigureAwait(true);
             if (product is null)
             {
                 logger.Warning("Update aborted: Product '{ProductId}' was not found. User: '{Username}'.", id, username);
@@ -123,7 +123,7 @@ public class ProductService(IProductsRepository productRepository, ILogger logge
             }
 
             product.Update(dto);
-            await productRepository.UpdateAsync(product, version, token);
+            await productRepository.UpdateAsync(product, version, token).ConfigureAwait(true);
 
             logger.Information("Successfully updated product '{ProductTitle}' (ID: {ProductId}). User: '{Username}'.", product.Title, id, username);
 

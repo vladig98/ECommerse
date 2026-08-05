@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Models;
 
-public class ProductVariant : BaseModel
+internal class ProductVariant : BaseModel
 {
     public Guid ProductId { get; set; }
     public Product Product { get; set; } = null!;
@@ -10,6 +10,6 @@ public class ProductVariant : BaseModel
     public string? Gtin { get; set; }
     public StockStatus StockStatus { get; set; }
 
-    public ICollection<ProductVariantAttribute> VariantAttributes { get; set; } = [];
+    public ICollection<ProductVariantAttributeModel> VariantAttributes { get; set; } = [];
     public ICollection<ProductMedia> Media { get; set; } = [];
 }

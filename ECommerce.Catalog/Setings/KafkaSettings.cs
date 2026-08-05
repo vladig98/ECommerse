@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Setings;
 
-public class KafkaSettings()
+internal class KafkaSettings()
 {
     public string Server { get; init; } = string.Empty;
     public string Username { get; init; } = string.Empty;

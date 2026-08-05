@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Models;
 
-public class Category : BaseModel
+internal class Category : BaseModel
 {
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;

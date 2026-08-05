@@ -1,25 +1,10 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-public class KafkaMessageConsumer : IMessageConsumer
+internal class KafkaMessageConsumer(IConsumer<Ignore, string> consumer, ILogger logger) : IMessageConsumer
 {
-    private readonly IConsumer<Ignore, string> _consumer;
-    private readonly ILogger _logger;
+    private readonly IConsumer<Ignore, string> _consumer = consumer;
+    private readonly ILogger _logger = logger;
     private ConsumeResult<Ignore, string>? _lastResult;
-
-    public KafkaMessageConsumer(IOptions<KafkaSettings> options, ILogger logger)
-    {
-        _logger = logger;
-        ConsumerConfig config = new()
-        {
-            BootstrapServers = options.Value.Server,
-            SecurityProtocol = SecurityProtocol.Plaintext,
-            GroupId = "catalog-service-inventory-consumer",
-            AutoOffsetReset = AutoOffsetReset.Earliest,
-            EnableAutoCommit = false
-        };
-
-        _consumer = new ConsumerBuilder<Ignore, string>(config).Build();
-    }
 
     public void Subscribe(string topic)
     {
@@ -39,12 +24,12 @@ public class KafkaMessageConsumer : IMessageConsumer
             string eventType = string.Empty;
             Guid eventId = Guid.NewGuid();
 
-            if (_lastResult.Message.Headers.TryGetLastBytes("eventType", out byte[]? typeBytes))
+            if (_lastResult.Message.Headers?.TryGetLastBytes("eventType", out byte[]? typeBytes) == true)
             {
                 eventType = Encoding.UTF8.GetString(typeBytes);
             }
 
-            if (_lastResult.Message.Headers.TryGetLastBytes("eventId", out byte[]? idBytes))
+            if (_lastResult.Message.Headers?.TryGetLastBytes("eventId", out byte[]? idBytes) == true)
             {
                 if (!Guid.TryParse(Encoding.UTF8.GetString(idBytes), out Guid parsedId))
                 {

@@ -1,19 +1,8 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-public class KafkaMessageProducer : IMessageProducer, IDisposable
+internal class KafkaMessageProducer(IProducer<string, string> producer) : IMessageProducer, IDisposable
 {
-    private readonly IProducer<string, string> _producer;
-
-    public KafkaMessageProducer(IOptions<KafkaSettings> options)
-    {
-        ProducerConfig config = new()
-        {
-            BootstrapServers = options.Value.Server,
-            SecurityProtocol = SecurityProtocol.Plaintext,
-            Acks = Acks.All
-        };
-        _producer = new ProducerBuilder<string, string>(config).Build();
-    }
+    private readonly IProducer<string, string> _producer = producer;
 
     public async Task PublishAsync(string topic, IntegrationEvent message, CancellationToken token)
     {
@@ -28,7 +17,7 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
             }
         };
 
-        await _producer.ProduceAsync(topic, kafkaMessage, token);
+        await _producer.ProduceAsync(topic, kafkaMessage, token).ConfigureAwait(true);
     }
 
     public void Dispose()

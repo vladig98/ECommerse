@@ -1,5 +1,5 @@
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
+    .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
     .CreateLogger();
 
 try
@@ -20,14 +20,15 @@ try
         .ConfigureScalar()
         .MapIdentityEndpoints();
 
-    app = await app.InitializeDatabase();
-    await app.RunAsync();
+    app = await app.InitializeDatabase().ConfigureAwait(true);
+    await app.RunAsync().ConfigureAwait(true);
 }
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
+    throw;
 }
 finally
 {
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync().ConfigureAwait(true);
 }
