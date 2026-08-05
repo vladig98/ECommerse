@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-public static class ApiResponseExtensions
+internal static class ApiResponseExtensions
 {
     extension<T>(ApiResponse<T> result)
     {
@@ -19,7 +19,7 @@ public static class ApiResponseExtensions
         public static ApiResponse<T> FromResponse<T2>(ApiResponse<T2> response) =>
             new(Error: response.Error, Code: response.Code);
 
-        public IResult ToErrorResult()
+        public IResult ToErrorResult() 
         {
             return result.Code switch
             {

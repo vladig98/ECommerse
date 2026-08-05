@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.ProductMediaDtos;
 
-public record class UpdateProductMediaDto
+internal record class UpdateProductMediaDto
 (
     Guid Id,
     string Url,

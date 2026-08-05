@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Events;
 
-public record class ProductVariantEventDto
+internal record class ProductVariantEventDto
 (
     Guid Id,
     string Sku,

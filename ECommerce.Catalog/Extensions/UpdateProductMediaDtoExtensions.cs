@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-public static class UpdateProductMediaDtoExtensions
+internal static class UpdateProductMediaDtoExtensions
 {
     extension(UpdateProductMediaDto updateProductMediaDto)
     {

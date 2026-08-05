@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Enums;
 
-public enum KeyedServices
+internal enum KeyedServices
 {
     CategoryService,
     CachedCategoryService,

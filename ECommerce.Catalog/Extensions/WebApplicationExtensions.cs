@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-public static class WebApplicationExtensions
+internal static class WebApplicationExtensions
 {
     extension(WebApplication app)
     {
@@ -20,7 +20,7 @@ public static class WebApplicationExtensions
             }).AllowAnonymous();
 
             string? urls = app.Configuration["ASPNETCORE_URLS"] ?? app.Configuration["urls"];
-            string? targetUrl = urls?.Split(';').FirstOrDefault(u => u.StartsWith("https"));
+            string? targetUrl = urls?.Split(';').FirstOrDefault(u => u.StartsWith("https", StringComparison.OrdinalIgnoreCase));
 
             if (string.IsNullOrWhiteSpace(targetUrl))
             {
@@ -62,9 +62,10 @@ public static class WebApplicationExtensions
 
         public async Task<WebApplication> InitializeDatabase()
         {
-            await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
+            AsyncServiceScope scope = app.Services.CreateAsyncScope();
+            await using ConfiguredAsyncDisposable _ = scope.ConfigureAwait(true);
             MainDbContext dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
-            await dbContext.Database.MigrateAsync();
+            await dbContext.Database.MigrateAsync().ConfigureAwait(true);
 
             return app;
         }

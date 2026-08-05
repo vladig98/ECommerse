@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.ProductMediaDtos;
 
-public record class CreateProductMediaDto
+internal record class CreateProductMediaDto
 (
     string Url,
     string? AltText,

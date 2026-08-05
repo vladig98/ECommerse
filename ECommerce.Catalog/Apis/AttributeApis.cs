@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Apis;
 
-public static class AttributeApis
+internal static class AttributeApis
 {
     extension(IEndpointRouteBuilder router)
     {
@@ -24,7 +24,7 @@ public static class AttributeApis
             [FromQuery] int pageSize = 100)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<PagedResult<VariantAttributeDto>> response = await attributeService.GetAllAsync(username, pageNumber, pageSize, token);
+        ApiResponse<PagedResult<VariantAttributeDto>> response = await attributeService.GetAllAsync(username, pageNumber, pageSize, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -41,7 +41,7 @@ public static class AttributeApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<VariantAttributeDto> response = await attributeService.GetAsync(username, id, token);
+        ApiResponse<VariantAttributeDto> response = await attributeService.GetAsync(username, id, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -58,7 +58,7 @@ public static class AttributeApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<VariantAttributeDto> response = await attributeService.CreateAsync(username, dto, token);
+        ApiResponse<VariantAttributeDto> response = await attributeService.CreateAsync(username, dto, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -81,7 +81,7 @@ public static class AttributeApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<VariantAttributeDto> response = await attributeService.UpdateAsync(username, id, version, dto, token);
+        ApiResponse<VariantAttributeDto> response = await attributeService.UpdateAsync(username, id, version, dto, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -99,7 +99,7 @@ public static class AttributeApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<VariantAttributeDto> response = await attributeService.DeleteAsync(username, id, version, token);
+        ApiResponse<VariantAttributeDto> response = await attributeService.DeleteAsync(username, id, version, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {

@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Events;
 
-public record class CategoryEventDto
+internal record class CategoryEventDto
 (
     Guid Id,
     string Name,

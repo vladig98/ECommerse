@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-public static class CategoryExtensions
+internal static class CategoryExtensions
 {
     extension(Category? category)
     {

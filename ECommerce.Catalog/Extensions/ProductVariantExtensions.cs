@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-public static class ProductVariantExtensions
+internal static class ProductVariantExtensions
 {
     extension(ProductVariant productVariant)
     {
@@ -106,8 +106,8 @@ public static class ProductVariantExtensions
         HashSet<Guid> incomingIds = [.. updateProductVariantDto.Attributes];
         HashSet<Guid> existingIds = [.. productVariant.VariantAttributes.Select(x => x.AttributeId)];
         
-        List<ProductVariantAttribute> toRemove = [];
-        foreach (ProductVariantAttribute variantAttribute in productVariant.VariantAttributes)
+        List<ProductVariantAttributeModel> toRemove = [];
+        foreach (ProductVariantAttributeModel variantAttribute in productVariant.VariantAttributes)
         {
             if (incomingIds.Contains(variantAttribute.AttributeId))
             {
@@ -128,14 +128,14 @@ public static class ProductVariantExtensions
             toInsert.Add(attributeId);
         }
 
-        foreach (ProductVariantAttribute attributeToRemove in toRemove)
+        foreach (ProductVariantAttributeModel attributeToRemove in toRemove)
         {
             productVariant.VariantAttributes.Remove(attributeToRemove);
         }
 
         foreach (Guid attributeId in toInsert)
         {
-            productVariant.VariantAttributes.Add(new ProductVariantAttribute()
+            productVariant.VariantAttributes.Add(new ProductVariantAttributeModel()
             {
                 AttributeId = attributeId,
                 VariantId = productVariant.Id

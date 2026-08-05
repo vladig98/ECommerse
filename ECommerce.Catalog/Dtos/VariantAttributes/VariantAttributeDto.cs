@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.VariantAttributes;
 
-public record class VariantAttributeDto
+internal record class VariantAttributeDto
 (
     Guid Id,
     DateTime CreatedAt,

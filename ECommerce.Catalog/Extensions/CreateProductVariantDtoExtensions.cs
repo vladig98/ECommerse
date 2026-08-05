@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-public static class CreateProductVariantDtoExtensions
+internal static class CreateProductVariantDtoExtensions
 {
     extension(CreateProductVariantDto createProductVariantDto)
     {
@@ -12,7 +12,7 @@ public static class CreateProductVariantDtoExtensions
                 Gtin = createProductVariantDto.Gtin,
                 Sku = createProductVariantDto.Sku,
                 Media = [.. createProductVariantDto.Media.Select(x => x.ToModel())],
-                VariantAttributes = [.. createProductVariantDto.Attributes.Select(x => new ProductVariantAttribute() { AttributeId = x })]
+                VariantAttributes = [.. createProductVariantDto.Attributes.Select(x => new ProductVariantAttributeModel() { AttributeId = x })]
             };
         }
     }

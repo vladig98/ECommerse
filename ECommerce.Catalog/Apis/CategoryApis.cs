@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Apis;
 
-public static class CategoryApis
+internal static class CategoryApis
 {
     extension(IEndpointRouteBuilder router)
     {
@@ -24,7 +24,7 @@ public static class CategoryApis
             [FromQuery] int pageSize = 100)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<PagedResult<CategoryDto>> response = await categoriesService.GetAllAsync(username, pageNumber, pageSize, token);
+        ApiResponse<PagedResult<CategoryDto>> response = await categoriesService.GetAllAsync(username, pageNumber, pageSize, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -41,7 +41,7 @@ public static class CategoryApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<CategoryDto> response = await categoriesService.GetAsync(username, id, token);
+        ApiResponse<CategoryDto> response = await categoriesService.GetAsync(username, id, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -58,7 +58,7 @@ public static class CategoryApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<CategoryDto> response = await categoriesService.CreateAsync(username, dto, token);
+        ApiResponse<CategoryDto> response = await categoriesService.CreateAsync(username, dto, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -81,7 +81,7 @@ public static class CategoryApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<CategoryDto> response = await categoriesService.UpdateAsync(username, id, version, dto, token);
+        ApiResponse<CategoryDto> response = await categoriesService.UpdateAsync(username, id, version, dto, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -99,7 +99,7 @@ public static class CategoryApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<CategoryDto> response = await categoriesService.DeleteAsync(username, id, version, token);
+        ApiResponse<CategoryDto> response = await categoriesService.DeleteAsync(username, id, version, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {

@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.ProductVariants;
 
-public record class CreateProductVariantDto
+internal record class CreateProductVariantDto
 (
     string Sku,
     decimal BasePrice,

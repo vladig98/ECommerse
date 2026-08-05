@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Events;
 
-public record class IntegrationEvent
+internal record class IntegrationEvent
 (
     Guid EventId,
     string Key,

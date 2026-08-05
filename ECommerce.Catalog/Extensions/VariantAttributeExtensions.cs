@@ -1,8 +1,8 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-public static class VariantAttributeExtensions
+internal static class VariantAttributeExtensions
 {
-    extension(VariantAttribute attribute)
+    extension(VariantAttributeModel attribute)
     {
         public VariantAttributeDto ToDto()
         {

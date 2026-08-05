@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-public static class WebBuilderExtensions
+internal static class WebBuilderExtensions
 {
     extension(WebApplicationBuilder builder)
     {

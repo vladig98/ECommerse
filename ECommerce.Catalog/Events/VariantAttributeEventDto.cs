@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Events;
 
-public record class VariantAttributeEventDto
+internal record class VariantAttributeEventDto
 (
     Guid Id,
     string Name,

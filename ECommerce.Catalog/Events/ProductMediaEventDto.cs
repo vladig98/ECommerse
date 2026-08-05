@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Events;
 
-public record class ProductMediaEventDto
+internal record class ProductMediaEventDto
 (
     Guid Id,
     string Url,

@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.BackgroundServices;
 
-public class OutboxPublisherService(
+internal class OutboxPublisherService(
     IServiceProvider serviceProvider,
     IMessageProducer messageProducer,
     ILogger logger) : BackgroundService
@@ -15,35 +15,37 @@ public class OutboxPublisherService(
         {
             try
             {
-                await using AsyncServiceScope scope = serviceProvider.CreateAsyncScope();
+                AsyncServiceScope scope = serviceProvider.CreateAsyncScope();
+                await using ConfiguredAsyncDisposable _ = scope.ConfigureAwait(true);
                 MainDbContext dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
 
                 List<EventMessage> messages = await dbContext.EventMessages
                     .OrderBy(x => x.CreatedAt)
                     .Take(100)
-                    .ToListAsync(stoppingToken);
+                    .ToListAsync(stoppingToken)
+                    .ConfigureAwait(true);
 
                 if (messages.Count == 0)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken).ConfigureAwait(true);
                     continue;
                 }
 
                 foreach (EventMessage msg in messages)
                 {
                     IntegrationEvent integrationEvent = new(msg.Id, msg.Key, msg.EventType, msg.Value);
-                    await messageProducer.PublishAsync(topic, integrationEvent, stoppingToken);
+                    await messageProducer.PublishAsync(topic, integrationEvent, stoppingToken).ConfigureAwait(true);
                 }
 
                 dbContext.EventMessages.RemoveRange(messages);
-                await dbContext.SaveChangesAsync(stoppingToken);
+                await dbContext.SaveChangesAsync(stoppingToken).ConfigureAwait(true);
 
                 logger.Debug("Published and cleared {Count} outbox messages.", messages.Count);
             }
             catch (Exception ex)
             {
                 logger.Error(ex, "Failed to process outbox messages. Retrying in 10 seconds...");
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken).ConfigureAwait(true);
             }
         }
     }

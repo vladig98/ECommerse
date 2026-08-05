@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Apis;
 
-public static class ProductApis
+internal static class ProductApis
 {
     extension(IEndpointRouteBuilder router)
     {
@@ -24,7 +24,7 @@ public static class ProductApis
             [FromQuery] int pageSize = 100)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<PagedResult<ProductDto>> response = await productsService.GetAllAsync(username, pageNumber, pageSize, token);
+        ApiResponse<PagedResult<ProductDto>> response = await productsService.GetAllAsync(username, pageNumber, pageSize, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -41,7 +41,7 @@ public static class ProductApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<ProductDto> response = await productsService.GetAsync(username, id, token);
+        ApiResponse<ProductDto> response = await productsService.GetAsync(username, id, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -58,7 +58,7 @@ public static class ProductApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<ProductDto> response = await productsService.CreateAsync(username, dto, token);
+        ApiResponse<ProductDto> response = await productsService.CreateAsync(username, dto, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -81,7 +81,7 @@ public static class ProductApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<ProductDto> response = await productsService.UpdateAsync(username, id, version, dto, token);
+        ApiResponse<ProductDto> response = await productsService.UpdateAsync(username, id, version, dto, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
@@ -99,7 +99,7 @@ public static class ProductApis
         CancellationToken token)
     {
         string username = context.User.Identity?.Name ?? "Anonymous";
-        ApiResponse<ProductDto> response = await productsService.DeleteAsync(username, id, version, token);
+        ApiResponse<ProductDto> response = await productsService.DeleteAsync(username, id, version, token).ConfigureAwait(true);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {

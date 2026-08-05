@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.VariantAttributes;
 
-public record class CreateVariantAttributeDto
+internal record class CreateVariantAttributeDto
 (
     string Name,
     string Value

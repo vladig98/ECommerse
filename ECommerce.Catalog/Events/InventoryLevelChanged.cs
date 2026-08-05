@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Events;
 
-public record class InventoryLevelChanged
+internal record class InventoryLevelChanged
 (
     Guid VariantId,
     string Sku,

@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.Products;
 
-public record class UpdateProductDto
+internal record class UpdateProductDto
 (
     string Title,
     string Slug,

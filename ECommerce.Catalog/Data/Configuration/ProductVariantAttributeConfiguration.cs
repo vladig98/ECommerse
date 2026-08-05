@@ -1,8 +1,8 @@
 ﻿namespace ECommerce.Catalog.Data.Configuration;
 
-public class ProductVariantAttributeConfiguration : IEntityTypeConfiguration<ProductVariantAttribute>
+internal class ProductVariantAttributeConfiguration : IEntityTypeConfiguration<ProductVariantAttributeModel>
 {
-    public void Configure(EntityTypeBuilder<ProductVariantAttribute> builder)
+    public void Configure(EntityTypeBuilder<ProductVariantAttributeModel> builder)
     {
         builder.ToTable("ProductVariantAttributes");
 

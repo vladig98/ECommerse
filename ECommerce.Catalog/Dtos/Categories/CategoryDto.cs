@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.Categories;
 
-public record class CategoryDto(
+internal record class CategoryDto(
     Guid Id,
     DateTime CreatedAt,
     DateTime UpdatedAt,

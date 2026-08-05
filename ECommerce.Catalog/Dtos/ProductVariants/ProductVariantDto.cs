@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.ProductVariants;
 
-public record class ProductVariantDto
+internal record class ProductVariantDto
 (
     Guid Id,
     DateTime CreatedAt,

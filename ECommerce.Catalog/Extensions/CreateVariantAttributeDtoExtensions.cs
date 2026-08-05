@@ -1,12 +1,12 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-public static class CreateVariantAttributeDtoExtensions
+internal static class CreateVariantAttributeDtoExtensions
 {
     extension(CreateVariantAttributeDto createVariantAttributeDto)
     {
-        public VariantAttribute ToModel()
+        public VariantAttributeModel ToModel()
         {
-            return new VariantAttribute()
+            return new VariantAttributeModel()
             {
                 Name = createVariantAttributeDto.Name,
                 Value = createVariantAttributeDto.Value
