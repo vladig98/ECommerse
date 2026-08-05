@@ -1,14 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-
-namespace ECommerce.Catalog.Test.DtoTests;
+﻿namespace ECommerce.Catalog.Test.DtoTests;
 
 public class ApiResponseTests
 {
     #region Factory Method Tests
 
     [Fact]
-    public void Success_Creates_Valid_Response_With_Data()
+    public void SuccessCreatesValidResponseWithData()
     {
         // Act
         ApiResponse<string> response = ApiResponse<string>.Success("Sample Data");
@@ -21,7 +18,7 @@ public class ApiResponseTests
     }
 
     [Fact]
-    public void Failure_Creates_Generic_Error_Response()
+    public void FailureCreatesGenericErrorResponse()
     {
         // Act
         ApiResponse<int> response = ApiResponse<int>.Failure("Something went wrong");
@@ -34,7 +31,7 @@ public class ApiResponseTests
     }
 
     [Fact]
-    public void NotFound_Creates_NotFound_Error_Response()
+    public void NotFoundCreatesNotFoundErrorResponse()
     {
         // Act
         ApiResponse<Guid> response = ApiResponse<Guid>.NotFound("Entity not found");
@@ -45,7 +42,7 @@ public class ApiResponseTests
     }
 
     [Fact]
-    public void Conflict_Creates_Conflict_Error_Response()
+    public void ConflictCreatesConflictErrorResponse()
     {
         // Act
         ApiResponse<bool> response = ApiResponse<bool>.Conflict("Resource version conflict");
@@ -56,7 +53,7 @@ public class ApiResponseTests
     }
 
     [Fact]
-    public void FromResponse_Transforms_Generic_Type_Preserving_Error_And_Code()
+    public void FromResponseTransformsGenericTypePreservingErrorAndCode()
     {
         // Arrange
         ApiResponse<string> sourceResponse = ApiResponse<string>.NotFound("Category missing");
@@ -75,7 +72,7 @@ public class ApiResponseTests
     #region IResult Mapping Tests (ToErrorResult)
 
     [Fact]
-    public void ToErrorResult_Maps_NotFound_To_NotFoundResult()
+    public void ToErrorResultMapsNotFoundToNotFoundResult()
     {
         // Arrange
         ApiResponse<string> response = ApiResponse<string>.NotFound("Product not found");
@@ -90,7 +87,7 @@ public class ApiResponseTests
     }
 
     [Fact]
-    public void ToErrorResult_Maps_Conflict_To_PreconditionFailedResult()
+    public void ToErrorResultMapsConflictToPreconditionFailedResult()
     {
         // Arrange
         ApiResponse<string> response = ApiResponse<string>.Conflict("Version mismatch");
@@ -105,7 +102,7 @@ public class ApiResponseTests
     }
 
     [Fact]
-    public void ToErrorResult_Maps_Generic_Error_To_InternalServerError()
+    public void ToErrorResultMapsGenericErrorToInternalServerError()
     {
         // Arrange
         ApiResponse<string> response = ApiResponse<string>.Failure("Database timeout");
@@ -124,7 +121,7 @@ public class ApiResponseTests
     #region Serialization Tests
 
     [Fact]
-    public void ApiResponse_Serializes_And_Deserializes_Correctly()
+    public void ApiResponseSerializesAndDeserializesCorrectly()
     {
         // Arrange
         ApiResponse<string> original = ApiResponse<string>.Success("Payload");

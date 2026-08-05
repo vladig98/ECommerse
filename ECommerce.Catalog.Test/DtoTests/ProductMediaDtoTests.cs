@@ -5,7 +5,7 @@ public class ProductMediaDtoTests
     #region Extension Tests: ToDto
 
     [Fact]
-    public void ToDto_Maps_All_Properties_Correctly()
+    public void ToDtoMapsAllPropertiesCorrectly()
     {
         // Arrange
         ProductMedia media = new()
@@ -38,7 +38,7 @@ public class ProductMediaDtoTests
     }
 
     [Fact]
-    public void ToDto_Handles_Null_AltText_Correctly()
+    public void ToDtoHandlesNullAltTextCorrectly()
     {
         // Arrange
         ProductMedia media = new()
@@ -68,7 +68,7 @@ public class ProductMediaDtoTests
     #region Extension Tests: ToEventData
 
     [Fact]
-    public void ToEventData_Maps_All_Event_Properties_Correctly()
+    public void ToEventDataMapsAllEventPropertiesCorrectly()
     {
         // Arrange
         ProductMedia media = new()
@@ -99,7 +99,7 @@ public class ProductMediaDtoTests
     #region DTO Serialization & Record Integrity Tests
 
     [Fact]
-    public void ProductMediaDto_Serializes_And_Deserializes_Correctly()
+    public void ProductMediaDtoSerializesAndDeserializesCorrectly()
     {
         // Arrange
         ProductMediaDto original = new(
@@ -129,7 +129,7 @@ public class ProductMediaDtoTests
     }
 
     [Fact]
-    public void CreateProductMediaDto_Record_Instantiates_Correctly()
+    public void CreateProductMediaDtoRecordInstantiatesCorrectly()
     {
         // Arrange & Act
         CreateProductMediaDto dto = new(
@@ -146,7 +146,7 @@ public class ProductMediaDtoTests
     }
 
     [Fact]
-    public void UpdateProductMediaDto_Record_Instantiates_Correctly()
+    public void UpdateProductMediaDtoRecordInstantiatesCorrectly()
     {
         // Arrange
         Guid id = Guid.NewGuid();

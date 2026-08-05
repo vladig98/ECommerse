@@ -5,7 +5,7 @@ public class ProductDtoTests
     #region Extension Tests: ToDto
 
     [Fact]
-    public void ToDto_Maps_All_Properties_And_Nested_Collections_Correctly()
+    public void ToDtoMapsAllPropertiesAndNestedCollectionsCorrectly()
     {
         // Arrange
         Category category = new()
@@ -75,7 +75,7 @@ public class ProductDtoTests
     }
 
     [Fact]
-    public void ToDto_Handles_Null_Navigations_And_Collections_Gracefully()
+    public void ToDtoHandlesNullNavigationsAndCollectionsGracefully()
     {
         // Arrange
         Product product = new()
@@ -113,7 +113,7 @@ public class ProductDtoTests
     #region Extension Tests: ToEventData & ToEventDataUpdate
 
     [Fact]
-    public void ToEventData_Maps_Populated_Product_To_ProductCreated_Event()
+    public void ToEventDataMapsPopulatedProductToProductCreatedEvent()
     {
         // Arrange
         Category category = new() { Id = Guid.NewGuid(), Name = "Hardware", Slug = "hardware" };
@@ -147,7 +147,7 @@ public class ProductDtoTests
     }
 
     [Fact]
-    public void ToEventDataUpdate_Maps_Populated_Product_To_ProductUpdated_Event()
+    public void ToEventDataUpdateMapsPopulatedProductToProductUpdatedEvent()
     {
         // Arrange
         Category category = new() { Id = Guid.NewGuid(), Name = "Monitors", Slug = "monitors" };
@@ -176,7 +176,7 @@ public class ProductDtoTests
     #region DTO Serialization Tests
 
     [Fact]
-    public void ProductDto_Serializes_And_Deserializes_Correctly()
+    public void ProductDtoSerializesAndDeserializesCorrectly()
     {
         // Arrange
         ProductDto original = new(
@@ -206,7 +206,7 @@ public class ProductDtoTests
     }
 
     [Fact]
-    public void ToEventData_Maps_Media_Collection_And_Properties_Correctly()
+    public void ToEventDataMapsMediaCollectionAndPropertiesCorrectly()
     {
         // Arrange
         ProductMedia primaryMedia = new()
@@ -256,7 +256,7 @@ public class ProductDtoTests
     }
 
     [Fact]
-    public void ToEventData_Handles_Null_Media_Collection_Without_Throwing()
+    public void ToEventDataHandlesNullMediaCollectionWithoutThrowing()
     {
         // Arrange
         Product product = new()

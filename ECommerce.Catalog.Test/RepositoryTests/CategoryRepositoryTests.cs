@@ -5,6 +5,8 @@ public class CategoryRepositoryTests : IDisposable
     private readonly MainDbContext _dbContext;
     private readonly Mock<ILogger> _loggerMock;
     private readonly CategoryRepository _categoryRepository;
+    private bool isDisposed;
+    private IntPtr nativeResource = Marshal.AllocHGlobal(100);
 
     public CategoryRepositoryTests()
     {
@@ -19,12 +21,33 @@ public class CategoryRepositoryTests : IDisposable
 
     public void Dispose()
     {
-        _dbContext.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (isDisposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            _dbContext.Dispose();
+        }
+
+        if (nativeResource != IntPtr.Zero)
+        {
+            Marshal.FreeHGlobal(nativeResource);
+            nativeResource = IntPtr.Zero;
+        }
+
+        isDisposed = true;
+    }
+
     [Fact]
-    public async Task Test_AddAsync()
+    public async Task TestAddAsync()
     {
         // Arrange
         Category category = new() { Name = "Laptops", Slug = "laptops" };
@@ -38,11 +61,16 @@ public class CategoryRepositoryTests : IDisposable
         Assert.Equal(1, _dbContext.Categories.Count());
 
         EntityEntry<Category> trackedEntity = _dbContext.ChangeTracker.Entries<Category>().Single();
-        Assert.Equal(EntityState.Unchanged, trackedEntity.State); // Unchanged because GetAsync reloads it
+        Assert.Equal(EntityState.Unchanged, trackedEntity.State);
+
+        Assert.Equal(category.Id, created.Id);
+        Assert.Equal(category.Name, created.Name);
+        Assert.Equal(category.Slug, created.Slug);
+        Assert.Equal(category.ParentCategoryId, created.ParentCategoryId);
     }
 
     [Fact]
-    public async Task Test_DeleteAsync()
+    public async Task TestDeleteAsync()
     {
         // Arrange
         Guid version = Guid.NewGuid();
@@ -59,10 +87,15 @@ public class CategoryRepositoryTests : IDisposable
         // Assert
         Assert.NotNull(deleted);
         Assert.Equal(0, _dbContext.Categories.Count());
+
+        Assert.Equal(category.Id, deleted.Id);
+        Assert.Equal(category.Name, deleted.Name);
+        Assert.Equal(category.Slug, deleted.Slug);
+        Assert.Equal(category.ParentCategoryId, deleted.ParentCategoryId);
     }
 
     [Fact]
-    public async Task Test_UpdateAsync()
+    public async Task TestUpdateAsync()
     {
         // Arrange
         Guid version = Guid.NewGuid();
@@ -87,7 +120,7 @@ public class CategoryRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task Test_GetAllAsync()
+    public async Task TestGetAllAsync()
     {
         // Arrange
         for (int i = 0; i < 5; i++)
@@ -103,6 +136,50 @@ public class CategoryRepositoryTests : IDisposable
         // Assert
         Assert.Equal(5, result.TotalCount);
         Assert.Equal(5, result.Items.Count);
-        Assert.Empty(_dbContext.ChangeTracker.Entries()); // Because of AsNoTracking
+        Assert.Empty(_dbContext.ChangeTracker.Entries());
+    }
+
+    [Fact]
+    public async Task TestGetAsyncReturnsCategoryWithRelations()
+    {
+        // Arrange
+        Guid parentId = Guid.NewGuid();
+        Guid childId = Guid.NewGuid();
+
+        Category parent = new() { Id = parentId, Name = "Electronics", Slug = "electronics" };
+        Category child = new() { Id = childId, Name = "Laptops", Slug = "laptops", ParentCategoryId = parentId };
+
+        _dbContext.Categories.Add(parent);
+        _dbContext.Categories.Add(child);
+        await _dbContext.SaveChangesAsync(CancellationToken.None);
+
+        // Clear the tracker to ensure we are actually querying the DB and testing the Include() statements
+        _dbContext.ChangeTracker.Clear();
+
+        // Act
+        Category? result = await _categoryRepository.GetAsync(childId, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(childId, result.Id);
+        Assert.Equal("Laptops", result.Name);
+
+        // Verify that GetAllRelatedEntities() successfully wired up the parent
+        Assert.NotNull(result.ParentCategory);
+        Assert.Equal(parentId, result.ParentCategory.Id);
+        Assert.Equal("Electronics", result.ParentCategory.Name);
+    }
+
+    [Fact]
+    public async Task TestGetAsyncReturnsNullIfNotFound()
+    {
+        // Arrange
+        Guid nonExistentId = Guid.NewGuid();
+
+        // Act
+        Category? result = await _categoryRepository.GetAsync(nonExistentId, CancellationToken.None);
+
+        // Assert
+        Assert.Null(result);
     }
 }

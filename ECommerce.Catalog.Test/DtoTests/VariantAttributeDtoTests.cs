@@ -5,10 +5,10 @@ public class VariantAttributeDtoTests
     #region Extension Tests: ToDto
 
     [Fact]
-    public void ToDto_Maps_All_Properties_Correctly()
+    public void ToDtoMapsAllPropertiesCorrectly()
     {
         // Arrange
-        VariantAttribute attribute = new()
+        VariantAttributeModel attribute = new()
         {
             Id = Guid.NewGuid(),
             CreatedAt = DateTime.UtcNow,
@@ -36,10 +36,10 @@ public class VariantAttributeDtoTests
     #region Extension Tests: ToEventData
 
     [Fact]
-    public void ToEventData_Maps_All_Event_Properties_Correctly()
+    public void ToEventDataMapsAllEventPropertiesCorrectly()
     {
         // Arrange
-        VariantAttribute attribute = new()
+        VariantAttributeModel attribute = new()
         {
             Id = Guid.NewGuid(),
             Name = "Size",
@@ -61,7 +61,7 @@ public class VariantAttributeDtoTests
     #region DTO Serialization & Record Integrity Tests
 
     [Fact]
-    public void VariantAttributeDto_Serializes_And_Deserializes_Correctly()
+    public void VariantAttributeDtoSerializesAndDeserializesCorrectly()
     {
         // Arrange
         VariantAttributeDto original = new(
@@ -85,7 +85,7 @@ public class VariantAttributeDtoTests
     }
 
     [Fact]
-    public void CreateVariantAttributeDto_Record_Instantiates_Correctly()
+    public void CreateVariantAttributeDtoRecordInstantiatesCorrectly()
     {
         // Arrange & Act
         CreateVariantAttributeDto dto = new(Name: "RAM", Value: "16GB");
@@ -96,7 +96,7 @@ public class VariantAttributeDtoTests
     }
 
     [Fact]
-    public void UpdateVariantAttributeDto_Record_Instantiates_Correctly()
+    public void UpdateVariantAttributeDtoRecordInstantiatesCorrectly()
     {
         // Act
         UpdateVariantAttributeDto dto = new(

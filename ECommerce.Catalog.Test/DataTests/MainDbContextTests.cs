@@ -3,6 +3,8 @@
 public class MainDbContextTests : IDisposable
 {
     private readonly MainDbContext mainDbContext;
+    private bool isDisposed;
+    private IntPtr nativeResource = Marshal.AllocHGlobal(100);
 
     public MainDbContextTests()
     {
@@ -15,22 +17,43 @@ public class MainDbContextTests : IDisposable
 
     public void Dispose()
     {
-        mainDbContext.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (isDisposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            mainDbContext.Dispose();
+        }
+
+        if (nativeResource != IntPtr.Zero)
+        {
+            Marshal.FreeHGlobal(nativeResource);
+            nativeResource = IntPtr.Zero;
+        }
+
+        isDisposed = true;
+    }
+
     [Fact]
-    public void Test_Ensure_DB_Has_Citext_Extension_Enabled()
+    public void TestEnsureDBHasCitextExtensionEnabled()
     {
         IReadOnlyList<PostgresExtension> extensions = mainDbContext.Model.GetPostgresExtensions();
         FieldInfo? field = typeof(PostgresExtension).GetField("_annotationName", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        bool hasCitext = extensions.Any(ext => field?.GetValue(ext) is string annotationName && annotationName.Contains("citext"));
+        bool hasCitext = extensions.Any(ext => field?.GetValue(ext) is string annotationName && annotationName.Contains("citext", StringComparison.Ordinal));
         Assert.True(hasCitext, "The 'citext' PostgreSQL extension is not configured.");
     }
 
     [Fact]
-    public void Test_Ensure_Every_Model_Has_Dedicated_EntityTypeConfiguration()
+    public void TestEnsureEveryModelHasDedicatedEntityTypeConfiguration()
     {
         List<Type> modelTypes = [.. typeof(BaseModel).Assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && typeof(BaseModel).IsAssignableFrom(t))];
@@ -52,7 +75,7 @@ public class MainDbContextTests : IDisposable
     }
 
     [Fact]
-    public void Test_Ensure_All_Entities_Have_Explicit_Table_Names()
+    public void TestEnsureAllEntitiesHaveExplicitTableNames()
     {
         IEnumerable<IEntityType> entityTypes = mainDbContext.Model.GetEntityTypes();
 
@@ -64,7 +87,7 @@ public class MainDbContextTests : IDisposable
     }
 
     [Fact]
-    public void Test_Ensure_No_Unintended_Shadow_Properties()
+    public void TestEnsureNoUnintendedShadowProperties()
     {
         IEnumerable<IProperty> shadowProperties = mainDbContext.Model.GetEntityTypes()
             .SelectMany(e => e.GetProperties())
@@ -74,7 +97,7 @@ public class MainDbContextTests : IDisposable
     }
 
     [Fact]
-    public void Test_Ensure_Only_Base_Models_Are_In_DB_Sets()
+    public void TestEnsureOnlyBaseModelsAreInDBSets()
     {
         Type[] props = [.. mainDbContext.GetType().GetProperties()
             .Select(x => x.PropertyType)
@@ -88,7 +111,7 @@ public class MainDbContextTests : IDisposable
     }
 
     [Fact]
-    public void Test_Ensure_All_Base_Models_Are_In_DB_Sets()
+    public void TestEnsureAllBaseModelsAreInDBSets()
     {
         Type[] models = [.. typeof(BaseModel).Assembly.GetTypes()
             .Where(type => typeof(BaseModel).IsAssignableFrom(type) && !type.IsAbstract && type.IsClass)];

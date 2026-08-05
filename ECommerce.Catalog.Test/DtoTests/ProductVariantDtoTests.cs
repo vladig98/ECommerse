@@ -5,7 +5,7 @@ public class ProductVariantDtoTests
     #region Extension Tests: ToDto
 
     [Fact]
-    public void ToDto_Maps_All_Properties_And_Nested_Collections_Correctly()
+    public void ToDtoMapsAllPropertiesAndNestedCollectionsCorrectly()
     {
         // Arrange
         ProductMedia media = new()
@@ -16,14 +16,14 @@ public class ProductVariantDtoTests
             IsPrimary = true
         };
 
-        VariantAttribute attribute = new()
+        VariantAttributeModel attribute = new()
         {
             Id = Guid.NewGuid(),
             Name = "Color",
             Value = "Black"
         };
 
-        ProductVariantAttribute joinEntity = new()
+        ProductVariantAttributeModel joinEntity = new()
         {
             AttributeId = attribute.Id,
             Attribute = attribute
@@ -65,7 +65,7 @@ public class ProductVariantDtoTests
     }
 
     [Fact]
-    public void ToDto_Handles_Null_Collections_And_Gtin_Gracefully()
+    public void ToDtoHandlesNullCollectionsAndGtinGracefully()
     {
         // Arrange
         ProductVariant variant = new()
@@ -99,12 +99,12 @@ public class ProductVariantDtoTests
     #region Extension Tests: ToEventData
 
     [Fact]
-    public void ToEventData_Maps_All_Event_Properties_Correctly()
+    public void ToEventDataMapsAllEventPropertiesCorrectly()
     {
         // Arrange
         ProductMedia media = new() { Id = Guid.NewGuid(), Url = "https://cdn.example.com/thumb.jpg" };
-        VariantAttribute attribute = new() { Id = Guid.NewGuid(), Name = "Size", Value = "XL" };
-        ProductVariantAttribute joinEntity = new() { Attribute = attribute };
+        VariantAttributeModel attribute = new() { Id = Guid.NewGuid(), Name = "Size", Value = "XL" };
+        ProductVariantAttributeModel joinEntity = new() { Attribute = attribute };
 
         ProductVariant variant = new()
         {
@@ -136,7 +136,7 @@ public class ProductVariantDtoTests
     #region DTO Serialization & Record Tests
 
     [Fact]
-    public void ProductVariantDto_Serializes_And_Deserializes_Correctly()
+    public void ProductVariantDtoSerializesAndDeserializesCorrectly()
     {
         // Arrange
         ProductVariantDto original = new(

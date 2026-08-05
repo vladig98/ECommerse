@@ -5,7 +5,7 @@ public class CategoryDtoTests
     #region Extension Tests: ToDto
 
     [Fact]
-    public void ToDto_Returns_Null_When_Category_Is_Null()
+    public void ToDtoReturnsNullWhenCategoryIsNull()
     {
         // Arrange
         Category? category = null;
@@ -18,7 +18,7 @@ public class CategoryDtoTests
     }
 
     [Fact]
-    public void ToDto_Maps_All_Basic_Properties_Correctly()
+    public void ToDtoMapsAllBasicPropertiesCorrectly()
     {
         // Arrange
         Category category = new()
@@ -49,7 +49,7 @@ public class CategoryDtoTests
     }
 
     [Fact]
-    public void ToDto_Handles_Null_SubCategories_Collection_On_Entity()
+    public void ToDtoHandlesNullSubCategoriesCollectionOnEntity()
     {
         // Arrange
         Category category = new()
@@ -70,7 +70,7 @@ public class CategoryDtoTests
     }
 
     [Fact]
-    public void ToDto_Recursively_Maps_Parent_And_SubCategories()
+    public void ToDtoRecursivelyMapsParentAndSubCategories()
     {
         // Arrange
         Category parentCategory = new()
@@ -114,7 +114,7 @@ public class CategoryDtoTests
     }
 
     [Fact]
-    public void ToDto_Handles_Null_Elements_Inside_SubCategories_List()
+    public void ToDtoHandlesNullElementsInsideSubCategoriesList()
     {
         // Arrange
         Category category = new()
@@ -139,7 +139,7 @@ public class CategoryDtoTests
     #region Extension Tests: ToEventData
 
     [Fact]
-    public void ToEventData_Maps_Correct_Fields()
+    public void ToEventDataMapsCorrectFields()
     {
         // Arrange
         Category category = new()
@@ -160,7 +160,7 @@ public class CategoryDtoTests
     }
 
     [Fact]
-    public void ToEventData_Returns_Null_When_Category_Is_Null()
+    public void ToEventDataReturnsNullWhenCategoryIsNull()
     {
         // Arrange
         Category? category = null;
@@ -175,7 +175,7 @@ public class CategoryDtoTests
     #region DTO Contract & Equality Tests
 
     [Fact]
-    public void CategoryDto_Record_Value_Equality_Works_As_Expected()
+    public void CategoryDtoRecordValueEqualityWorksAsExpected()
     {
         // Arrange
         Guid id = Guid.NewGuid();
@@ -191,7 +191,7 @@ public class CategoryDtoTests
     }
 
     [Fact]
-    public void CreateCategoryDto_Record_Instantiates_Correctly()
+    public void CreateCategoryDtoRecordInstantiatesCorrectly()
     {
         // Arrange
         Guid? parentId = Guid.NewGuid();
@@ -206,7 +206,7 @@ public class CategoryDtoTests
     }
 
     [Fact]
-    public void UpdateCategoryDto_Record_Value_Equality_Works_As_Expected()
+    public void UpdateCategoryDtoRecordValueEqualityWorksAsExpected()
     {
         // Arrange
         Guid parentId = Guid.NewGuid();
@@ -222,7 +222,7 @@ public class CategoryDtoTests
     #region Serialization Tests
 
     [Fact]
-    public void CategoryDto_Serializes_And_Deserializes_Correctly()
+    public void CategoryDtoSerializesAndDeserializesCorrectly()
     {
         // Arrange
         CategoryDto original = new(
