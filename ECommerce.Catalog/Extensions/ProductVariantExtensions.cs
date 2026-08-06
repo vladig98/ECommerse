@@ -29,7 +29,7 @@ public static class ProductVariantExtensions
             );
         }
 
-        public ProductPriceChanged ToPricheChangeEventData()
+        public ProductPriceChanged ToPriceChangeEventData()
         {
             return new ProductPriceChanged
             (
