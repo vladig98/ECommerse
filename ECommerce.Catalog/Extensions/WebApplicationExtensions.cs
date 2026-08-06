@@ -33,9 +33,9 @@ public static class WebApplicationExtensions
             return app;
         }
 
-        public WebApplication MapIdentityEndpoints()
+        public WebApplication MapCatalogEndpoints()
         {
-            app.MapGroup("/api/catalog")
+            app.MapGroup("/api/v1/catalog")
                 .MapProductEndpoints()
                 .MapCategoryEndpoints()
                 .MapAttributeEndpoints();
