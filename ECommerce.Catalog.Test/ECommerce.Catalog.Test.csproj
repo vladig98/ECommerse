@@ -6,9 +6,6 @@
 		<IsPackable>false</IsPackable>
 		<OutputType>Exe</OutputType>
 		<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<AnalysisLevel>latest-all</AnalysisLevel>
-		<ReportAnalyzer>true</ReportAnalyzer>
 	</PropertyGroup>
 
 	<ItemGroup>

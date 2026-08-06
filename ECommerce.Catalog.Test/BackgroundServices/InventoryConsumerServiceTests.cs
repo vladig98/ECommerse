@@ -90,7 +90,7 @@ public class InventoryConsumerServiceTests : IDisposable
 
         // Act
         await _service.StartAsync(cts.Token);
-        await Task.Delay(500, CancellationToken.None); // Wait half a second to guarantee completion
+        await Task.Delay(500, CancellationToken.None);
         await cts.CancelAsync();
         await _service.StopAsync(CancellationToken.None);
 

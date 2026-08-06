@@ -113,27 +113,6 @@ public class CategoryDtoTests
         Assert.Equal("Gaming Laptops", dto.SubCategories[0]?.Name);
     }
 
-    [Fact]
-    public void ToDtoHandlesNullElementsInsideSubCategoriesList()
-    {
-        // Arrange
-        Category category = new()
-        {
-            Id = Guid.NewGuid(),
-            Name = "Peripherals",
-            Slug = "peripherals",
-            SubCategories = [null!]
-        };
-
-        // Act
-        CategoryDto? dto = category.ToDto();
-
-        // Assert
-        Assert.NotNull(dto);
-        Assert.Single(dto.SubCategories);
-        Assert.Null(dto.SubCategories[0]);
-    }
-
     #endregion
 
     #region Extension Tests: ToEventData
@@ -181,7 +160,7 @@ public class CategoryDtoTests
         Guid id = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
         Guid version = Guid.NewGuid();
-        List<CategoryDto?> subCategories = [];
+        List<CategoryDto> subCategories = [];
 
         CategoryDto dto1 = new(id, now, now, version, "Phones", "phones", null, subCategories);
         CategoryDto dto2 = new(id, now, now, version, "Phones", "phones", null, subCategories);
