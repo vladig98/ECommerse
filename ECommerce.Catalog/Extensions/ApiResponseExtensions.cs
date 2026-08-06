@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-internal static class ApiResponseExtensions
+public static class ApiResponseExtensions
 {
     extension<T>(ApiResponse<T> result)
     {

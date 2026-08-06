@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Events;
 
-internal record class ProductUpdated
+public record class ProductUpdated
 (
     Guid Id,
     string Title,

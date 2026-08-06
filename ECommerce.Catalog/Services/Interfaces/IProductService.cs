@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Services.Interfaces;
 
-internal interface IProductService
+public interface IProductService
 {
     Task<ApiResponse<ProductDto>> CreateAsync(string username, CreateProductDto dto, CancellationToken token);
     Task<ApiResponse<ProductDto>> GetAsync(string username, Guid id, CancellationToken token);

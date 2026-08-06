@@ -1,5 +1,5 @@
 ﻿namespace ECommerce.Catalog.Models;
 
-internal class ProcessedEvent : BaseModel
+public class ProcessedEvent : BaseModel
 {
 }

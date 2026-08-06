@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Helpers;
 
-internal static class CacheKeys
+public static class CacheKeys
 {
     public const string ProductKey = "Product:Id:{0}";
     public const string AllProductsKey = "Products";

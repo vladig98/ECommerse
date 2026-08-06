@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Repositories.Interfaces;
 
-internal interface IVariantAttributeRepository
+public interface IVariantAttributeRepository
 {
     Task<PagedResult<VariantAttributeModel>> GetAllAsync(int pageNumber = 1, int itemsPerPage = 100, CancellationToken token = default);
     Task<VariantAttributeModel?> GetAsync(Guid id, CancellationToken token);

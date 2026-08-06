@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Services.Interfaces;
 
-internal interface IMessageConsumer : IDisposable
+public interface IMessageConsumer : IDisposable
 {
     void Subscribe(string topic);
     IntegrationEvent? Consume(CancellationToken token);

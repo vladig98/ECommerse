@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Events;
 
-internal record class ProductPriceChanged
+public record class ProductPriceChanged
 (
     Guid ProductId,
     Guid VariantId,

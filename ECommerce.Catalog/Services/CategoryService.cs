@@ -1,13 +1,13 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-internal class CategoryService(ICategoryRepository categoryRepository, ILogger logger) : ICategoryService
+public class CategoryService(ICategoryRepository categoryRepository, ILogger logger) : ICategoryService
 {
     public async Task<ApiResponse<CategoryDto>> CreateAsync(string username, CreateCategoryDto dto, CancellationToken token)
     {
         try
         {
             Category category = dto.ToModel();
-            Category createdCategory = await categoryRepository.AddAsync(category, token).ConfigureAwait(true);
+            Category createdCategory = await categoryRepository.AddAsync(category, token);
             CategoryDto categoryDto = createdCategory.ToDto()!;
 
             logger.Information("Successfully created category '{CategoryName}' (ID: {CategoryId}). User: '{Username}'", createdCategory.Name, createdCategory.Id, username);
@@ -30,7 +30,7 @@ internal class CategoryService(ICategoryRepository categoryRepository, ILogger l
     {
         try
         {
-            Category? category = await categoryRepository.DeleteAsync(id, version, token).ConfigureAwait(true);
+            Category? category = await categoryRepository.DeleteAsync(id, version, token);
             if (category is null)
             {
                 logger.Warning("Delete aborted: Category '{CategoryId}' was not found. User: '{Username}'.", id, username);
@@ -64,7 +64,7 @@ internal class CategoryService(ICategoryRepository categoryRepository, ILogger l
     {
         try
         {
-            PagedResult<Category> pagedModels = await categoryRepository.GetAllAsync(pageNumber, itemsPerPage, token).ConfigureAwait(true);
+            PagedResult<Category> pagedModels = await categoryRepository.GetAllAsync(pageNumber, itemsPerPage, token);
 
             List<CategoryDto> dtos = [.. pagedModels.Items.Select(x => x.ToDto()!)];
 
@@ -91,7 +91,7 @@ internal class CategoryService(ICategoryRepository categoryRepository, ILogger l
     {
         try
         {
-            Category? category = await categoryRepository.GetAsync(id, token).ConfigureAwait(true);
+            Category? category = await categoryRepository.GetAsync(id, token);
             if (category is null)
             {
                 logger.Warning("Read aborted: Category '{CategoryId}' was not found. User: '{Username}'", id, username);
@@ -113,7 +113,7 @@ internal class CategoryService(ICategoryRepository categoryRepository, ILogger l
     {
         try
         {
-            Category? category = await categoryRepository.GetAsync(id, token).ConfigureAwait(true);
+            Category? category = await categoryRepository.GetAsync(id, token);
             if (category is null)
             {
                 logger.Warning("Update aborted: Category '{CategoryId}' was not found. User: '{Username}'.", id, username);
@@ -121,7 +121,7 @@ internal class CategoryService(ICategoryRepository categoryRepository, ILogger l
             }
 
             category.Update(dto);
-            await categoryRepository.UpdateAsync(category, version, token).ConfigureAwait(true);
+            await categoryRepository.UpdateAsync(category, version, token);
 
             CategoryDto categoryDto = category.ToDto()!;
 

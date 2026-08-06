@@ -1,13 +1,13 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-internal class CachedVariantAttributeService([FromKeyedServices(KeyedServices.AttributeService)] IVariantAttributeService variantService, HybridCache hybridCache, ILogger logger) : IVariantAttributeService
+public class CachedVariantAttributeService([FromKeyedServices(KeyedServices.AttributeService)] IVariantAttributeService variantService, HybridCache hybridCache, ILogger logger) : IVariantAttributeService
 {
     private static readonly CompositeFormat CategoryAttributeFormat = CompositeFormat.Parse(CacheKeys.AttributeKey);
     private static readonly CompositeFormat PaginatedAttributesFormat = CompositeFormat.Parse(CacheKeys.PaginatedAttributes);
 
     public async Task<ApiResponse<VariantAttributeDto>> CreateAsync(string username, CreateVariantAttributeDto dto, CancellationToken token)
     {
-        ApiResponse<VariantAttributeDto> response = await variantService.CreateAsync(username, dto, token).ConfigureAwait(true);
+        ApiResponse<VariantAttributeDto> response = await variantService.CreateAsync(username, dto, token);
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             return response;
@@ -17,8 +17,8 @@ internal class CachedVariantAttributeService([FromKeyedServices(KeyedServices.At
 
         try
         {
-            await hybridCache.SetAsync(string.Format(null, CategoryAttributeFormat, attributeDto.Id), attributeDto, cancellationToken: token).ConfigureAwait(true);
-            await hybridCache.RemoveByTagAsync(CacheKeys.AllAttributesKey, cancellationToken: token).ConfigureAwait(true);
+            await hybridCache.SetAsync(string.Format(null, CategoryAttributeFormat, attributeDto.Id), attributeDto, cancellationToken: token);
+            await hybridCache.RemoveByTagAsync(CacheKeys.AllAttributesKey, cancellationToken: token);
         }
         catch (Exception ex)
         {
@@ -30,7 +30,7 @@ internal class CachedVariantAttributeService([FromKeyedServices(KeyedServices.At
 
     public async Task<ApiResponse<VariantAttributeDto>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
     {
-        ApiResponse<VariantAttributeDto> response = await variantService.DeleteAsync(username, id, version, token).ConfigureAwait(true);
+        ApiResponse<VariantAttributeDto> response = await variantService.DeleteAsync(username, id, version, token);
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             return response;
@@ -40,8 +40,8 @@ internal class CachedVariantAttributeService([FromKeyedServices(KeyedServices.At
 
         try
         {
-            await hybridCache.RemoveAsync(string.Format(null, CategoryAttributeFormat, attributeDto.Id), cancellationToken: token).ConfigureAwait(true);
-            await hybridCache.RemoveByTagAsync(CacheKeys.AllAttributesKey, cancellationToken: token).ConfigureAwait(true);
+            await hybridCache.RemoveAsync(string.Format(null, CategoryAttributeFormat, attributeDto.Id), cancellationToken: token);
+            await hybridCache.RemoveByTagAsync(CacheKeys.AllAttributesKey, cancellationToken: token);
         }
         catch (Exception ex)
         {
@@ -57,17 +57,16 @@ internal class CachedVariantAttributeService([FromKeyedServices(KeyedServices.At
 
         ApiResponse<PagedResult<VariantAttributeDto>> response = await hybridCache.GetOrCreateAsync(
             key: cacheKey,
-            factory: async (ct) => await variantService.GetAllAsync(username, pageNumber, itemsPerPage, ct).ConfigureAwait(true),
+            factory: async (ct) => await variantService.GetAllAsync(username, pageNumber, itemsPerPage, ct),
             options: null,
             tags: [CacheKeys.AllAttributesKey],
-            cancellationToken: token)
-            .ConfigureAwait(true);
+            cancellationToken: token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             try
             {
-                await hybridCache.RemoveAsync(cacheKey, token).ConfigureAwait(true);
+                await hybridCache.RemoveAsync(cacheKey, token);
             }
             catch (Exception ex)
             {
@@ -84,15 +83,14 @@ internal class CachedVariantAttributeService([FromKeyedServices(KeyedServices.At
 
         ApiResponse<VariantAttributeDto> response = await hybridCache.GetOrCreateAsync(
             key: cacheKey,
-            factory: async (ct) => await variantService.GetAsync(username, id, ct).ConfigureAwait(true),
-            cancellationToken: token)
-            .ConfigureAwait(true);
+            factory: async (ct) => await variantService.GetAsync(username, id, ct),
+            cancellationToken: token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             try
             {
-                await hybridCache.RemoveAsync(cacheKey, token).ConfigureAwait(true);
+                await hybridCache.RemoveAsync(cacheKey, token);
             }
             catch (Exception ex)
             {
@@ -105,7 +103,7 @@ internal class CachedVariantAttributeService([FromKeyedServices(KeyedServices.At
 
     public async Task<ApiResponse<VariantAttributeDto>> UpdateAsync(string username, Guid id, Guid version, UpdateVariantAttributeDto dto, CancellationToken token)
     {
-        ApiResponse<VariantAttributeDto> response = await variantService.UpdateAsync(username, id, version, dto, token).ConfigureAwait(true);
+        ApiResponse<VariantAttributeDto> response = await variantService.UpdateAsync(username, id, version, dto, token);
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             return response;
@@ -115,8 +113,8 @@ internal class CachedVariantAttributeService([FromKeyedServices(KeyedServices.At
 
         try
         {
-            await hybridCache.SetAsync(string.Format(null, CategoryAttributeFormat, attributeDto.Id), attributeDto, cancellationToken: token).ConfigureAwait(true);
-            await hybridCache.RemoveByTagAsync(CacheKeys.AllAttributesKey, cancellationToken: token).ConfigureAwait(true);
+            await hybridCache.SetAsync(string.Format(null, CategoryAttributeFormat, attributeDto.Id), attributeDto, cancellationToken: token);
+            await hybridCache.RemoveByTagAsync(CacheKeys.AllAttributesKey, cancellationToken: token);
         }
         catch (Exception ex)
         {

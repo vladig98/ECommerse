@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-internal static class VariantAttributeExtensions
+public static class VariantAttributeExtensions
 {
     extension(VariantAttributeModel attribute)
     {

@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-internal static class CreateCategoryDtoExtensions
+public static class CreateCategoryDtoExtensions
 {
     extension(CreateCategoryDto createCategoryDto)
     {

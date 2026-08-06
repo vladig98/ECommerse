@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Models;
 
-internal class ProductVariant : BaseModel
+public class ProductVariant : BaseModel
 {
     public Guid ProductId { get; set; }
     public Product Product { get; set; } = null!;

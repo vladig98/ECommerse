@@ -1,13 +1,13 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-internal class CachedProductService([FromKeyedServices(KeyedServices.ProductService)] IProductService productService, HybridCache hybridCache, ILogger logger) : IProductService
+public class CachedProductService([FromKeyedServices(KeyedServices.ProductService)] IProductService productService, HybridCache hybridCache, ILogger logger) : IProductService
 {
     private static readonly CompositeFormat ProductKeyFormat = CompositeFormat.Parse(CacheKeys.ProductKey);
     private static readonly CompositeFormat PaginatedProductsFormat = CompositeFormat.Parse(CacheKeys.PaginatedProducts);
 
     public async Task<ApiResponse<ProductDto>> CreateAsync(string username, CreateProductDto dto, CancellationToken token)
     {
-        ApiResponse<ProductDto> response = await productService.CreateAsync(username, dto, token).ConfigureAwait(true);
+        ApiResponse<ProductDto> response = await productService.CreateAsync(username, dto, token);
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             return response;
@@ -17,8 +17,8 @@ internal class CachedProductService([FromKeyedServices(KeyedServices.ProductServ
 
         try
         {
-            await hybridCache.SetAsync(string.Format(null, ProductKeyFormat, productDto.Id), productDto, cancellationToken: token).ConfigureAwait(true);
-            await hybridCache.RemoveByTagAsync(CacheKeys.AllProductsKey, cancellationToken: token).ConfigureAwait(true);
+            await hybridCache.SetAsync(string.Format(null, ProductKeyFormat, productDto.Id), productDto, cancellationToken: token);
+            await hybridCache.RemoveByTagAsync(CacheKeys.AllProductsKey, cancellationToken: token);
         }
         catch (Exception ex)
         {
@@ -30,7 +30,7 @@ internal class CachedProductService([FromKeyedServices(KeyedServices.ProductServ
 
     public async Task<ApiResponse<ProductDto>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
     {
-        ApiResponse<ProductDto> response = await productService.DeleteAsync(username, id, version, token).ConfigureAwait(true);
+        ApiResponse<ProductDto> response = await productService.DeleteAsync(username, id, version, token);
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             return response;
@@ -40,8 +40,8 @@ internal class CachedProductService([FromKeyedServices(KeyedServices.ProductServ
 
         try
         {
-            await hybridCache.RemoveAsync(string.Format(null, ProductKeyFormat, productDto.Id), cancellationToken: token).ConfigureAwait(true);
-            await hybridCache.RemoveByTagAsync(CacheKeys.AllProductsKey, cancellationToken: token).ConfigureAwait(true);
+            await hybridCache.RemoveAsync(string.Format(null, ProductKeyFormat, productDto.Id), cancellationToken: token);
+            await hybridCache.RemoveByTagAsync(CacheKeys.AllProductsKey, cancellationToken: token);
         }
         catch (Exception ex)
         {
@@ -57,17 +57,16 @@ internal class CachedProductService([FromKeyedServices(KeyedServices.ProductServ
 
         ApiResponse<PagedResult<ProductDto>> response = await hybridCache.GetOrCreateAsync(
             key: cacheKey,
-            factory: async (ct) => await productService.GetAllAsync(username, pageNumber, itemsPerPage, ct).ConfigureAwait(true),
+            factory: async (ct) => await productService.GetAllAsync(username, pageNumber, itemsPerPage, ct),
             options: null,
             tags: [CacheKeys.AllProductsKey],
-            cancellationToken: token)
-            .ConfigureAwait(true);
+            cancellationToken: token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             try
             {
-                await hybridCache.RemoveAsync(cacheKey, token).ConfigureAwait(true);
+                await hybridCache.RemoveAsync(cacheKey, token);
             }
             catch (Exception ex)
             {
@@ -84,15 +83,14 @@ internal class CachedProductService([FromKeyedServices(KeyedServices.ProductServ
 
         ApiResponse<ProductDto> response = await hybridCache.GetOrCreateAsync(
             key: cacheKey,
-            factory: async (ct) => await productService.GetAsync(username, id, ct).ConfigureAwait(true),
-            cancellationToken: token)
-            .ConfigureAwait(true);
+            factory: async (ct) => await productService.GetAsync(username, id, ct),
+            cancellationToken: token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             try
             {
-                await hybridCache.RemoveAsync(cacheKey, token).ConfigureAwait(true);
+                await hybridCache.RemoveAsync(cacheKey, token);
             }
             catch (Exception ex)
             {
@@ -105,7 +103,7 @@ internal class CachedProductService([FromKeyedServices(KeyedServices.ProductServ
 
     public async Task<ApiResponse<ProductDto>> UpdateAsync(string username, Guid id, Guid version, UpdateProductDto dto, CancellationToken token)
     {
-        ApiResponse<ProductDto> response = await productService.UpdateAsync(username, id, version, dto, token).ConfigureAwait(true);
+        ApiResponse<ProductDto> response = await productService.UpdateAsync(username, id, version, dto, token);
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             return response;
@@ -115,8 +113,8 @@ internal class CachedProductService([FromKeyedServices(KeyedServices.ProductServ
 
         try
         {
-            await hybridCache.SetAsync(string.Format(null, ProductKeyFormat, productDto.Id), productDto, cancellationToken: token).ConfigureAwait(true);
-            await hybridCache.RemoveByTagAsync(CacheKeys.AllProductsKey, cancellationToken: token).ConfigureAwait(true);
+            await hybridCache.SetAsync(string.Format(null, ProductKeyFormat, productDto.Id), productDto, cancellationToken: token);
+            await hybridCache.RemoveByTagAsync(CacheKeys.AllProductsKey, cancellationToken: token);
         }
         catch (Exception ex)
         {

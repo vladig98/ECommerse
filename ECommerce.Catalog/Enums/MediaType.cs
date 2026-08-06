@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Enums;
 
-internal enum MediaType
+public enum MediaType
 {
     Image = 1,
     Video = 2,

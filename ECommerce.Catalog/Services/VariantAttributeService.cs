@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-internal class VariantAttributeService(IVariantAttributeRepository variantAttributeRepository, ILogger logger) : IVariantAttributeService
+public class VariantAttributeService(IVariantAttributeRepository variantAttributeRepository, ILogger logger) : IVariantAttributeService
 {
     public async Task<ApiResponse<VariantAttributeDto>> CreateAsync(string username, CreateVariantAttributeDto dto, CancellationToken token)
     {
@@ -8,7 +8,7 @@ internal class VariantAttributeService(IVariantAttributeRepository variantAttrib
         {
             VariantAttributeModel attribute = dto.ToModel();
 
-            VariantAttributeModel createdAttribute = await variantAttributeRepository.AddAsync(attribute, token).ConfigureAwait(true);
+            VariantAttributeModel createdAttribute = await variantAttributeRepository.AddAsync(attribute, token);
             VariantAttributeDto attributeDto = createdAttribute.ToDto();
 
             logger.Information("Successfully created variant attribute '{Name}: {Value}' (ID: {AttributeId}). User: '{Username}'", createdAttribute.Name, createdAttribute.Value, createdAttribute.Id, username);
@@ -31,7 +31,7 @@ internal class VariantAttributeService(IVariantAttributeRepository variantAttrib
     {
         try
         {
-            VariantAttributeModel? attribute = await variantAttributeRepository.DeleteAsync(id, version, token).ConfigureAwait(true);
+            VariantAttributeModel? attribute = await variantAttributeRepository.DeleteAsync(id, version, token);
             if (attribute is null)
             {
                 logger.Warning("Delete aborted: Variant attribute '{AttributeId}' was not found. User: '{Username}'.", id, username);
@@ -65,7 +65,7 @@ internal class VariantAttributeService(IVariantAttributeRepository variantAttrib
     {
         try
         {
-            PagedResult<VariantAttributeModel> pagedModels = await variantAttributeRepository.GetAllAsync(pageNumber, itemsPerPage, token).ConfigureAwait(true);
+            PagedResult<VariantAttributeModel> pagedModels = await variantAttributeRepository.GetAllAsync(pageNumber, itemsPerPage, token);
 
             List<VariantAttributeDto> dtos = [.. pagedModels.Items.Select(x => x.ToDto())];
 
@@ -92,7 +92,7 @@ internal class VariantAttributeService(IVariantAttributeRepository variantAttrib
     {
         try
         {
-            VariantAttributeModel? attribute = await variantAttributeRepository.GetAsync(id, token).ConfigureAwait(true);
+            VariantAttributeModel? attribute = await variantAttributeRepository.GetAsync(id, token);
             if (attribute is null)
             {
                 logger.Warning("Read aborted: Variant attribute '{AttributeId}' was not found. User: '{Username}'", id, username);
@@ -114,7 +114,7 @@ internal class VariantAttributeService(IVariantAttributeRepository variantAttrib
     {
         try
         {
-            VariantAttributeModel? attribute = await variantAttributeRepository.GetAsync(id, token).ConfigureAwait(true);
+            VariantAttributeModel? attribute = await variantAttributeRepository.GetAsync(id, token);
             if (attribute is null)
             {
                 logger.Warning("Update aborted: Variant attribute '{AttributeId}' was not found. User: '{Username}'.", id, username);
@@ -122,7 +122,7 @@ internal class VariantAttributeService(IVariantAttributeRepository variantAttrib
             }
 
             attribute.Update(dto);
-            await variantAttributeRepository.UpdateAsync(attribute, version, token).ConfigureAwait(true);
+            await variantAttributeRepository.UpdateAsync(attribute, version, token);
 
             VariantAttributeDto attributeDto = attribute.ToDto();
 

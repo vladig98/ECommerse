@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Events;
 
-internal record class ProductDeleted
+public record class ProductDeleted
 (
     Guid Id
 );

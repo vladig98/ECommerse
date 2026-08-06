@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Models;
 
-internal class ProductVariantAttributeModel
+public class ProductVariantAttributeModel
 {
     public Guid VariantId { get; set; }
     public ProductVariant Variant { get; set; } = null!;

@@ -1,22 +1,22 @@
 ﻿namespace ECommerce.Catalog.Repositories;
 
-internal class VariantAttributeRepository(MainDbContext dbContext, ILogger logger) : IVariantAttributeRepository
+public class VariantAttributeRepository(MainDbContext dbContext, ILogger logger) : IVariantAttributeRepository
 {
     public async Task<VariantAttributeModel> AddAsync(VariantAttributeModel attribute, CancellationToken token)
     {
         logger.Debug("Executing INSERT for new Variant Attribute in database.");
 
         dbContext.VariantAttributes.Add(attribute);
-        await dbContext.SaveChangesAsync(token).ConfigureAwait(true);
+        await dbContext.SaveChangesAsync(token);
 
-        VariantAttributeModel? createdAttribute = await GetAsync(attribute.Id, token).ConfigureAwait(true);
+        VariantAttributeModel? createdAttribute = await GetAsync(attribute.Id, token);
 
         return createdAttribute!;
     }
 
     public async Task<VariantAttributeModel?> DeleteAsync(Guid id, Guid version, CancellationToken token)
     {
-        VariantAttributeModel? attribute = await GetAsync(id, token).ConfigureAwait(true);
+        VariantAttributeModel? attribute = await GetAsync(id, token);
         if (attribute is null)
         {
             return attribute;
@@ -27,7 +27,7 @@ internal class VariantAttributeRepository(MainDbContext dbContext, ILogger logge
         dbContext.Entry(attribute).Property(p => p.Version).OriginalValue = version;
         dbContext.VariantAttributes.Remove(attribute);
 
-        await dbContext.SaveChangesAsync(token).ConfigureAwait(true);
+        await dbContext.SaveChangesAsync(token);
 
         return attribute;
     }
@@ -36,7 +36,7 @@ internal class VariantAttributeRepository(MainDbContext dbContext, ILogger logge
     {
         logger.Debug("Executing COUNT and SELECT for paginated Variant Attributes.");
 
-        int totalCount = await dbContext.VariantAttributes.CountAsync(token).ConfigureAwait(true);
+        int totalCount = await dbContext.VariantAttributes.CountAsync(token);
         int totalPages = (int)Math.Ceiling(totalCount / (double)itemsPerPage);
 
         int realPageNumber = Math.Clamp(pageNumber - 1, 0, totalPages);
@@ -47,8 +47,7 @@ internal class VariantAttributeRepository(MainDbContext dbContext, ILogger logge
             .OrderByDescending(x => x.CreatedAt)
             .Skip(itemsToSkip)
             .Take(itemsPerPage)
-            .ToListAsync(token)
-            .ConfigureAwait(true);
+            .ToListAsync(token);
 
         return new PagedResult<VariantAttributeModel>(items, totalCount, pageNumber, itemsPerPage, totalPages);
     }
@@ -58,8 +57,7 @@ internal class VariantAttributeRepository(MainDbContext dbContext, ILogger logge
         logger.Debug("Executing SELECT for Variant Attribute '{AttributeId}'.", id);
 
         return await dbContext.VariantAttributes
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: token)
-                .ConfigureAwait(true);
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: token);
     }
 
     public async Task UpdateAsync(VariantAttributeModel attribute, Guid version, CancellationToken token)
@@ -67,6 +65,6 @@ internal class VariantAttributeRepository(MainDbContext dbContext, ILogger logge
         logger.Debug("Executing UPDATE for Variant Attribute '{AttributeId}' in database.", attribute.Id);
 
         dbContext.Entry(attribute).Property(p => p.Version).OriginalValue = version;
-        await dbContext.SaveChangesAsync(token).ConfigureAwait(true);
+        await dbContext.SaveChangesAsync(token);
     }
 }

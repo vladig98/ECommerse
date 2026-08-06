@@ -3,9 +3,6 @@
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<AnalysisLevel>latest-all</AnalysisLevel>
-		<ReportAnalyzer>true</ReportAnalyzer>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -30,12 +27,6 @@
 		<PackageReference Include="Serilog" Version="4.4.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Migrations\" />
-		<InternalsVisibleTo Include="ECommerce.Catalog.Test" />
-		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 
 </Project>

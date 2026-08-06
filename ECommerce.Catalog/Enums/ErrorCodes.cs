@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Enums;
 
-internal enum ErrorCodes
+public enum ErrorCodes
 {
     None = 0,
     NotFound = 1,

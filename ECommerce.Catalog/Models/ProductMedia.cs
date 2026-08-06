@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Models;
 
-internal class ProductMedia : BaseModel
+public class ProductMedia : BaseModel
 {
     public Guid ProductId { get; set; }
     public Product Product { get; set; } = null!;

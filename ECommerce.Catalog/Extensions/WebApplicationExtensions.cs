@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-internal static class WebApplicationExtensions
+public static class WebApplicationExtensions
 {
     extension(WebApplication app)
     {
@@ -62,10 +62,9 @@ internal static class WebApplicationExtensions
 
         public async Task<WebApplication> InitializeDatabase()
         {
-            AsyncServiceScope scope = app.Services.CreateAsyncScope();
-            await using ConfiguredAsyncDisposable _ = scope.ConfigureAwait(true);
+            await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
             MainDbContext dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
-            await dbContext.Database.MigrateAsync().ConfigureAwait(true);
+            await dbContext.Database.MigrateAsync();
 
             return app;
         }

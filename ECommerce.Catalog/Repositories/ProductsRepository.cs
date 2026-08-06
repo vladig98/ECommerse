@@ -1,22 +1,22 @@
 ﻿namespace ECommerce.Catalog.Repositories;
 
-internal class ProductsRepository(MainDbContext dbContext, ILogger logger) : IProductsRepository
+public class ProductsRepository(MainDbContext dbContext, ILogger logger) : IProductsRepository
 {
     public async Task<Product> AddAsync(Product product, CancellationToken token)
     {
         logger.Debug("Executing INSERT for new Product in database.");
 
         dbContext.Products.Add(product);
-        await dbContext.SaveChangesAsync(token).ConfigureAwait(true);
+        await dbContext.SaveChangesAsync(token);
 
-        Product? createdProduct = await GetAsync(product.Id, token).ConfigureAwait(true);
+        Product? createdProduct = await GetAsync(product.Id, token);
 
         return createdProduct!;
     }
 
     public async Task<Product?> DeleteAsync(Guid id, Guid version, CancellationToken token)
     {
-        Product? product = await GetAsync(id, token).ConfigureAwait(true);
+        Product? product = await GetAsync(id, token);
         if (product is null)
         {
             return product;
@@ -27,7 +27,7 @@ internal class ProductsRepository(MainDbContext dbContext, ILogger logger) : IPr
         dbContext.Entry(product).Property(p => p.Version).OriginalValue = version;
         dbContext.Products.Remove(product);
 
-        await dbContext.SaveChangesAsync(token).ConfigureAwait(true);
+        await dbContext.SaveChangesAsync(token);
 
         return product;
     }
@@ -36,7 +36,7 @@ internal class ProductsRepository(MainDbContext dbContext, ILogger logger) : IPr
     {
         logger.Debug("Executing COUNT and SELECT for paginated Products.");
 
-        int totalCount = await dbContext.Products.CountAsync(token).ConfigureAwait(true);
+        int totalCount = await dbContext.Products.CountAsync(token);
         int totalPages = (int)Math.Ceiling(totalCount / (double)itemsPerPage);
 
         int realPageNumber = Math.Clamp(pageNumber - 1, 0, totalPages);
@@ -49,8 +49,7 @@ internal class ProductsRepository(MainDbContext dbContext, ILogger logger) : IPr
             .OrderByDescending(x => x.CreatedAt)
             .Skip(itemsToSkip)
             .Take(itemsPerPage)
-            .ToListAsync(token)
-            .ConfigureAwait(true);
+            .ToListAsync(token);
 
         return new PagedResult<Product>(items, totalCount, pageNumber, itemsPerPage, totalPages);
     }
@@ -61,8 +60,7 @@ internal class ProductsRepository(MainDbContext dbContext, ILogger logger) : IPr
 
         return await dbContext.Products
                 .GetAllRelatedEntities()
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: token)
-                .ConfigureAwait(true);
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: token);
     }
 
     public async Task UpdateAsync(Product product, Guid version, CancellationToken token)
@@ -72,6 +70,6 @@ internal class ProductsRepository(MainDbContext dbContext, ILogger logger) : IPr
         dbContext.Entry(product).State = EntityState.Modified;
         dbContext.Entry(product).Property(p => p.Version).OriginalValue = version;
 
-        await dbContext.SaveChangesAsync(token).ConfigureAwait(true);
+        await dbContext.SaveChangesAsync(token);
     }
 }

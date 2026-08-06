@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-internal static class ProductDbSetExtensions
+public static class ProductDbSetExtensions
 {
     extension(DbSet<Product> products)
     {

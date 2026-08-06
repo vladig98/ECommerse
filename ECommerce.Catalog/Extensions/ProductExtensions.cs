@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-internal static class ProductExtensions
+public static class ProductExtensions
 {
     extension(Product product)
     {
@@ -84,7 +84,7 @@ internal static class ProductExtensions
 
         foreach (UpdateProductVariantDto updateVariantDto in updateProductDto.ProductVariants)
         {
-            if (updateVariantDto.Id.Equals(default) || updateVariantDto.Id.Equals(Guid.Empty))
+            if (updateVariantDto.Id == Guid.Empty)
             {
                 variantsToInsert.Add(updateVariantDto.ToModel());
                 continue;
@@ -123,7 +123,7 @@ internal static class ProductExtensions
 
         foreach (UpdateProductMediaDto updateMediaDto in updateProductDto.ProductMedia)
         {
-            if (updateMediaDto.Id.Equals(default) || updateMediaDto.Id.Equals(Guid.Empty))
+            if (updateMediaDto.Id == Guid.Empty)
             {
                 mediaToInsert.Add(updateMediaDto.ToModel());
                 continue;

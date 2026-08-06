@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Enums;
 
-internal enum StockStatus
+public enum StockStatus
 {
     InStock = 1,
     LowStock = 2,

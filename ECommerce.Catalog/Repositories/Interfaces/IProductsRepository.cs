@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Repositories.Interfaces;
 
-internal interface IProductsRepository
+public interface IProductsRepository
 {
     Task<PagedResult<Product>> GetAllAsync(int pageNumber = 1, int itemsPerPage = 100, CancellationToken token = default);
     Task<Product?> GetAsync(Guid id, CancellationToken token);

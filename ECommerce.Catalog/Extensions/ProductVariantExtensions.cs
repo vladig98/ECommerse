@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-internal static class ProductVariantExtensions
+public static class ProductVariantExtensions
 {
     extension(ProductVariant productVariant)
     {
@@ -25,11 +25,7 @@ internal static class ProductVariantExtensions
                 BasePrice: productVariant.BasePrice,
                 Gtin: productVariant.Gtin,
                 Media: productVariant.Media?.Select(x => x.ToDto()).ToList() ?? [],
-                Attributes: productVariant.VariantAttributes?
-                    .Select(x => x.Attribute?.ToDto())
-                    .Where(x => x is not null)
-                    .Select(x => x!)
-                    .ToList() ?? []
+                Attributes: productVariant.VariantAttributes?.Select(x => x.Attribute?.ToDto()).Where(x => x is not null).OfType<VariantAttributeDto>().ToList() ?? []
             );
         }
 
@@ -53,11 +49,7 @@ internal static class ProductVariantExtensions
                 BasePrice: productVariant.BasePrice,
                 Gtin: productVariant.Gtin,
                 Media: productVariant.Media?.Select(x => x.ToEventData()).ToList() ?? [],
-                Attributes: productVariant.VariantAttributes?
-                    .Select(x => x.Attribute?.ToEventData())
-                    .Where(x => x is not null)
-                    .Select(x => x!)
-                    .ToList() ?? []
+                Attributes: productVariant.VariantAttributes?.Select(x => x.Attribute?.ToEventData()).Where(x => x is not null).OfType<VariantAttributeEventDto>().ToList() ?? []
             );
         }
     }
@@ -69,7 +61,7 @@ internal static class ProductVariantExtensions
 
         foreach (UpdateProductMediaDto updateMediaDto in updateProductVariantDto.Media)
         {
-            if (updateMediaDto.Id.Equals(default) || updateMediaDto.Id.Equals(Guid.Empty))
+            if (updateMediaDto.Id == Guid.Empty)
             {
                 mediaToInsert.Add(updateMediaDto.ToModel());
                 continue;
@@ -135,11 +127,17 @@ internal static class ProductVariantExtensions
 
         foreach (Guid attributeId in toInsert)
         {
-            productVariant.VariantAttributes.Add(new ProductVariantAttributeModel()
-            {
-                AttributeId = attributeId,
-                VariantId = productVariant.Id
-            });
+            ProductVariantAttributeModel variantAttributeModel = CreateModel(productVariant, attributeId);
+            productVariant.VariantAttributes.Add(variantAttributeModel);
         }
+    }
+
+    private static ProductVariantAttributeModel CreateModel(ProductVariant productVariant, Guid attributeId)
+    {
+        return new ProductVariantAttributeModel()
+        {
+            AttributeId = attributeId,
+            VariantId = productVariant.Id
+        };
     }
 }

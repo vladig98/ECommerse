@@ -1,13 +1,13 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-internal class CachedCategoryService([FromKeyedServices(KeyedServices.CategoryService)] ICategoryService categoryService, HybridCache hybridCache, ILogger logger) : ICategoryService
+public class CachedCategoryService([FromKeyedServices(KeyedServices.CategoryService)] ICategoryService categoryService, HybridCache hybridCache, ILogger logger) : ICategoryService
 {
     private static readonly CompositeFormat CategoryKeyFormat = CompositeFormat.Parse(CacheKeys.CategoryKey);
     private static readonly CompositeFormat PaginatedCategoriesFormat = CompositeFormat.Parse(CacheKeys.PaginatedCategories);
 
     public async Task<ApiResponse<CategoryDto>> CreateAsync(string username, CreateCategoryDto dto, CancellationToken token)
     {
-        ApiResponse<CategoryDto> response = await categoryService.CreateAsync(username, dto, token).ConfigureAwait(true);
+        ApiResponse<CategoryDto> response = await categoryService.CreateAsync(username, dto, token);
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             return response;
@@ -17,8 +17,8 @@ internal class CachedCategoryService([FromKeyedServices(KeyedServices.CategorySe
 
         try
         {
-            await hybridCache.SetAsync(string.Format(null, CategoryKeyFormat, categoryDto.Id), categoryDto, cancellationToken: token).ConfigureAwait(true);
-            await hybridCache.RemoveByTagAsync(CacheKeys.AllCategoriesKey, cancellationToken: token).ConfigureAwait(true);
+            await hybridCache.SetAsync(string.Format(null, CategoryKeyFormat, categoryDto.Id), categoryDto, cancellationToken: token);
+            await hybridCache.RemoveByTagAsync(CacheKeys.AllCategoriesKey, cancellationToken: token);
         }
         catch (Exception ex)
         {
@@ -30,7 +30,7 @@ internal class CachedCategoryService([FromKeyedServices(KeyedServices.CategorySe
 
     public async Task<ApiResponse<CategoryDto>> DeleteAsync(string username, Guid id, Guid version, CancellationToken token)
     {
-        ApiResponse<CategoryDto> response = await categoryService.DeleteAsync(username, id, version, token).ConfigureAwait(true);
+        ApiResponse<CategoryDto> response = await categoryService.DeleteAsync(username, id, version, token);
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             return response;
@@ -40,8 +40,8 @@ internal class CachedCategoryService([FromKeyedServices(KeyedServices.CategorySe
 
         try
         {
-            await hybridCache.RemoveAsync(string.Format(null, CategoryKeyFormat, categoryDto.Id), cancellationToken: token).ConfigureAwait(true);
-            await hybridCache.RemoveByTagAsync(CacheKeys.AllCategoriesKey, cancellationToken: token).ConfigureAwait(true);
+            await hybridCache.RemoveAsync(string.Format(null, CategoryKeyFormat, categoryDto.Id), cancellationToken: token);
+            await hybridCache.RemoveByTagAsync(CacheKeys.AllCategoriesKey, cancellationToken: token);
         }
         catch (Exception ex)
         {
@@ -57,17 +57,16 @@ internal class CachedCategoryService([FromKeyedServices(KeyedServices.CategorySe
 
         ApiResponse<PagedResult<CategoryDto>> response = await hybridCache.GetOrCreateAsync(
             key: cacheKey,
-            factory: async (ct) => await categoryService.GetAllAsync(username, pageNumber, itemsPerPage, ct).ConfigureAwait(true),
+            factory: async (ct) => await categoryService.GetAllAsync(username, pageNumber, itemsPerPage, ct),
             options: null,
             tags: [CacheKeys.AllCategoriesKey],
-            cancellationToken: token)
-            .ConfigureAwait(true);
+            cancellationToken: token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             try
             {
-                await hybridCache.RemoveAsync(cacheKey, token).ConfigureAwait(true);
+                await hybridCache.RemoveAsync(cacheKey, token);
             }
             catch (Exception ex)
             {
@@ -84,15 +83,14 @@ internal class CachedCategoryService([FromKeyedServices(KeyedServices.CategorySe
 
         ApiResponse<CategoryDto> response = await hybridCache.GetOrCreateAsync(
             key: cacheKey,
-            factory: async (ct) => await categoryService.GetAsync(username, id, ct).ConfigureAwait(true),
-            cancellationToken: token)
-            .ConfigureAwait(true);
+            factory: async (ct) => await categoryService.GetAsync(username, id, ct),
+            cancellationToken: token);
 
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             try
             {
-                await hybridCache.RemoveAsync(cacheKey, token).ConfigureAwait(true);
+                await hybridCache.RemoveAsync(cacheKey, token);
             }
             catch (Exception ex)
             {
@@ -105,7 +103,7 @@ internal class CachedCategoryService([FromKeyedServices(KeyedServices.CategorySe
 
     public async Task<ApiResponse<CategoryDto>> UpdateAsync(string username, Guid id, Guid version, UpdateCategoryDto dto, CancellationToken token)
     {
-        ApiResponse<CategoryDto> response = await categoryService.UpdateAsync(username, id, version, dto, token).ConfigureAwait(true);
+        ApiResponse<CategoryDto> response = await categoryService.UpdateAsync(username, id, version, dto, token);
         if (!string.IsNullOrWhiteSpace(response.Error))
         {
             return response;
@@ -115,8 +113,8 @@ internal class CachedCategoryService([FromKeyedServices(KeyedServices.CategorySe
 
         try
         {
-            await hybridCache.SetAsync(string.Format(null, CategoryKeyFormat, categoryDto.Id), categoryDto, cancellationToken: token).ConfigureAwait(true);
-            await hybridCache.RemoveByTagAsync(CacheKeys.AllCategoriesKey, cancellationToken: token).ConfigureAwait(true);
+            await hybridCache.SetAsync(string.Format(null, CategoryKeyFormat, categoryDto.Id), categoryDto, cancellationToken: token);
+            await hybridCache.RemoveByTagAsync(CacheKeys.AllCategoriesKey, cancellationToken: token);
         }
         catch (Exception ex)
         {

@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-internal static class CategoryExtensions
+public static class CategoryExtensions
 {
     extension(Category? category)
     {
@@ -20,7 +20,7 @@ internal static class CategoryExtensions
                 Name: category.Name,
                 Slug: category.Slug,
                 ParentCategory: category.ParentCategory?.ToDto(),
-                SubCategories: category.SubCategories?.Select(x => x.ToDto()).ToList() ?? []
+                SubCategories: category.SubCategories?.Select(x => x.ToDto()).Where(x => x is not null).OfType<CategoryDto>().ToList() ?? []
             );
         }
 

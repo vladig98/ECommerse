@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Services.Interfaces;
 
-internal interface ICategoryService
+public interface ICategoryService
 {
     Task<ApiResponse<CategoryDto>> CreateAsync(string username, CreateCategoryDto dto, CancellationToken token);
     Task<ApiResponse<CategoryDto>> GetAsync(string username, Guid id, CancellationToken token);

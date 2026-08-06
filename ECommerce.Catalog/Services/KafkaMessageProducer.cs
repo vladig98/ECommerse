@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-internal class KafkaMessageProducer(IProducer<string, string> producer) : IMessageProducer, IDisposable
+public class KafkaMessageProducer(IProducer<string, string> producer) : IMessageProducer, IDisposable
 {
     private readonly IProducer<string, string> _producer = producer;
 
@@ -17,7 +17,7 @@ internal class KafkaMessageProducer(IProducer<string, string> producer) : IMessa
             }
         };
 
-        await _producer.ProduceAsync(topic, kafkaMessage, token).ConfigureAwait(true);
+        await _producer.ProduceAsync(topic, kafkaMessage, token);
     }
 
     public void Dispose()

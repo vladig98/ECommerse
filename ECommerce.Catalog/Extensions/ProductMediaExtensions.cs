@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Extensions;
 
-internal static class ProductMediaExtensions
+public static class ProductMediaExtensions
 {
     extension(ProductMedia productMedia)
     {
