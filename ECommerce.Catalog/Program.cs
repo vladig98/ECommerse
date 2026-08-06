@@ -18,7 +18,7 @@ try
 
     app = app.ConfigureMiddlewares()
         .ConfigureScalar()
-        .MapIdentityEndpoints();
+        .MapCatalogEndpoints();
 
     app = await app.InitializeDatabase().ConfigureAwait(true);
     await app.RunAsync().ConfigureAwait(true);
