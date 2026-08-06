@@ -33,7 +33,7 @@ public class OutboxInterceptor : SaveChangesInterceptor
 
                 if (originalPrice != currentPrice)
                 {
-                    outboxMessages.Add(CreateEventMessage(variant.ProductId, nameof(ProductPriceChanged), variant.ToPricheChangeEventData()));
+                    outboxMessages.Add(CreateEventMessage(variant.ProductId, nameof(ProductPriceChanged), variant.ToPriceChangeEventData()));
                 }
             }
         }
