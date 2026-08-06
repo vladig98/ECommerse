@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Data.Configuration;
 
-internal class ProductMediaConfiguration : BaseModelConfiguration<ProductMedia>
+public class ProductMediaConfiguration : BaseModelConfiguration<ProductMedia>
 {
     public override void Configure(EntityTypeBuilder<ProductMedia> builder)
     {

@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Data.Configuration;
 
-internal class CategoryConfiguration : BaseModelConfiguration<Category>
+public class CategoryConfiguration : BaseModelConfiguration<Category>
 {
     public override void Configure(EntityTypeBuilder<Category> builder)
     {

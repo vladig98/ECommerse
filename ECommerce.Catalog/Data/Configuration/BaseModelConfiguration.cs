@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Data.Configuration;
 
-internal abstract class BaseModelConfiguration<TEntity> : IEntityTypeConfiguration<TEntity>
+public abstract class BaseModelConfiguration<TEntity> : IEntityTypeConfiguration<TEntity>
     where TEntity : BaseModel
 {
     public virtual void Configure(EntityTypeBuilder<TEntity> builder)

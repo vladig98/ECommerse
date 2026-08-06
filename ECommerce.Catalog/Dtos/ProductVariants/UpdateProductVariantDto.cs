@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.ProductVariants;
 
-internal record class UpdateProductVariantDto
+public record class UpdateProductVariantDto
 (
     Guid Id,
     string Sku,

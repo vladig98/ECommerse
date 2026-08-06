@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Data.Configuration;
 
-internal class ProductConfiguration : BaseModelConfiguration<Product>
+public class ProductConfiguration : BaseModelConfiguration<Product>
 {
     public override void Configure(EntityTypeBuilder<Product> builder)
     {

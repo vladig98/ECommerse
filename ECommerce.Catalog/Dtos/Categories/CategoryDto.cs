@@ -1,6 +1,7 @@
 ﻿namespace ECommerce.Catalog.Dtos.Categories;
 
-internal record class CategoryDto(
+public record class CategoryDto
+(
     Guid Id,
     DateTime CreatedAt,
     DateTime UpdatedAt,
@@ -8,5 +9,5 @@ internal record class CategoryDto(
     string Name,
     string Slug,
     CategoryDto? ParentCategory,
-    List<CategoryDto?> SubCategories
+    List<CategoryDto> SubCategories
 );

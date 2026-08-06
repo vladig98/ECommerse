@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Data.Configuration;
 
-internal class EventMessageConfiguration : BaseModelConfiguration<EventMessage>
+public class EventMessageConfiguration : BaseModelConfiguration<EventMessage>
 {
     public override void Configure(EntityTypeBuilder<EventMessage> builder)
     {

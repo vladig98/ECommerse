@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.BackgroundServices;
 
-internal class InventoryConsumerService(
+public class InventoryConsumerService(
     IServiceProvider serviceProvider,
     IMessageConsumer messageConsumer,
     ILogger logger) : BackgroundService
@@ -29,18 +29,17 @@ internal class InventoryConsumerService(
                 {
                     IntegrationEvent? integrationEvent = messageConsumer.Consume(stoppingToken);
 
-                    if (integrationEvent is null || !integrationEvent.EventType.Equals(nameof(InventoryLevelChanged), StringComparison.OrdinalIgnoreCase))
+                    if (integrationEvent is not { EventType: nameof(InventoryLevelChanged) })
                     {
                         messageConsumer.Commit();
                         continue;
                     }
 
-                    AsyncServiceScope scope = serviceProvider.CreateAsyncScope();
-                    await using ConfiguredAsyncDisposable _ = scope.ConfigureAwait(true);
+                    await using AsyncServiceScope scope = serviceProvider.CreateAsyncScope();
                     MainDbContext dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
 
                     bool alreadyProcessed = await dbContext.ProcessedEvents
-                        .AnyAsync(x => x.Id == integrationEvent.EventId, stoppingToken).ConfigureAwait(true);
+                        .AnyAsync(x => x.Id == integrationEvent.EventId, stoppingToken);
 
                     if (alreadyProcessed)
                     {
@@ -58,15 +57,20 @@ internal class InventoryConsumerService(
                     }
 
                     ProductVariant? variant = await dbContext.ProductVariants
-                        .FirstOrDefaultAsync(x => x.Id == levelChanged.VariantId, stoppingToken).ConfigureAwait(true);
+                        .FirstOrDefaultAsync(x => x.Id == levelChanged.VariantId, stoppingToken);
 
                     if (variant is not null && variant.StockStatus != levelChanged.Status)
                     {
                         variant.StockStatus = levelChanged.Status;
                     }
 
-                    dbContext.ProcessedEvents.Add(new ProcessedEvent { Id = integrationEvent.EventId });
-                    await dbContext.SaveChangesAsync(stoppingToken).ConfigureAwait(true);
+                    ProcessedEvent @event = new() 
+                    { 
+                        Id = integrationEvent.EventId 
+                    };
+
+                    dbContext.ProcessedEvents.Add(@event);
+                    await dbContext.SaveChangesAsync(stoppingToken);
 
                     messageConsumer.Commit();
 
@@ -75,7 +79,7 @@ internal class InventoryConsumerService(
                 catch (Exception ex)
                 {
                     logger.Error(ex, "Error processing inventory message. Retrying in 5 seconds...");
-                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken).ConfigureAwait(true);
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                 }
             }
         }

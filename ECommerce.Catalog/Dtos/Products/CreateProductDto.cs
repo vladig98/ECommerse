@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.Products;
 
-internal record class CreateProductDto
+public record class CreateProductDto
 (
     string Title,
     string Slug,

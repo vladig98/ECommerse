@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos;
 
-internal record class PagedResult<T>
+public record class PagedResult<T>
 (
     List<T> Items, 
     int TotalCount, 

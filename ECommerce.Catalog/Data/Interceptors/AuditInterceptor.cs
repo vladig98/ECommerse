@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Data.Interceptors;
 
-internal class AuditInterceptor : SaveChangesInterceptor
+public class AuditInterceptor : SaveChangesInterceptor
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,

@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.ProductMediaDtos;
 
-internal record class ProductMediaDto
+public record class ProductMediaDto
 (
     Guid Id,
     DateTime CreatedAt,

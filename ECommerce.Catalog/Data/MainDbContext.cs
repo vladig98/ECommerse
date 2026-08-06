@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Data;
 
-internal class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(options)
+public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(options)
 {
     public DbSet<Product> Products { get; set; }
     public DbSet<ProductVariant> ProductVariants { get; set; }

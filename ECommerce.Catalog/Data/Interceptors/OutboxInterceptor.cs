@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Data.Interceptors;
 
-internal class OutboxInterceptor : SaveChangesInterceptor
+public class OutboxInterceptor : SaveChangesInterceptor
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
@@ -20,17 +20,10 @@ internal class OutboxInterceptor : SaveChangesInterceptor
         {
             if (entry.Entity is Product product)
             {
-                if (entry.State == EntityState.Added)
+                EventMessage? message = GetMessage(entry, product);
+                if (message is not null)
                 {
-                    outboxMessages.Add(CreateEventMessage(product.Id, nameof(ProductCreated), product.ToEventData()));
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    outboxMessages.Add(CreateEventMessage(product.Id, nameof(ProductUpdated), product.ToEventDataUpdate()));
-                }
-                else if (entry.State == EntityState.Deleted)
-                {
-                    outboxMessages.Add(CreateEventMessage(product.Id, nameof(ProductDeleted), product.ToEventDataDelete()));
+                    outboxMessages.Add(message);
                 }
             }
             else if (entry.Entity is ProductVariant variant && entry.State == EntityState.Modified)
@@ -40,11 +33,7 @@ internal class OutboxInterceptor : SaveChangesInterceptor
 
                 if (originalPrice != currentPrice)
                 {
-                    outboxMessages.Add(CreateEventMessage(
-                        aggregateId: variant.ProductId,
-                        eventType: nameof(ProductPriceChanged),
-                        payload: variant.ToPricheChangeEventData()
-                    ));
+                    outboxMessages.Add(CreateEventMessage(variant.ProductId, nameof(ProductPriceChanged), variant.ToPricheChangeEventData()));
                 }
             }
         }
@@ -55,6 +44,17 @@ internal class OutboxInterceptor : SaveChangesInterceptor
         }
 
         return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+
+    private static EventMessage? GetMessage(EntityEntry<BaseModel> entry, Product product)
+    {
+        return entry.State switch
+        {
+            EntityState.Added => CreateEventMessage(product.Id, nameof(ProductCreated), product.ToEventData()),
+            EntityState.Modified => CreateEventMessage(product.Id, nameof(ProductUpdated), product.ToEventDataUpdate()),
+            EntityState.Deleted => CreateEventMessage(product.Id, nameof(ProductDeleted), product.ToEventDataDelete()),
+            _ => null
+        };
     }
 
     private static EventMessage CreateEventMessage<T>(Guid aggregateId, string eventType, T payload)

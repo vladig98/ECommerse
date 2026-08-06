@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Data.Configuration;
 
-internal class VariantAttributeConfiguration : BaseModelConfiguration<VariantAttributeModel>
+public class VariantAttributeConfiguration : BaseModelConfiguration<VariantAttributeModel>
 {
     public override void Configure(EntityTypeBuilder<VariantAttributeModel> builder)
     {

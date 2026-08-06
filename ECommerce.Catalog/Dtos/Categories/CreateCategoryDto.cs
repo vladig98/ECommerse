@@ -1,6 +1,6 @@
 ﻿namespace ECommerce.Catalog.Dtos.Categories;
 
-internal record class CreateCategoryDto
+public record class CreateCategoryDto
 (
     string Name,
     string Slug,

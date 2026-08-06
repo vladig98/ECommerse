@@ -1,6 +1,7 @@
 ﻿namespace ECommerce.Catalog.Dtos.Products;
 
-internal record class ProductDto(
+public record class ProductDto
+(
     Guid Id,
     DateTime CreatedAt,
     DateTime UpdatedAt,
