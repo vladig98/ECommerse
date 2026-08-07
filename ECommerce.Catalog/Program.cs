@@ -17,7 +17,7 @@ Log.Logger = new LoggerConfiguration()
         options.Protocol = Serilog.Sinks.OpenTelemetry.OtlpProtocol.Grpc;
         options.ResourceAttributes = new Dictionary<string, object>
         {
-            ["service.name"] = "CatalogService"
+            ["service.name"] = "CatalogService" 
         };
     })
     .CreateLogger();
