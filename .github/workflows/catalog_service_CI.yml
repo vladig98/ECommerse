@@ -41,4 +41,4 @@ jobs:
       run: dotnet build ECommerce.Catalog.Test/ECommerce.Catalog.Test.csproj --no-restore
 
     - name: Run Tests
-      run: dotnet test ECommerce.Catalog.Test/ECommerce.Catalog.Test.csproj --no-build --no-restore
+      run: dotnet test ECommerce.Catalog.Test/ECommerce.Catalog.Test.csproj --no-build --no-restore -p:TestingPlatformDotnetTestSupport=true
