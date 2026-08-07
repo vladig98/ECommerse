@@ -1,0 +1,44 @@
+name: Catalog Service CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'ECommerce.Catalog/**'
+      - 'ECommerce.Catalog.Test/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'ECommerce.Catalog/**'
+      - 'ECommerce.Catalog.Test/**'
+
+jobs:
+  unitTest:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v7
+
+    - name: Set up .NET 10
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore .NET CLI Tools
+      run: dotnet tool restore
+
+    - name: Restore App NuGets
+      run: dotnet restore ECommerce.Catalog/ECommerce.Catalog.csproj
+
+    - name: Restore Test NuGets
+      run: dotnet restore ECommerce.Catalog.Test/ECommerce.Catalog.Test.csproj
+
+    - name: Build app
+      run: dotnet build ECommerce.Catalog/ECommerce.Catalog.csproj --no-restore
+
+    - name: Build tests
+      run: dotnet build ECommerce.Catalog.Test/ECommerce.Catalog.Test.csproj --no-restore
+
+    - name: Run Tests
+      run: dotnet test ECommerce.Catalog.Test/ECommerce.Catalog.Test.csproj --no-build --no-restore
