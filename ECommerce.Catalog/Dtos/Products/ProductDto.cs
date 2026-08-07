@@ -13,5 +13,6 @@ public record class ProductDto
     bool IsActive,
     CategoryDto? Category,
     List<ProductMediaDto> Media,
-    List<ProductVariantDto> Variants
+    List<ProductVariantDto> Variants,
+    ProductJsonLdDto LdSchema
 );

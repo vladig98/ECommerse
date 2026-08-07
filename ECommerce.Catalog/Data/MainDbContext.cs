@@ -9,6 +9,7 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
     public DbSet<ProductMedia> ProductMedia { get; set; }
     public DbSet<EventMessage> EventMessages { get; set; }
     public DbSet<ProcessedEvent> ProcessedEvents { get; set; }
+    public DbSet<DeadLetterMessage> DeadLetterMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,5 +25,6 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         modelBuilder.ApplyConfiguration(new VariantAttributeConfiguration());
         modelBuilder.ApplyConfiguration(new EventMessageConfiguration());
         modelBuilder.ApplyConfiguration(new ProcessedEventConfiguration());
+        modelBuilder.ApplyConfiguration(new DeadLetterMessageConfiguration());
     }
 }

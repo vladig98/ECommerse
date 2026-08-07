@@ -6,6 +6,7 @@ public class InventoryConsumerService(
     ILogger logger) : BackgroundService
 {
     private const string topic = "inventory";
+    private const int MaxRetries = 5;
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -21,17 +22,27 @@ public class InventoryConsumerService(
         logger.Information("Starting Inventory Consumer...");
         messageConsumer.Subscribe(topic);
 
+        int retryCount = 0;
+        IntegrationEvent? pendingEvent = null;
+
         try
         {
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    IntegrationEvent? integrationEvent = messageConsumer.Consume(stoppingToken);
-
-                    if (integrationEvent is not { EventType: nameof(InventoryLevelChanged) })
+                    if (pendingEvent is null)
                     {
-                        messageConsumer.Commit();
+                        pendingEvent = messageConsumer.Consume(stoppingToken);
+                        if (pendingEvent is null)
+                        {
+                            continue;
+                        }
+                    }
+
+                    if (pendingEvent is not { EventType: nameof(InventoryLevelChangedAvro) })
+                    {
+                        CommitAndReset(ref pendingEvent, ref retryCount);
                         continue;
                     }
 
@@ -39,47 +50,70 @@ public class InventoryConsumerService(
                     MainDbContext dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
 
                     bool alreadyProcessed = await dbContext.ProcessedEvents
-                        .AnyAsync(x => x.Id == integrationEvent.EventId, stoppingToken);
+                        .AnyAsync(x => x.Id == pendingEvent.EventId, stoppingToken);
 
                     if (alreadyProcessed)
                     {
-                        logger.Debug("Skipping duplicate event {EventId}", integrationEvent.EventId);
-                        messageConsumer.Commit();
+                        logger.Debug("Skipping duplicate event {EventId}", pendingEvent.EventId);
+                        CommitAndReset(ref pendingEvent, ref retryCount);
                         continue;
                     }
 
-                    InventoryLevelChanged? levelChanged = JsonSerializer.Deserialize<InventoryLevelChanged>(integrationEvent.Payload);
-                    if (levelChanged is null)
+                    if (pendingEvent.Payload is not InventoryLevelChangedAvro levelChanged)
                     {
-                        logger.Warning("Failed to deserialize inventory event.");
-                        messageConsumer.Commit();
-                        continue;
+                        throw new InvalidOperationException("Payload was not of type InventoryLevelChangedAvro.");
                     }
 
                     ProductVariant? variant = await dbContext.ProductVariants
                         .FirstOrDefaultAsync(x => x.Id == levelChanged.VariantId, stoppingToken);
 
-                    if (variant is not null && variant.StockStatus != levelChanged.Status)
+                    if (variant is not null && variant.StockStatus != (StockStatus)levelChanged.Status)
                     {
-                        variant.StockStatus = levelChanged.Status;
+                        variant.StockStatus = (StockStatus)levelChanged.Status;
                     }
 
-                    ProcessedEvent @event = new() 
-                    { 
-                        Id = integrationEvent.EventId 
-                    };
-
-                    dbContext.ProcessedEvents.Add(@event);
+                    dbContext.ProcessedEvents.Add(new ProcessedEvent { Id = pendingEvent.EventId });
                     await dbContext.SaveChangesAsync(stoppingToken);
 
-                    messageConsumer.Commit();
-
-                    logger.Debug("Successfully processed and committed event {EventId}", integrationEvent.EventId);
+                    logger.Debug("Successfully processed and committed event {EventId}", pendingEvent.EventId);
+                    CommitAndReset(ref pendingEvent, ref retryCount);
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, "Error processing inventory message. Retrying in 5 seconds...");
-                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                    retryCount++;
+
+                    if (retryCount >= MaxRetries)
+                    {
+                        logger.Error(ex, "Poison message detected {EventId} after {Max} retries. Routing to DLQ.", pendingEvent?.EventId, MaxRetries);
+
+                        await using AsyncServiceScope dlqScope = serviceProvider.CreateAsyncScope();
+                        MainDbContext dlqContext = dlqScope.ServiceProvider.GetRequiredService<MainDbContext>();
+
+                        DeadLetterMessage dlqMessage = new()
+                        {
+                            Id = Guid.NewGuid(),
+                            OriginalMessageId = pendingEvent?.EventId,
+                            Source = "InventoryConsumer",
+                            EventType = pendingEvent?.EventType ?? "Unknown",
+                            Payload = pendingEvent?.Payload != null
+                                ? JsonSerializer.Serialize((object)pendingEvent.Payload)
+                                : "{}",
+                            ErrorReason = ex.Message,
+                            FailedAt = DateTime.UtcNow
+                        };
+
+                        dlqContext.DeadLetterMessages.Add(dlqMessage);
+                        await dlqContext.SaveChangesAsync(stoppingToken);
+
+                        CommitAndReset(ref pendingEvent, ref retryCount);
+                    }
+                    else
+                    {
+                        // Exponential backoff: 2, 4, 8, 16 seconds...
+                        int backoffSeconds = (int)Math.Pow(2, retryCount);
+                        logger.Warning(ex, "Error processing inventory message. Retrying in {Delay} seconds...", backoffSeconds);
+                        await Task.Delay(TimeSpan.FromSeconds(backoffSeconds), stoppingToken);
+                    }
                 }
             }
         }
@@ -87,5 +121,12 @@ public class InventoryConsumerService(
         {
             logger.Information("Inventory consumer cancellation requested.");
         }
+    }
+
+    private void CommitAndReset(ref IntegrationEvent? pendingEvent, ref int retryCount)
+    {
+        messageConsumer.Commit();
+        pendingEvent = null;
+        retryCount = 0;
     }
 }
