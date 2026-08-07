@@ -191,7 +191,8 @@ public class ProductDtoTests
             IsActive: true,
             Category: null,
             Media: [],
-            Variants: []
+            Variants: [],
+            LdSchema: null!
         );
 
         // Act

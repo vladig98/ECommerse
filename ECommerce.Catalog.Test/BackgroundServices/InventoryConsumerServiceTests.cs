@@ -34,7 +34,7 @@ public class InventoryConsumerServiceTests : IDisposable
 
         _service = new InventoryConsumerService(_serviceProviderMock.Object, _consumerMock.Object, _loggerMock.Object);
 
-        // FIX: Pre-warm EF Core to force model compilation immediately, eliminating cold-start timeouts
+        // Pre-warm EF Core to force model compilation immediately, eliminating cold-start timeouts
         _dbContext.Database.EnsureCreated();
         _dbContext.ProcessedEvents.AnyAsync(CancellationToken.None).Wait(CancellationToken.None);
     }
@@ -77,11 +77,16 @@ public class InventoryConsumerServiceTests : IDisposable
         _dbContext.ProductVariants.Add(new ProductVariant { Id = variantId, Sku = "SKU-1", StockStatus = StockStatus.InStock });
         await _dbContext.SaveChangesAsync(CancellationToken.None);
 
-        string payload = JsonSerializer.Serialize(new InventoryLevelChanged(variantId, "SKU-1", StockStatus.OutOfStock));
-        IntegrationEvent incomingEvent = new(eventId, "key", "InventoryLevelChanged", payload);
+        // Pass the actual Avro generated object
+        InventoryLevelChangedAvro payload = new()
+        {
+            VariantId = variantId,
+            Sku = "SKU-1",
+            Status = (int)StockStatus.OutOfStock
+        };
 
-        // Return event on the first loop, then throw OperationCanceledException on the second loop
-        // to force the background thread into its Task.Delay which cleanly responds to cts.Cancel()
+        IntegrationEvent incomingEvent = new(eventId, "key", nameof(InventoryLevelChangedAvro), payload);
+
         _consumerMock.SetupSequence(x => x.Consume(It.IsAny<CancellationToken>()))
             .Returns(incomingEvent)
             .Throws(new OperationCanceledException(CancellationToken.None));
@@ -114,7 +119,8 @@ public class InventoryConsumerServiceTests : IDisposable
         _dbContext.ProcessedEvents.Add(new ProcessedEvent { Id = eventId });
         await _dbContext.SaveChangesAsync(CancellationToken.None);
 
-        IntegrationEvent incomingEvent = new(eventId, "key", "InventoryLevelChanged", "{}");
+        InventoryLevelChangedAvro payload = new() { VariantId = Guid.NewGuid(), Sku = "SKU-1", Status = 1 };
+        IntegrationEvent incomingEvent = new(eventId, "key", nameof(InventoryLevelChangedAvro), payload);
 
         _consumerMock.SetupSequence(x => x.Consume(It.IsAny<CancellationToken>()))
             .Returns(incomingEvent)
@@ -137,7 +143,8 @@ public class InventoryConsumerServiceTests : IDisposable
     public async Task ExecuteAsyncIgnoresIrrelevantEventTypes()
     {
         // Arrange
-        IntegrationEvent incomingEvent = new(Guid.NewGuid(), "key", "SomeOtherEvent", "{}");
+        Mock<ISpecificRecord> dummyPayload = new();
+        IntegrationEvent incomingEvent = new(Guid.NewGuid(), "key", "SomeOtherEventAvro", dummyPayload.Object);
 
         _consumerMock.SetupSequence(x => x.Consume(It.IsAny<CancellationToken>()))
             .Returns(incomingEvent)
@@ -157,10 +164,11 @@ public class InventoryConsumerServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ExecuteAsyncHandlesDeserializationFailures()
+    public async Task ExecuteAsyncThrowsAndRetriesOnBadPayloadType()
     {
         // Arrange
-        IntegrationEvent incomingEvent = new(Guid.NewGuid(), "key", "InventoryLevelChanged", "null");
+        Mock<ISpecificRecord> wrongPayloadType = new(); // Not InventoryLevelChangedAvro
+        IntegrationEvent incomingEvent = new(Guid.NewGuid(), "key", nameof(InventoryLevelChangedAvro), wrongPayloadType.Object);
 
         _consumerMock.SetupSequence(x => x.Consume(It.IsAny<CancellationToken>()))
             .Returns(incomingEvent)
@@ -170,21 +178,23 @@ public class InventoryConsumerServiceTests : IDisposable
 
         // Act
         await _service.StartAsync(cts.Token);
-        await Task.Delay(500, CancellationToken.None);
+        await Task.Delay(200, CancellationToken.None);
         await cts.CancelAsync();
         await _service.StopAsync(CancellationToken.None);
 
-        // Assert
-        _loggerMock.Verify(x => x.Warning("Failed to deserialize inventory event."), Times.Once);
-        _consumerMock.Verify(x => x.Commit(), Times.Once);
+        // Assert: Casting failure should be caught by the general exception handler and trigger exponential backoff
+        _loggerMock.Verify(x => x.Warning(It.IsAny<Exception>(), "Error processing inventory message. Retrying in {Delay} seconds...", It.IsAny<int>()), Times.AtLeastOnce);
+        _consumerMock.Verify(x => x.Commit(), Times.Never);
     }
 
     [Fact]
-    public async Task ExecuteAsyncCatchesExceptionsAndRetries()
+    public async Task ExecuteAsyncCatchesExceptionsAndRetriesWithExponentialBackoff()
     {
         // Arrange
-        IntegrationEvent incomingEvent = new(Guid.NewGuid(), "key", "InventoryLevelChanged", "{}");
+        InventoryLevelChangedAvro payload = new() { VariantId = Guid.NewGuid(), Sku = "SKU-1", Status = 1 };
+        IntegrationEvent incomingEvent = new(Guid.NewGuid(), "key", nameof(InventoryLevelChangedAvro), payload);
 
+        // Simulate database outage
         _serviceProviderMock.Setup(x => x.GetService(typeof(MainDbContext))).Throws(new TimeoutException("Database down"));
 
         _consumerMock.SetupSequence(x => x.Consume(It.IsAny<CancellationToken>()))
@@ -195,12 +205,12 @@ public class InventoryConsumerServiceTests : IDisposable
 
         // Act
         await _service.StartAsync(cts.Token);
-        await Task.Delay(500, CancellationToken.None);
+        await Task.Delay(200, CancellationToken.None);
         await cts.CancelAsync();
         await _service.StopAsync(CancellationToken.None);
 
-        // Assert
-        _loggerMock.Verify(x => x.Error(It.IsAny<Exception>(), "Error processing inventory message. Retrying in 5 seconds..."), Times.Once);
+        // Assert: We now verify the new Serilog Warning for exponential backoff instead of the old hardcoded Error
+        _loggerMock.Verify(x => x.Warning(It.IsAny<Exception>(), "Error processing inventory message. Retrying in {Delay} seconds...", It.IsAny<int>()), Times.AtLeastOnce);
         _consumerMock.Verify(x => x.Commit(), Times.Never);
     }
 }

@@ -1,4 +1,5 @@
-﻿global using Confluent.Kafka;
+﻿global using Avro.Specific;
+global using Confluent.Kafka;
 global using ECommerce.Catalog.BackgroundServices;
 global using ECommerce.Catalog.Data;
 global using ECommerce.Catalog.Data.Interceptors;
@@ -10,6 +11,7 @@ global using ECommerce.Catalog.Dtos.ProductVariants;
 global using ECommerce.Catalog.Dtos.VariantAttributes;
 global using ECommerce.Catalog.Enums;
 global using ECommerce.Catalog.Events;
+global using ECommerce.Catalog.Events.Generated;
 global using ECommerce.Catalog.Extensions;
 global using ECommerce.Catalog.Helpers;
 global using ECommerce.Catalog.Models;

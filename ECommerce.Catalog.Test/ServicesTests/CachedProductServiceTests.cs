@@ -25,7 +25,7 @@ public class CachedProductServiceTests
     {
         // Arrange
         CreateProductDto dto = new("Laptop", "laptop", "Fast", "Brand", true, Guid.NewGuid(), [], []);
-        ProductDto createdDto = new(Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", "Fast", "Brand", true, null, [], []);
+        ProductDto createdDto = new(Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", "Fast", "Brand", true, null, [], [], null!);
         ApiResponse<ProductDto> innerResponse = ApiResponse<ProductDto>.Success(createdDto);
 
         _innerServiceMock.Setup(x => x.CreateAsync("testuser", dto, It.IsAny<CancellationToken>()))
@@ -64,7 +64,7 @@ public class CachedProductServiceTests
     {
         // Arrange
         CreateProductDto dto = new("Laptop", "laptop", null, null, true, Guid.NewGuid(), [], []);
-        ProductDto createdDto = new(Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], []);
+        ProductDto createdDto = new(Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], [], null!);
 
         _innerServiceMock.Setup(x => x.CreateAsync("testuser", dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<ProductDto>.Success(createdDto));
@@ -87,7 +87,7 @@ public class CachedProductServiceTests
         // Arrange
         Guid id = Guid.NewGuid();
         Guid version = Guid.NewGuid();
-        ProductDto deletedDto = new(id, DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], []);
+        ProductDto deletedDto = new(id, DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], [], null!);
 
         _innerServiceMock.Setup(x => x.DeleteAsync("testuser", id, version, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<ProductDto>.Success(deletedDto));
@@ -121,7 +121,7 @@ public class CachedProductServiceTests
     {
         // Arrange
         Guid id = Guid.NewGuid();
-        ProductDto deletedDto = new(id, DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], []);
+        ProductDto deletedDto = new(id, DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], [], null!);
 
         _innerServiceMock.Setup(x => x.DeleteAsync("testuser", id, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<ProductDto>.Success(deletedDto));
@@ -200,7 +200,7 @@ public class CachedProductServiceTests
     {
         // Arrange
         Guid id = Guid.NewGuid();
-        ProductDto dto = new(id, DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], []);
+        ProductDto dto = new(id, DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], [], null!);
 
         _innerServiceMock.Setup(x => x.GetAsync("testuser", id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<ProductDto>.Success(dto));
@@ -240,7 +240,7 @@ public class CachedProductServiceTests
         Guid id = Guid.NewGuid();
         Guid version = Guid.NewGuid();
         UpdateProductDto dto = new("Laptop", "laptop", null, null, true, Guid.NewGuid(), [], []);
-        ProductDto updatedDto = new(id, DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], []);
+        ProductDto updatedDto = new(id, DateTime.UtcNow, DateTime.UtcNow, Guid.NewGuid(), "Laptop", "laptop", null, null, true, null, [], [], null!);
 
         _innerServiceMock.Setup(x => x.UpdateAsync("testuser", id, version, dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<ProductDto>.Success(updatedDto));

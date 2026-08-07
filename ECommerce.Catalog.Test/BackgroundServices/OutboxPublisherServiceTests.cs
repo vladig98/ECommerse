@@ -9,6 +9,7 @@ public class OutboxPublisherServiceTests : IDisposable
     private readonly OutboxPublisherService _service;
     private bool isDisposed;
     private IntPtr nativeResource = Marshal.AllocHGlobal(100);
+
     public OutboxPublisherServiceTests()
     {
         DbContextOptions<MainDbContext> options = new DbContextOptionsBuilder<MainDbContext>()
@@ -66,17 +67,20 @@ public class OutboxPublisherServiceTests : IDisposable
     public async Task ExecuteAsyncSuccessfullyPublishesAndRemovesMessages()
     {
         // Arrange
-        Guid eventId = Guid.NewGuid();
+        Guid productId = Guid.NewGuid();
+        var dummyEvent = new ProductCreated(productId, "Test Product", "test-product", null, null, true, null, [], []);
+        string validJson = JsonSerializer.Serialize(dummyEvent);
+
         _dbContext.EventMessages.Add(new EventMessage
         {
-            Id = eventId,
+            Id = Guid.NewGuid(),
             Key = "key1",
-            EventType = "ProductCreated",
-            Value = "{}"
+            EventType = nameof(ProductCreated),
+            Value = validJson
         });
         await _dbContext.SaveChangesAsync(CancellationToken.None);
 
-        _producerMock.Setup(x => x.PublishAsync(It.IsAny<string>(), It.IsAny<IntegrationEvent>(), It.IsAny<CancellationToken>()))
+        _producerMock.Setup(x => x.PublishAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISpecificRecord>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         using CancellationTokenSource cts = new();
@@ -90,11 +94,11 @@ public class OutboxPublisherServiceTests : IDisposable
         await _service.StopAsync(CancellationToken.None);
 
         // Assert
-        // 1. Verify MessageProducer was invoked with correct data
-        _producerMock.Verify(x => x.PublishAsync("products", It.Is<IntegrationEvent>(e =>
-            e.EventId == eventId &&
-            e.EventType == "ProductCreated" &&
-            e.Payload == "{}"), It.IsAny<CancellationToken>()), Times.Once);
+        // 1. Verify MessageProducer was invoked with the correct generic parameters and Avro mapping
+        _producerMock.Verify(x => x.PublishAsync("products", "key1", It.Is<ISpecificRecord>(e =>
+            e is ProductCreatedAvro &&
+            ((ProductCreatedAvro)e).Title == "Test Product" &&
+            ((ProductCreatedAvro)e).Id == productId), It.IsAny<CancellationToken>()), Times.Once);
 
         // 2. Verify the database was cleaned up
         int remainingMessages = await _dbContext.EventMessages.CountAsync(CancellationToken.None);
@@ -114,18 +118,27 @@ public class OutboxPublisherServiceTests : IDisposable
         await _service.StopAsync(CancellationToken.None);
 
         // Assert
-        _producerMock.Verify(x => x.PublishAsync(It.IsAny<string>(), It.IsAny<IntegrationEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+        _producerMock.Verify(x => x.PublishAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISpecificRecord>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task ExecuteAsyncCatchesExceptionsAndLogsError()
     {
         // Arrange
-        _dbContext.EventMessages.Add(new EventMessage { Id = Guid.NewGuid(), Key = "key1", EventType = "ProductCreated", Value = "{}" });
+        var dummyEvent = new ProductCreated(Guid.NewGuid(), "Test Product", "test-product", null, null, true, null, [], []);
+        string validJson = JsonSerializer.Serialize(dummyEvent);
+
+        _dbContext.EventMessages.Add(new EventMessage
+        {
+            Id = Guid.NewGuid(),
+            Key = "key1",
+            EventType = nameof(ProductCreated),
+            Value = validJson
+        });
         await _dbContext.SaveChangesAsync(CancellationToken.None);
 
         // Simulate a Kafka outage
-        _producerMock.Setup(x => x.PublishAsync(It.IsAny<string>(), It.IsAny<IntegrationEvent>(), It.IsAny<CancellationToken>()))
+        _producerMock.Setup(x => x.PublishAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISpecificRecord>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TimeoutException("Kafka Broker Down"));
 
         using CancellationTokenSource cts = new();
@@ -138,7 +151,13 @@ public class OutboxPublisherServiceTests : IDisposable
 
         // Assert
         // Verify the error was caught and logged (meaning the service didn't crash)
-        _loggerMock.Verify(x => x.Error(It.IsAny<Exception>(), "Failed to process outbox messages. Retrying in 10 seconds..."), Times.AtLeastOnce);
+        _loggerMock.Verify(x => x.Warning(
+            It.IsAny<Exception>(),
+            "Failed to process message {MessageId}. Retry {Count}/{Max}",
+            It.IsAny<Guid>(),
+            It.IsAny<int>(),
+            It.IsAny<int>()),
+            Times.AtLeastOnce);
 
         // Verify the message was NOT deleted from the database
         int remainingMessages = await _dbContext.EventMessages.CountAsync(CancellationToken.None);

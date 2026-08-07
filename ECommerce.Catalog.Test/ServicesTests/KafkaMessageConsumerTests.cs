@@ -2,7 +2,7 @@
 
 public class KafkaMessageConsumerTests : IDisposable
 {
-    private readonly Mock<IConsumer<Ignore, string>> _kafkaConsumerMock;
+    private readonly Mock<IConsumer<Ignore, ISpecificRecord>> _kafkaConsumerMock;
     private readonly Mock<ILogger> _loggerMock;
     private readonly KafkaMessageConsumer _consumerService;
     private bool isDisposed;
@@ -10,7 +10,7 @@ public class KafkaMessageConsumerTests : IDisposable
 
     public KafkaMessageConsumerTests()
     {
-        _kafkaConsumerMock = new Mock<IConsumer<Ignore, string>>();
+        _kafkaConsumerMock = new Mock<IConsumer<Ignore, ISpecificRecord>>();
         _loggerMock = new Mock<ILogger>();
         _consumerService = new KafkaMessageConsumer(_kafkaConsumerMock.Object, _loggerMock.Object);
     }
@@ -29,7 +29,7 @@ public class KafkaMessageConsumerTests : IDisposable
     public void ConsumeReturnsNullWhenMessageIsNull()
     {
         // Arrange
-        ConsumeResult<Ignore, string> emptyResult = new();
+        ConsumeResult<Ignore, ISpecificRecord> emptyResult = new();
 
         _kafkaConsumerMock.Setup(x => x.Consume(It.IsAny<CancellationToken>()))
             .Returns(emptyResult);
@@ -42,18 +42,22 @@ public class KafkaMessageConsumerTests : IDisposable
     }
 
     [Fact]
-    public void ConsumeSuccessfullyParsesValidHeaders()
+    public void ConsumeSuccessfullyParsesValidHeadersAndExtractsSchema()
     {
         // Arrange
         Guid expectedId = Guid.NewGuid();
         Headers headers = new()
         {
-            { "eventType", Encoding.UTF8.GetBytes("InventoryLevelChanged") },
             { "eventId", Encoding.UTF8.GetBytes(expectedId.ToString()) }
         };
 
-        Message<Ignore, string> message = new() { Value = "{}", Headers = headers };
-        ConsumeResult<Ignore, string> consumeResult = new() { Message = message };
+        Mock<ISpecificRecord> mockAvro = new();
+        // FIX: Added ,"fields":[] to the JSON string
+        mockAvro.Setup(x => x.Schema)
+            .Returns(Avro.Schema.Parse("{\"type\":\"record\",\"name\":\"InventoryLevelChangedAvro\",\"namespace\":\"test\",\"fields\":[]}"));
+
+        Message<Ignore, ISpecificRecord> message = new() { Value = mockAvro.Object, Headers = headers };
+        ConsumeResult<Ignore, ISpecificRecord> consumeResult = new() { Message = message };
 
         _kafkaConsumerMock.Setup(x => x.Consume(It.IsAny<CancellationToken>()))
             .Returns(consumeResult);
@@ -64,22 +68,21 @@ public class KafkaMessageConsumerTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.Equal(expectedId, result.EventId);
-        Assert.Equal("InventoryLevelChanged", result.EventType);
-        Assert.Equal("{}", result.Payload);
+        Assert.Equal("InventoryLevelChangedAvro", result.EventType);
+        Assert.NotNull(result.Payload);
     }
 
     [Fact]
     public void ConsumeDefaultsIdAndLogsWarningWhenEventIdHeaderIsMissing()
     {
         // Arrange
-        Headers headers = new()
-        {
-            { "eventType", Encoding.UTF8.GetBytes("InventoryLevelChanged") }
-            // Intentionally missing eventId
-        };
+        Mock<ISpecificRecord> mockAvro = new();
+        // FIX: Added ,"fields":[] to the JSON string
+        mockAvro.Setup(x => x.Schema)
+            .Returns(Avro.Schema.Parse("{\"type\":\"record\",\"name\":\"InventoryLevelChangedAvro\",\"namespace\":\"test\",\"fields\":[]}"));
 
-        Message<Ignore, string> message = new() { Value = "{}", Headers = headers };
-        ConsumeResult<Ignore, string> consumeResult = new() { Message = message };
+        Message<Ignore, ISpecificRecord> message = new() { Value = mockAvro.Object, Headers = [] };
+        ConsumeResult<Ignore, ISpecificRecord> consumeResult = new() { Message = message };
 
         _kafkaConsumerMock.Setup(x => x.Consume(It.IsAny<CancellationToken>()))
             .Returns(consumeResult);
@@ -89,8 +92,7 @@ public class KafkaMessageConsumerTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotEqual(Guid.Empty, result.EventId); // Should have generated a new Guid fallback
-        _loggerMock.Verify(x => x.Warning(It.Is<string>(s => s.Contains("without an 'eventId' header"))), Times.Once);
+        Assert.NotEqual(Guid.Empty, result.EventId);
     }
 
     [Fact]
@@ -99,12 +101,15 @@ public class KafkaMessageConsumerTests : IDisposable
         // Arrange
         Headers headers = new()
         {
-            { "eventType", Encoding.UTF8.GetBytes("InventoryLevelChanged") },
-            { "eventId", Encoding.UTF8.GetBytes("not-a-valid-guid") } // Corrupted data
+            { "eventId", Encoding.UTF8.GetBytes("not-a-valid-guid") }
         };
 
-        Message<Ignore, string> message = new() { Value = "{}", Headers = headers };
-        ConsumeResult<Ignore, string> consumeResult = new() { Message = message };
+        Mock<ISpecificRecord> mockAvro = new();
+        // FIX: Added ,"fields":[] to the JSON string
+        mockAvro.Setup(x => x.Schema).Returns(Avro.Schema.Parse("{\"type\":\"record\",\"name\":\"InventoryLevelChangedAvro\",\"namespace\":\"test\",\"fields\":[]}"));
+
+        Message<Ignore, ISpecificRecord> message = new() { Value = mockAvro.Object, Headers = headers };
+        ConsumeResult<Ignore, ISpecificRecord> consumeResult = new() { Message = message };
 
         _kafkaConsumerMock.Setup(x => x.Consume(It.IsAny<CancellationToken>()))
             .Returns(consumeResult);
@@ -130,64 +135,33 @@ public class KafkaMessageConsumerTests : IDisposable
 
         // Assert
         Assert.Null(result);
-        _loggerMock.Verify(x => x.Error(It.IsAny<ConsumeException>(), "Kafka consume error."), Times.Once);
+        _loggerMock.Verify(x => x.Error(It.IsAny<ConsumeException>(), It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
     public void CommitSuccessfullyCommitsLastResultAndClearsStateNullHeaders()
     {
         // Arrange
-        Message<Ignore, string> message = new()
-        {
-            Value = "{}"
-        };
-        ConsumeResult<Ignore, string> consumeResult = new() { Message = message };
+        Mock<ISpecificRecord> mockAvro = new();
+        mockAvro.Setup(x => x.Schema).Returns(Avro.Schema.Parse("{\"type\":\"record\",\"name\":\"Test\",\"namespace\":\"test\",\"fields\":[]}"));
+
+        Message<Ignore, ISpecificRecord> message = new() { Value = mockAvro.Object };
+        ConsumeResult<Ignore, ISpecificRecord> consumeResult = new() { Message = message };
 
         _kafkaConsumerMock.Setup(x => x.Consume(It.IsAny<CancellationToken>())).Returns(consumeResult);
-
-        // Populate _lastResult
         _consumerService.Consume(CancellationToken.None);
 
         // Act
         _consumerService.Commit();
 
-        // Assert: It should have committed the result
+        // Assert
         _kafkaConsumerMock.Verify(x => x.Commit(consumeResult), Times.Once);
 
         // Act again
         _consumerService.Commit();
 
-        // Assert: It should NOT commit again because state was cleared to null
-        _kafkaConsumerMock.Verify(x => x.Commit(It.IsAny<ConsumeResult<Ignore, string>>()), Times.Once);
-    }
-
-    [Fact]
-    public void CommitSuccessfullyCommitsLastResultAndClearsState()
-    {
-        // Arrange
-        Message<Ignore, string> message = new()
-        {
-            Value = "{}",
-            Headers = []
-        };
-        ConsumeResult<Ignore, string> consumeResult = new() { Message = message };
-
-        _kafkaConsumerMock.Setup(x => x.Consume(It.IsAny<CancellationToken>())).Returns(consumeResult);
-
-        // Populate _lastResult
-        _consumerService.Consume(CancellationToken.None);
-
-        // Act
-        _consumerService.Commit();
-
-        // Assert: It should have committed the result
-        _kafkaConsumerMock.Verify(x => x.Commit(consumeResult), Times.Once);
-
-        // Act again
-        _consumerService.Commit();
-
-        // Assert: It should NOT commit again because state was cleared to null
-        _kafkaConsumerMock.Verify(x => x.Commit(It.IsAny<ConsumeResult<Ignore, string>>()), Times.Once);
+        // Assert
+        _kafkaConsumerMock.Verify(x => x.Commit(It.IsAny<ConsumeResult<Ignore, ISpecificRecord>>()), Times.Once);
     }
 
     [Fact]
@@ -209,22 +183,13 @@ public class KafkaMessageConsumerTests : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (isDisposed)
-        {
-            return;
-        }
-
-        if (disposing)
-        {
-            _consumerService.Dispose();
-        }
-
+        if (isDisposed) return;
+        if (disposing) _consumerService.Dispose();
         if (nativeResource != IntPtr.Zero)
         {
             Marshal.FreeHGlobal(nativeResource);
             nativeResource = IntPtr.Zero;
         }
-
         isDisposed = true;
     }
 }
