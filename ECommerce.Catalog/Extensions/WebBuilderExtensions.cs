@@ -24,6 +24,94 @@ public static class WebBuilderExtensions
             return builder;
         }
 
+        public WebApplicationBuilder AddOpenTelemetry()
+        {
+            builder.Services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService("CatalogService"))
+            .WithTracing(tracing => tracing
+                .AddAspNetCoreInstrumentation()
+                .AddNpgsql()
+                .AddSource("ECommerce.Catalog.Kafka")
+                .AddConsoleExporter()
+                .AddOtlpExporter())
+            .WithMetrics(metrics => metrics
+                .AddAspNetCoreInstrumentation()
+                .AddConsoleExporter()
+                .AddOtlpExporter());
+
+            return builder;
+        }
+
+        public WebApplicationBuilder AddKafkaAvroSchema()
+        {
+            KafkaSettings kafkaSettings = new();
+            builder.Configuration.GetSection("KafkaSettings").Bind(kafkaSettings);
+
+            string bootstrapServers = string.IsNullOrWhiteSpace(kafkaSettings.Server) ? "localhost:9092" : kafkaSettings.Server;
+            string schemaRegistryUrl = string.IsNullOrWhiteSpace(kafkaSettings.SchemaRegistryUrl) ? "http://localhost:8081" : kafkaSettings.SchemaRegistryUrl;
+
+            builder.Services.AddSingleton(sp =>
+            {
+                ISchemaRegistryClient schemaRegistry = sp.GetRequiredService<ISchemaRegistryClient>();
+                ProducerConfig config = new() { BootstrapServers = bootstrapServers };
+
+                if (!string.IsNullOrWhiteSpace(kafkaSettings.Username))
+                {
+                    config.SecurityProtocol = SecurityProtocol.SaslSsl;
+                    config.SaslMechanism = SaslMechanism.Plain;
+                    config.SaslUsername = kafkaSettings.Username;
+                    config.SaslPassword = kafkaSettings.Password;
+                }
+
+                AvroSerializerConfig avroSerializerConfig = new()
+                {
+                    SubjectNameStrategy = SubjectNameStrategy.Record
+                };
+
+                return new ProducerBuilder<string, ISpecificRecord>(config)
+                    .SetValueSerializer(new AvroSerializer<ISpecificRecord>(schemaRegistry, avroSerializerConfig))
+                    .Build();
+            });
+
+            builder.Services.AddSingleton(sp =>
+            {
+                ISchemaRegistryClient schemaRegistry = sp.GetRequiredService<ISchemaRegistryClient>();
+                ConsumerConfig config = new()
+                {
+                    BootstrapServers = bootstrapServers,
+                    GroupId = "catalog-service-group",
+                    AutoOffsetReset = AutoOffsetReset.Earliest,
+                    EnableAutoCommit = false
+                };
+
+                if (!string.IsNullOrWhiteSpace(kafkaSettings.Username))
+                {
+                    config.SecurityProtocol = SecurityProtocol.SaslSsl;
+                    config.SaslMechanism = SaslMechanism.Plain;
+                    config.SaslUsername = kafkaSettings.Username;
+                    config.SaslPassword = kafkaSettings.Password;
+                }
+
+                return new ConsumerBuilder<Ignore, ISpecificRecord>(config)
+                    .SetValueDeserializer(new AvroDeserializer<ISpecificRecord>(schemaRegistry).AsSyncOverAsync())
+                    .Build();
+            });
+
+            builder.Services.AddSingleton<ISchemaRegistryClient>(sp =>
+            {
+                SchemaRegistryConfig config = new() { Url = schemaRegistryUrl };
+
+                if (!string.IsNullOrWhiteSpace(kafkaSettings.Username))
+                {
+                    config.BasicAuthUserInfo = $"{kafkaSettings.Username}:{kafkaSettings.Password}";
+                }
+
+                return new CachedSchemaRegistryClient(config);
+            });
+
+            return builder;
+        }
+
         public WebApplicationBuilder AddCache()
         {
             builder.Services.AddStackExchangeRedisCache(options =>

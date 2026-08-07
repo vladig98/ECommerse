@@ -5,5 +5,5 @@ public record class IntegrationEvent
     Guid EventId,
     string Key,
     string EventType,
-    string Payload
+    ISpecificRecord Payload
 );

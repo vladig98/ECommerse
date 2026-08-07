@@ -29,6 +29,16 @@ public static class ProductVariantExtensions
             );
         }
 
+        public OfferJsonLdDto ToSchemaDto()
+        {
+            return new OfferJsonLdDto
+            (
+                Sku: productVariant.Sku,
+                Price: productVariant.BasePrice,
+                Availability: GetAvailability(productVariant.StockStatus)
+            );
+        }
+
         public ProductPriceChanged ToPriceChangeEventData()
         {
             return new ProductPriceChanged
@@ -52,6 +62,17 @@ public static class ProductVariantExtensions
                 Attributes: productVariant.VariantAttributes?.Select(x => x.Attribute?.ToEventData()).Where(x => x is not null).OfType<VariantAttributeEventDto>().ToList() ?? []
             );
         }
+    }
+
+    private static string GetAvailability(StockStatus stockStatus)
+    {
+        return stockStatus switch
+        {
+            StockStatus.InStock => "https://schema.org/InStock",
+            StockStatus.OutOfStock => "https://schema.org/OutOfStock",
+            StockStatus.LowStock => "https://schema.org/LimitedAvailability",
+            _ => "https://schema.org/OutOfStock"
+        };
     }
 
     private static void UpdateProductVariantMedia(ProductVariant productVariant, UpdateProductVariantDto updateProductVariantDto)

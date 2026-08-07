@@ -1,0 +1,34 @@
+{
+  "namespace": "ECommerce.Catalog.Events.Generated",
+  "type": "record",
+  "name": "ProductPriceChangedAvro",
+  "fields": [
+    {
+      "name": "ProductId",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "VariantId",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "Sku",
+      "type": "string"
+    },
+    {
+      "name": "NewPrice",
+      "type": {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 18,
+        "scale": 2
+      }
+    }
+  ]
+}

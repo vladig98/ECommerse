@@ -1,10 +1,10 @@
 ﻿namespace ECommerce.Catalog.Services;
 
-public class KafkaMessageConsumer(IConsumer<Ignore, string> consumer, ILogger logger) : IMessageConsumer
+public class KafkaMessageConsumer(IConsumer<Ignore, ISpecificRecord> consumer, ILogger logger) : IMessageConsumer
 {
-    private readonly IConsumer<Ignore, string> _consumer = consumer;
+    private readonly IConsumer<Ignore, ISpecificRecord> _consumer = consumer;
     private readonly ILogger _logger = logger;
-    private ConsumeResult<Ignore, string>? _lastResult;
+    private ConsumeResult<Ignore, ISpecificRecord>? _lastResult;
 
     public void Subscribe(string topic)
     {
@@ -16,40 +16,33 @@ public class KafkaMessageConsumer(IConsumer<Ignore, string> consumer, ILogger lo
         try
         {
             _lastResult = _consumer.Consume(token);
-            if (_lastResult is not { Message: not null })
+            if (_lastResult is not { Message.Value: not null })
             {
                 return null;
             }
 
-            string eventType = string.Empty;
+            ISpecificRecord avroMessage = _lastResult.Message.Value;
             Guid eventId = Guid.NewGuid();
-
-            if (_lastResult.Message.Headers?.TryGetLastBytes("eventType", out byte[]? typeBytes) == true)
-            {
-                eventType = Encoding.UTF8.GetString(typeBytes);
-            }
 
             if (_lastResult.Message.Headers?.TryGetLastBytes("eventId", out byte[]? idBytes) == true)
             {
                 if (!Guid.TryParse(Encoding.UTF8.GetString(idBytes), out Guid parsedId))
                 {
-                    _logger.Warning("Message received with an invalid 'eventId' format. Idempotency cannot be guaranteed.");
+                    _logger.Warning("Message received with an invalid 'eventId' format.");
                 }
                 else
                 {
                     eventId = parsedId;
                 }
             }
-            else
-            {
-                _logger.Warning("Message received without an 'eventId' header. Idempotency cannot be guaranteed.");
-            }
 
-            return new IntegrationEvent(eventId, string.Empty, eventType, _lastResult.Message.Value);
+            string eventType = avroMessage.Schema.Name;
+
+            return new IntegrationEvent(eventId, string.Empty, eventType, avroMessage);
         }
         catch (ConsumeException ex)
         {
-            _logger.Error(ex, "Kafka consume error.");
+            _logger.Error(ex, "Kafka consume error or Schema Registry deserialization failure.");
             return null;
         }
     }

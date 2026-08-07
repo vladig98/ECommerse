@@ -59,14 +59,5 @@ public static class WebApplicationExtensions
 
             return app;
         }
-
-        public async Task<WebApplication> InitializeDatabase()
-        {
-            await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
-            MainDbContext dbContext = scope.ServiceProvider.GetRequiredService<MainDbContext>();
-            await dbContext.Database.MigrateAsync();
-
-            return app;
-        }
     }
 }

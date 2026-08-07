@@ -1,0 +1,176 @@
+{
+  "namespace": "ECommerce.Catalog.Events.Generated",
+  "type": "record",
+  "name": "ProductUpdatedAvro",
+  "fields": [
+    {
+      "name": "Id",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "Title",
+      "type": "string"
+    },
+    {
+      "name": "Slug",
+      "type": "string"
+    },
+    {
+      "name": "Description",
+      "type": [ "null", "string" ],
+      "default": null
+    },
+    {
+      "name": "Brand",
+      "type": [ "null", "string" ],
+      "default": null
+    },
+    {
+      "name": "IsActive",
+      "type": "boolean"
+    },
+    {
+      "name": "Category",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "CategoryEventDtoAvro",
+          "fields": [
+            {
+              "name": "Id",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "Name",
+              "type": "string"
+            },
+            {
+              "name": "Slug",
+              "type": "string"
+            }
+          ]
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "Media",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "ProductMediaEventDtoAvro",
+          "fields": [
+            {
+              "name": "Id",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "Url",
+              "type": "string"
+            },
+            {
+              "name": "AltText",
+              "type": [ "null", "string" ],
+              "default": null
+            },
+            {
+              "name": "Type",
+              "type": "int",
+              "doc": "Mapped to MediaType enum"
+            },
+            {
+              "name": "DisplayOrder",
+              "type": "int"
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Variants",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "ProductVariantEventDtoAvro",
+          "fields": [
+            {
+              "name": "Id",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "Sku",
+              "type": "string"
+            },
+            {
+              "name": "BasePrice",
+              "type": {
+                "type": "bytes",
+                "logicalType": "decimal",
+                "precision": 18,
+                "scale": 2
+              }
+            },
+            {
+              "name": "Gtin",
+              "type": [ "null", "string" ],
+              "default": null
+            },
+            {
+              "name": "Media",
+              "type": {
+                "type": "array",
+                "items": "ProductMediaEventDtoAvro"
+              }
+            },
+            {
+              "name": "Attributes",
+              "type": {
+                "type": "array",
+                "items": {
+                  "type": "record",
+                  "name": "VariantAttributeEventDtoAvro",
+                  "fields": [
+                    {
+                      "name": "Id",
+                      "type": {
+                        "type": "string",
+                        "logicalType": "uuid"
+                      }
+                    },
+                    {
+                      "name": "Name",
+                      "type": "string"
+                    },
+                    {
+                      "name": "Value",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

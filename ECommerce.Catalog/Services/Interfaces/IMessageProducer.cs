@@ -2,5 +2,5 @@
 
 public interface IMessageProducer
 {
-    Task PublishAsync(string topic, IntegrationEvent message, CancellationToken token);
+    Task PublishAsync<T>(string topic, string key, T message, CancellationToken token) where T : ISpecificRecord;
 }

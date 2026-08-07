@@ -1,0 +1,23 @@
+{
+  "namespace": "ECommerce.Catalog.Events.Generated",
+  "type": "record",
+  "name": "InventoryLevelChangedAvro",
+  "fields": [
+    {
+      "name": "VariantId",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "Sku",
+      "type": "string"
+    },
+    {
+      "name": "Status",
+      "type": "int",
+      "doc": "Mapped to StockStatus enum"
+    }
+  ]
+}

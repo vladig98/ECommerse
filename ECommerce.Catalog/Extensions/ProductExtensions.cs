@@ -32,7 +32,19 @@ public static class ProductExtensions
                 IsActive: product.IsActive,
                 Category: product.Category?.ToDto(),
                 Media: product.Media?.Select(x => x.ToDto()).ToList() ?? [],
-                Variants: product.Variants?.Select(x => x.ToDto()).ToList() ?? []
+                Variants: product.Variants?.Select(x => x.ToDto()).ToList() ?? [],
+                LdSchema: product.ToSchemaDto()
+            );
+        }
+
+        public ProductJsonLdDto ToSchemaDto()
+        {
+            return new ProductJsonLdDto
+            (
+                Name: product.Title,
+                Description: product.Description,
+                Brand: GetBrandSchema(product),
+                Offers: product.Variants?.Select(x => x.ToSchemaDto()).ToList() ?? []
             );
         }
 
@@ -75,6 +87,19 @@ public static class ProductExtensions
                 Id: product.Id
             );
         }
+    }
+
+    private static BrandJsonLdDto? GetBrandSchema(Product product)
+    {
+        if (string.IsNullOrWhiteSpace(product.Brand))
+        {
+            return null;
+        }
+
+        return new BrandJsonLdDto
+        (
+            Name: product.Brand
+        );
     }
 
     private static void UpdateProductVariant(Product product, UpdateProductDto updateProductDto)

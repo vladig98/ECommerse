@@ -1,0 +1,14 @@
+{
+  "namespace": "ECommerce.Catalog.Events.Generated",
+  "type": "record",
+  "name": "ProductDeletedAvro",
+  "fields": [
+    {
+      "name": "Id",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    }
+  ]
+}
