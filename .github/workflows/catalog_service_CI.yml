@@ -26,7 +26,7 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore .NET CLI Tools
-      run: dotnet tool restore
+      run: dotnet tool restore --tool-manifest ECommerce.Catalog/dotnet-tools.json
 
     - name: Restore App NuGets
       run: dotnet restore ECommerce.Catalog/ECommerce.Catalog.csproj
