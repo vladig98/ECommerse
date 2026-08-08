@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path=".github/workflows/catalog_service_CI.yml" />
     <File Path="global.json" />
   </Folder>
   <Project Path="ECommerce.Catalog.Test/ECommerce.Catalog.Test.csproj" Id="19c98a41-a305-4913-814b-7f4eb6e3a427" />

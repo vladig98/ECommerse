@@ -1,0 +1,19 @@
+# ecommerce-chart/templates/config.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: catalog-secrets
+type: Opaque
+data:
+  # Base64 encrypted connections injected via Helm values parameters
+  ConnectionStrings__Main: {{ printf "Host=postgres-service;Port=%d;Database=%s;Username=%s;Password=%s;" (int .Values.infrastructure.postgres.port) .Values.infrastructure.postgres.dbName .Values.infrastructure.postgres.user .Values.infrastructure.postgres.password | b64enc }}
+  ConnectionStrings__Redis: {{ printf "redis-service:%d" (int .Values.infrastructure.redis.port) | b64enc }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: catalog-config-secret
+type: Opaque
+data:
+  KafkaSettings__Server: {{ .Values.catalogService.config.kafkaServer | b64enc }}
+  KafkaSettings__SchemaRegistryUrl: {{ .Values.catalogService.config.schemaRegistryUrl | b64enc }}

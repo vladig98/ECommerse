@@ -1,0 +1,31 @@
+# ecommerce-chart/values.yaml
+global:
+  environment: "Development"
+
+# 1. Application-specific configurations
+catalogService:
+  replicaCount: 2
+  image:
+    repository: "catalog-service"
+    tag: "latest"
+    pullPolicy: "Always" # Forces Kubernetes to grab new local Docker builds
+  config:
+    aspnetcoreEnvironment: "Development"
+    kafkaServer: "kafka-service:9092"
+    schemaRegistryUrl: "http://schema-registry-service:8081"
+    otelExporterEndpoint: "http://otel-collector-service:4317"
+
+# 2. Infrastructure Layer Configuration (System of Record & Backbone)
+infrastructure:
+  postgres:
+    image: "postgres:18" # Updated to Postgres 18 baseline per doc
+    dbName: "CatalogDb"
+    user: "postgres"
+    password: "YourSecurePassword123!"
+    port: 5432
+  redis:
+    image: "redis:7.2"
+    port: 6379
+  kafka:
+    image: "confluentinc/cp-kafka:7.5.0"
+    port: 9092

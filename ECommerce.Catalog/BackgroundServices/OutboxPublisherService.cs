@@ -137,8 +137,20 @@ public class OutboxPublisherService(
             ProductId = domainEvent.ProductId,
             VariantId = domainEvent.VariantId,
             Sku = domainEvent.Sku,
-            NewPrice = new Avro.AvroDecimal(domainEvent.NewPrice)
+            NewPrice = CreateAvroDecimal(domainEvent.NewPrice, 2)
         };
+    }
+
+    private static Avro.AvroDecimal CreateAvroDecimal(decimal value, int scale)
+    {
+        // 1. Shift the decimal point to get the unscaled integer (e.g., 3.99 -> 399)
+        decimal unscaled = Math.Round(value * (decimal)Math.Pow(10, scale));
+
+        // 2. Convert directly to BigInteger
+        System.Numerics.BigInteger bigIntValue = new(unscaled);
+
+        // 3. Pass the BigInteger and scale directly into the constructor
+        return new Avro.AvroDecimal(bigIntValue, scale);
     }
 
     private static ProductCreatedAvro MapToProductCreatedAvro(string jsonValue)
@@ -173,7 +185,7 @@ public class OutboxPublisherService(
             {
                 Id = v.Id,
                 Sku = v.Sku,
-                BasePrice = new Avro.AvroDecimal(v.BasePrice),
+                BasePrice = CreateAvroDecimal(v.BasePrice, 2),
                 Gtin = v.Gtin,
                 Media = [.. v.Media.Select(m => new ProductMediaEventDtoAvro
                 {
@@ -226,7 +238,7 @@ public class OutboxPublisherService(
             {
                 Id = v.Id,
                 Sku = v.Sku,
-                BasePrice = new Avro.AvroDecimal(v.BasePrice),
+                BasePrice = CreateAvroDecimal(v.BasePrice, 2),
                 Gtin = v.Gtin,
                 Media = [.. v.Media.Select(m => new ProductMediaEventDtoAvro
                 {

@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  labels:
+    app: catalog-service
+spec:
+  replicas: {{ .Values.catalogService.replicaCount }}
+  selector:
+    matchLabels:
+      app: catalog-service
+  template:
+    metadata:
+      labels:
+        app: catalog-service
+    spec:
+      # --- INIT CONTAINER: Executes the self-contained EF migration bundle ---
+      initContainers:
+      - name: migration-runner
+        image: "{{ .Values.catalogService.image.repository }}:{{ .Values.catalogService.image.tag }}"
+        imagePullPolicy: {{ .Values.catalogService.image.pullPolicy | quote }}
+        # Simply run the binary bundle directly from the root app folder now
+        command: ["/bin/sh", "-c", "chmod +x ./migrate && ./migrate"]
+        envFrom:
+        - secretRef:
+            name: catalog-secrets
+
+      # --- MAIN CONTAINER: The ASP.NET Core API ---
+      containers:
+      - name: catalog-app
+        image: "{{ .Values.catalogService.image.repository }}:{{ .Values.catalogService.image.tag }}"
+        imagePullPolicy: {{ .Values.catalogService.image.pullPolicy | quote }}
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: {{ .Values.catalogService.config.aspnetcoreEnvironment | quote }}
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: {{ .Values.catalogService.config.otelExporterEndpoint | quote }}
+        envFrom:
+        - secretRef:
+            name: catalog-secrets
+        - secretRef:
+            name: catalog-config-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: catalog-service
